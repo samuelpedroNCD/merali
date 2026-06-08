@@ -53,6 +53,53 @@ export async function createCertification(input: unknown): Promise<ActionResult>
   return { ok: true, id: data.id };
 }
 
+const BulkRow = z.object({
+  type_id: z.preprocess(s, z.string().uuid().nullable()),
+  expiry_date: z.preprocess(s, z.string().nullable()),
+  document_link: z.preprocess(s, z.string().nullable()),
+});
+
+/** Add several certificate links for one property at once. */
+export async function bulkCreateCertifications(
+  propertyId: string,
+  rows: unknown,
+): Promise<ActionResult> {
+  let user;
+  try {
+    user = await requirePermission("certifications", "create");
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+  if (!propertyId) return { ok: false, error: "Choose a property." };
+  const parsed = z.array(BulkRow).safeParse(rows);
+  if (!parsed.success) return { ok: false, error: "Invalid rows." };
+  const today = new Date().toISOString().slice(0, 10);
+  const records = parsed.data
+    .filter((r) => r.type_id || r.document_link)
+    .map((r) => ({
+      property_id: propertyId,
+      type_id: r.type_id,
+      expiry_date: r.expiry_date,
+      document_link: r.document_link,
+      is_expired: r.expiry_date ? r.expiry_date < today : false,
+    }));
+  if (records.length === 0) return { ok: false, error: "Add at least one certificate row." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("certification").insert(records);
+  if (error) return { ok: false, error: error.message };
+
+  await logActivity({
+    type: "Certification Created",
+    objectLabel: `${records.length} certificates (bulk)`,
+    objectTable: "certification",
+    objectId: propertyId,
+    creatorId: user.id,
+  });
+  revalidatePath("/certifications");
+  return { ok: true };
+}
+
 export async function updateCertification(id: string, input: unknown): Promise<ActionResult> {
   let user;
   try {

@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { propertyStatusTone as statusTone } from "@/lib/badge-tones";
 import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
+import { InlineAddSelect } from "@/components/ui/inline-add-select";
 import { Tabs } from "@/components/ui/tabs";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { gbp } from "@/lib/utils";
@@ -332,7 +333,7 @@ export function PropertiesClient({
             <SelectField label="Landlord" value={form.landlord_id} onChange={(v) => set("landlord_id", v)} options={landlords} placeholder="Choose a landlord…" />
             <SelectField label="Status" value={form.status} onChange={(v) => set("status", v)} options={options.property_status} />
             <SelectField label="Tenancy class" value={form.tenancy_class} onChange={(v) => set("tenancy_class", v)} options={options.tenancy_class} />
-            <SelectField label="Property type" value={form.property_type} onChange={(v) => set("property_type", v)} options={options.property_type} />
+            <InlineAddSelect label="Property type" value={form.property_type} onChange={(v) => set("property_type", v)} options={options.property_type} category="property_type" />
             <SelectField label="Property tax" value={form.property_tax} onChange={(v) => set("property_tax", v)} options={options.property_tax} />
             <Field label="Bedrooms">
               <Input type="number" min={0} value={form.bedrooms} onChange={(e) => set("bedrooms", e.target.value)} />

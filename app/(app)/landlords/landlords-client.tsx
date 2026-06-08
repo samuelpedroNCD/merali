@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
 import { Tabs } from "@/components/ui/tabs";
+import { InlineAddSelect } from "@/components/ui/inline-add-select";
 import type { Option } from "@/lib/data/options";
 import type { LandlordRow } from "@/lib/data/landlords";
 import { createLandlord, updateLandlord, deleteLandlord } from "./actions";
@@ -218,7 +219,7 @@ export function LandlordsClient({
         <Tabs tabs={TABS} value={tab} onChange={setTab} className="mb-6" />
         {tab === "identity" && (
           <div className="grid grid-cols-2 gap-5">
-            <SelectField label="Landlord type" value={form.landlord_type} onChange={(v) => set("landlord_type", v)} options={options.landlord_type} className="col-span-2" />
+            <InlineAddSelect label="Landlord type" value={form.landlord_type} onChange={(v) => set("landlord_type", v)} options={options.landlord_type} category="landlord_type" className="col-span-2" />
             {individual ? (
               <>
                 <Field label="First name"><Input value={form.first_name} onChange={(e) => set("first_name", e.target.value)} /></Field>

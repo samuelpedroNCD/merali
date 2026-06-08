@@ -13,7 +13,7 @@ import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
 import { fmtDate } from "@/lib/utils";
 import type { CertificationRow } from "@/lib/data/certifications";
-import { createCertification, updateCertification, deleteCertification } from "./actions";
+import { createCertification, updateCertification, deleteCertification, bulkCreateCertifications } from "./actions";
 
 type Perms = { create: boolean; edit: boolean; remove: boolean };
 type Opt = { value: string; label: string };
@@ -58,6 +58,27 @@ export function CertificationsClient({
   const [pending, startTransition] = useTransition();
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
+  // Bulk add
+  type BulkRow = { type_id: string; expiry_date: string; document_link: string };
+  const emptyRow: BulkRow = { type_id: "", expiry_date: "", document_link: "" };
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkProperty, setBulkProperty] = useState("");
+  const [bulkRows, setBulkRows] = useState<BulkRow[]>([{ ...emptyRow }, { ...emptyRow }, { ...emptyRow }]);
+  const [bulkError, setBulkError] = useState<string | null>(null);
+  const setRow = (i: number, k: keyof BulkRow, v: string) =>
+    setBulkRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, [k]: v } : r)));
+  function openBulk() {
+    setBulkProperty(""); setBulkRows([{ ...emptyRow }, { ...emptyRow }, { ...emptyRow }]); setBulkError(null); setBulkOpen(true);
+  }
+  function saveBulk() {
+    setBulkError(null);
+    startTransition(async () => {
+      const res = await bulkCreateCertifications(bulkProperty, bulkRows);
+      if (!res.ok) return setBulkError(res.error);
+      setBulkOpen(false); toast.success("Certificates added."); router.refresh();
+    });
+  }
+
   function openCreate() {
     setEditing(null); setForm(toForm()); setError(null); setOpen(true);
   }
@@ -87,9 +108,14 @@ export function CertificationsClient({
         search="Search certifications…"
         action={
           perms.create ? (
-            <Button size="toolbar" className="gap-[6px]" onClick={openCreate}>
-              <Plus strokeWidth={1.8} className="h-[16px] w-[16px]" /> New certification
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="toolbar" className="gap-[6px]" onClick={openBulk}>
+                <Plus strokeWidth={1.8} className="h-[16px] w-[16px]" /> Bulk add
+              </Button>
+              <Button size="toolbar" className="gap-[6px]" onClick={openCreate}>
+                <Plus strokeWidth={1.8} className="h-[16px] w-[16px]" /> New certification
+              </Button>
+            </div>
           ) : undefined
         }
       />
@@ -174,6 +200,46 @@ export function CertificationsClient({
           <Field label="Expiry date"><Input type="date" value={form.expiry_date} onChange={(e) => set("expiry_date", e.target.value)} /></Field>
           <Field label="Document link"><Input value={form.document_link} onChange={(e) => set("document_link", e.target.value)} placeholder="https://…" /></Field>
           <Field label="Notes"><Textarea rows={3} value={form.notes} onChange={(e) => set("notes", e.target.value)} /></Field>
+        </div>
+      </Drawer>
+
+      <Drawer
+        open={bulkOpen}
+        onClose={() => setBulkOpen(false)}
+        title="Bulk add certificates"
+        subtitle="Add several certificate links for one property at once"
+        size="md"
+        footer={
+          <>
+            {bulkError && <span className="mr-auto text-[13px] font-medium text-[var(--bad)]">{bulkError}</span>}
+            <Button variant="ghost" size="toolbar" onClick={() => setBulkOpen(false)}>Cancel</Button>
+            <Button size="toolbar" onClick={saveBulk} disabled={pending}>{pending && <Loader2 className="h-4 w-4 animate-spin" />} Add all</Button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <Field label="Property">
+            <Select value={bulkProperty} onChange={(e) => setBulkProperty(e.target.value)}>
+              <option value="">Choose…</option>
+              {properties.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+            </Select>
+          </Field>
+          <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-[1.2fr_0.9fr_1.6fr] gap-2 text-[11.5px] font-semibold uppercase tracking-[0.05em] text-muted">
+              <span>Type</span><span>Expiry</span><span>Document link</span>
+            </div>
+            {bulkRows.map((r, i) => (
+              <div key={i} className="grid grid-cols-[1.2fr_0.9fr_1.6fr] gap-2">
+                <Select value={r.type_id} onChange={(e) => setRow(i, "type_id", e.target.value)}>
+                  <option value="">—</option>
+                  {types.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                </Select>
+                <Input type="date" value={r.expiry_date} onChange={(e) => setRow(i, "expiry_date", e.target.value)} />
+                <Input value={r.document_link} onChange={(e) => setRow(i, "document_link", e.target.value)} placeholder="https://…" />
+              </div>
+            ))}
+            <button type="button" onClick={() => setBulkRows((rs) => [...rs, { ...emptyRow }])} className="self-start text-[12.5px] font-semibold text-accent hover:underline">+ Add row</button>
+          </div>
         </div>
       </Drawer>
     </>
