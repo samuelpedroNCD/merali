@@ -9,10 +9,8 @@ import { Topbar } from "@/components/shell/topbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { keyStatusTone as statusTone } from "@/lib/badge-tones";
 import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
-import { fmtDate } from "@/lib/utils";
 import type { Option } from "@/lib/data/options";
 import type { KeyRow, KeyTotals } from "@/lib/data/keys";
 import { createKey, updateKey, deleteKey } from "./actions";
@@ -105,33 +103,36 @@ export function KeysClient({
           <p className="mt-[2px] text-[14px] text-muted">Track and manage property keys.</p>
         </div>
         <div className="grid grid-cols-2 gap-[18px] lg:grid-cols-4">
-          <StatCard label="Total Keys" value={totals.total} />
-          <StatCard label="Keys Out" value={totals.out} />
-          <StatCard label="Spare Available" value={totals.spare} />
-          <StatCard label="Lost Keys" value={totals.lost} />
+          <StatCard label="Total copies" value={totals.total} />
+          <StatCard label="Copies out" value={totals.out} />
+          <StatCard label="Spare copies" value={totals.spare} />
+          <StatCard label="Lost keys" value={totals.lost} />
         </div>
         <Input placeholder="Search by key code…" className="max-w-[460px]" value={query} onChange={(e) => setQuery(e.target.value)} />
         <Card className="overflow-x-auto p-0">
-          <div className="grid min-w-[920px] grid-cols-[0.9fr_1.6fr_0.9fr_0.9fr_0.9fr_0.7fr_0.6fr_auto] items-center gap-3 border-b border-border px-6 py-4 text-[11.5px] font-semibold uppercase tracking-[0.05em] text-muted">
-            <span>Key code</span><span>Property</span><span>Held by</span><span>Date issued</span><span>Date return</span><span>Status</span><span>Spares</span><span className="text-right">Action</span>
+          <div className="grid min-w-[760px] grid-cols-[1fr_1.8fr_0.7fr_1.1fr_auto] items-center gap-3 border-b border-border px-6 py-4 text-[11.5px] font-semibold uppercase tracking-[0.05em] text-muted">
+            <span>Key code</span><span>Property</span><span className="text-center">Copies</span><span>Movement</span><span className="text-right">Action</span>
           </div>
           {filtered.length === 0 && (
             <div className="grid place-items-center py-16 text-center">
               <p className="text-[15px] font-medium text-text-2">No keys yet</p>
-              <p className="mt-1 text-[13px] text-muted">{perms.create ? "Issue your first key." : "No records available."}</p>
+              <p className="mt-1 text-[13px] text-muted">{perms.create ? "Add your first key code." : "No records available."}</p>
             </div>
           )}
-          {filtered.map((k) => (
-            <div key={k.id} className="grid min-w-[920px] grid-cols-[0.9fr_1.6fr_0.9fr_0.9fr_0.9fr_0.7fr_0.6fr_auto] items-center gap-3 border-b border-border px-6 py-4 text-[13.5px] last:border-b-0">
-              <span className="font-semibold text-text">{k.key_code || "—"}</span>
+          {filtered.map((k) => {
+            const lost = (k.status ?? "").toLowerCase() === "lost";
+            return (
+            <div key={k.id} className="grid min-w-[760px] grid-cols-[1fr_1.8fr_0.7fr_1.1fr_auto] items-center gap-3 border-b border-border px-6 py-4 text-[13.5px] last:border-b-0">
+              <button onClick={() => setDetailKeyId(k.id)} className="truncate text-left font-semibold text-text hover:text-accent">{k.key_code || "—"}</button>
               <span className="truncate text-text-2">{k.property?.address || "—"}</span>
-              <span className="text-text-2">{k.held_by_type || "—"}</span>
-              <span className="text-text-2">{k.date_given ? fmtDate(k.date_given) : "—"}</span>
-              <span className="text-text-2">{k.date_returned ? fmtDate(k.date_returned) : "—"}</span>
-              <span>{k.status ? <Badge tone={statusTone(k.status)} dot>{k.status}</Badge> : <span className="text-muted">—</span>}</span>
-              <span className="text-text-2">{k.spares_count > 0 ? `Yes (${k.spares_count})` : "No"}</span>
+              <span className="text-center text-text-2">{k.copies_total}</span>
+              <span>
+                {lost ? <Badge tone="bad" dot>Lost</Badge>
+                  : k.copies_out > 0 ? <Badge tone="warn" dot>{k.copies_out} of {k.copies_total} out</Badge>
+                  : <Badge tone="good" dot>All in office</Badge>}
+              </span>
               <span className="flex justify-end gap-1">
-                <button onClick={() => setDetailKeyId(k.id)} className="grid h-8 w-8 place-items-center rounded-md text-text-2 transition-colors hover:bg-surface-2/60" aria-label="Issue / return & history" title="Issue / return & history">
+                <button onClick={() => setDetailKeyId(k.id)} className="grid h-8 w-8 place-items-center rounded-md text-accent transition-colors hover:bg-surface-2/60" aria-label="Movement log: issue / return & history" title="Movement log: issue / return & history">
                   <History strokeWidth={1.6} className="h-[16px] w-[16px]" />
                 </button>
                 {perms.edit && (
@@ -146,7 +147,8 @@ export function KeysClient({
                 )}
               </span>
             </div>
-          ))}
+            );
+          })}
         </Card>
       </main>
 

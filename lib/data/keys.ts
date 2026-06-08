@@ -12,32 +12,42 @@ export type KeyRow = {
   notes: string | null;
   property?: { address: string | null } | null;
   spares_count: number;
+  copies_total: number; // the key itself + its spares
+  copies_out: number; // how many copies are currently out
 };
 
 export type KeyTotals = { total: number; out: number; spare: number; lost: number };
+
+const isOut = (s?: string | null) => (s ?? "").toLowerCase() === "out";
+const isLost = (s?: string | null) => (s ?? "").toLowerCase() === "lost";
 
 export async function listKeys(): Promise<{ keys: KeyRow[]; totals: KeyTotals }> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("key")
-    .select("*, property:property_id(address), key_spare(count)")
+    .select("*, property:property_id(address), key_spare(status)")
     .order("created_at", { ascending: false });
 
   const keys: KeyRow[] = (data ?? []).map((k) => {
     const { key_spare, ...rest } = k as Record<string, unknown> & {
-      key_spare?: { count: number }[];
+      key_spare?: { status: string | null }[];
     };
+    const spares = key_spare ?? [];
+    const row = rest as unknown as KeyRow;
+    const copiesOut = (isOut(row.status) ? 1 : 0) + spares.filter((s) => isOut(s.status)).length;
     return {
-      ...(rest as unknown as KeyRow),
-      spares_count: key_spare?.[0]?.count ?? 0,
+      ...row,
+      spares_count: spares.length,
+      copies_total: 1 + spares.length,
+      copies_out: copiesOut,
     };
   });
 
   const totals: KeyTotals = {
-    total: keys.length,
-    out: keys.filter((k) => (k.status ?? "").toLowerCase() === "out").length,
+    total: keys.reduce((a, k) => a + k.copies_total, 0),
+    out: keys.reduce((a, k) => a + k.copies_out, 0),
     spare: keys.reduce((a, k) => a + k.spares_count, 0),
-    lost: keys.filter((k) => (k.status ?? "").toLowerCase() === "lost").length,
+    lost: keys.filter((k) => isLost(k.status)).length,
   };
   return { keys, totals };
 }
@@ -102,9 +112,12 @@ export async function getKeyDetail(id: string): Promise<KeyDetail | null> {
     return (Array.isArray(r) ? r[0]?.full_name : r?.full_name) ?? null;
   };
 
+  const spareRows = (spares ?? []) as unknown as SpareRow[];
+  const keyRow = key as unknown as KeyRow;
+  const copiesOut = (isOut(keyRow.status) ? 1 : 0) + spareRows.filter((s) => isOut(s.status)).length;
   return {
-    key: { ...(key as unknown as KeyRow), spares_count: spares?.length ?? 0 },
-    spares: (spares ?? []) as unknown as SpareRow[],
+    key: { ...keyRow, spares_count: spareRows.length, copies_total: 1 + spareRows.length, copies_out: copiesOut },
+    spares: spareRows,
     log: (log ?? []).map((l) => ({
       id: l.id as string,
       spare_id: (l.spare_id as string) ?? null,
