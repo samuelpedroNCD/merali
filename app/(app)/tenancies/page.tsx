@@ -2,6 +2,7 @@ import { requireUser, can } from "@/lib/auth";
 import { listLeases, listPropertyOptions } from "@/lib/data/leases";
 import { listTenantOptions } from "@/lib/data/tenants";
 import { getOptions } from "@/lib/data/options";
+import { nominalOptions } from "@/lib/data/nominals";
 import { TenanciesClient } from "./tenancies-client";
 
 export default async function TenanciesPage({
@@ -11,11 +12,12 @@ export default async function TenanciesPage({
 }) {
   const user = await requireUser();
   const { edit, renew } = await searchParams;
-  const [leases, properties, tenants, options] = await Promise.all([
+  const [leases, properties, tenants, options, nominals] = await Promise.all([
     listLeases(),
     listPropertyOptions(),
     listTenantOptions(),
-    getOptions(["tenancy_code", "lease_status", "payment_frequency"]),
+    getOptions(["tenancy_code", "lease_status", "payment_frequency", "deposit_scheme"]),
+    nominalOptions(),
   ]);
 
   return (
@@ -24,6 +26,7 @@ export default async function TenanciesPage({
       properties={properties}
       tenants={tenants}
       options={options}
+      nominals={nominals}
       editId={edit}
       renewId={renew}
       perms={{

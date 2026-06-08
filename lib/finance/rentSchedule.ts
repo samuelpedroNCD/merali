@@ -79,11 +79,37 @@ type LeaseLike = {
  *  - keeps any paid/collected/reconciled rows untouched
  *  - refreshes amount_due on existing unpaid rows when rent changes
  */
+export type RentReview = { effective_date: string; new_amount: number };
+
 export async function syncRentSchedule(
   supabase: SupabaseClient,
   lease: LeaseLike,
+  reviews?: RentReview[],
 ): Promise<void> {
   if (!lease.start_date || lease.rent_amount == null) return;
+
+  // Reviews drive the rent from their effective date. Fetch them if not provided
+  // (e.g. when called from the Plaid sync path) so amounts stay consistent.
+  let revs = reviews;
+  if (!revs) {
+    const { data } = await supabase
+      .from("rent_review")
+      .select("effective_date, new_amount")
+      .eq("lease_id", lease.id);
+    revs = (data ?? []) as RentReview[];
+  }
+  const sorted = [...revs]
+    .map((r) => ({ effective_date: r.effective_date, new_amount: Number(r.new_amount) }))
+    .sort((a, b) => a.effective_date.localeCompare(b.effective_date));
+  const base = Number(lease.rent_amount);
+  const amountFor = (date: string) => {
+    let amt = base;
+    for (const r of sorted) {
+      if (r.effective_date <= date) amt = r.new_amount;
+      else break;
+    }
+    return amt;
+  };
 
   const dates = generateDueDates(
     lease.start_date,
@@ -121,7 +147,7 @@ export async function syncRentSchedule(
       property_id: lease.property_id,
       tenant_id: lease.tenant_id,
       due_date: d,
-      amount_due: lease.rent_amount,
+      amount_due: amountFor(d),
       invoice_status: "Pending",
     }));
   if (toInsert.length) await supabase.from("rent_schedule").insert(toInsert);
@@ -134,22 +160,18 @@ export async function syncRentSchedule(
   if (toDelete.length)
     await supabase.from("rent_schedule").delete().in("id", toDelete);
 
-  // Refresh amount_due on in-term unpaid rows when rent changed.
-  const unpaidInTerm = (existing ?? [])
-    .filter(
-      (r) =>
-        target.has(r.due_date as string) &&
-        !isPaid({
-          amount_collected: Number(r.amount_collected ?? 0),
-          invoice_status: (r.invoice_status as string) ?? "Pending",
-          reconciled: Boolean(r.reconciled),
-        }),
-    )
-    .map((r) => r.id as string);
-  if (unpaidInTerm.length) {
-    await supabase
-      .from("rent_schedule")
-      .update({ amount_due: lease.rent_amount })
-      .in("id", unpaidInTerm);
+  // Refresh amount_due on in-term unpaid rows to the effective (review-aware) amount.
+  const unpaidInTerm = (existing ?? []).filter(
+    (r) =>
+      target.has(r.due_date as string) &&
+      !isPaid({
+        amount_collected: Number(r.amount_collected ?? 0),
+        invoice_status: (r.invoice_status as string) ?? "Pending",
+        reconciled: Boolean(r.reconciled),
+      }),
+  );
+  for (const r of unpaidInTerm) {
+    const amt = amountFor(r.due_date as string);
+    await supabase.from("rent_schedule").update({ amount_due: amt }).eq("id", r.id as string);
   }
 }

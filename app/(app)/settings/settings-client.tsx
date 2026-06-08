@@ -12,6 +12,7 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { initials } from "@/lib/utils";
 import { updateProfile, changePassword, changeEmail, updateAvatar, updateNotificationPrefs } from "./actions";
 import { OptionSetsManager } from "./option-sets-manager";
+import { NominalManager } from "./nominal-manager";
 import type { OptionCategory } from "@/lib/data/option-admin";
 
 type NotifyPrefs = {
@@ -26,11 +27,13 @@ export function SettingsClient({
   profile,
   notifyPrefs,
   optionSets,
+  nominals,
   canManageOptions,
 }: {
   profile: { first_name: string; last_name: string; phone: string; email: string; avatarUrl: string | null };
   notifyPrefs: NotifyPrefs;
   optionSets: OptionCategory[];
+  nominals: import("@/lib/data/nominals").NominalCode[];
   canManageOptions: boolean;
 }) {
   const router = useRouter();
@@ -40,7 +43,7 @@ export function SettingsClient({
     { key: "personal", label: "Personal Info" },
     { key: "account", label: "Account Settings" },
     { key: "notifications", label: "Notifications" },
-    ...(canManageOptions ? [{ key: "options", label: "Option Sets" }] : []),
+    ...(canManageOptions ? [{ key: "options", label: "Option Sets" }, { key: "nominals", label: "Nominals" }] : []),
   ];
 
   return (
@@ -56,6 +59,7 @@ export function SettingsClient({
         {tab === "account" && <AccountSettings email={profile.email} />}
         {tab === "notifications" && <NotificationPrefs prefs={notifyPrefs} onSaved={() => router.refresh()} />}
         {tab === "options" && canManageOptions && <OptionSetsManager optionSets={optionSets} />}
+        {tab === "nominals" && canManageOptions && <NominalManager nominals={nominals} />}
       </main>
     </>
   );

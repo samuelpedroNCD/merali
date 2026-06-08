@@ -30,6 +30,7 @@ function toForm(t?: TransactionRow | null): Form {
     vat_rate: t?.vat_rate != null ? String(t.vat_rate) : "0",
     txn_date: t?.txn_date ?? new Date().toISOString().slice(0, 10),
     property_id: t?.property_id ?? "",
+    nominal_code_id: t?.nominal_code_id ?? "",
     status: t?.status ?? "",
     reference: t?.reference ?? "",
     receipt_link: t?.receipt_link ?? "",
@@ -42,12 +43,14 @@ export function NominalClient({
   totals,
   properties,
   options,
+  nominals,
   perms,
 }: {
   transactions: TransactionRow[];
   totals: LedgerTotals;
   properties: Opt[];
   options: Record<string, Option[]>;
+  nominals: Opt[];
   perms: Perms;
 }) {
   const router = useRouter();
@@ -236,6 +239,7 @@ export function NominalClient({
         <div className="grid grid-cols-2 gap-5">
           <SelectField label="Type" value={form.type} onChange={(v) => set("type", v)} options={options.transaction_type} />
           <SelectField label="Category" value={form.category} onChange={(v) => set("category", v)} options={options.transaction_category} />
+          <SelectFieldOpt label="Nominal code" value={form.nominal_code_id} onChange={(v) => set("nominal_code_id", v)} options={nominals} placeholder="Choose…" className="col-span-2" />
           <Field label="Amount (gross, £)"><Input type="number" step="0.01" min={0} value={form.amount_gross} onChange={(e) => set("amount_gross", e.target.value)} /></Field>
           <SelectField label="VAT rate (%)" value={form.vat_rate} onChange={(v) => set("vat_rate", v)} options={options.vat_rate} />
           <SelectFieldOpt label="Property" value={form.property_id} onChange={(v) => set("property_id", v)} options={properties} placeholder="Choose…" />

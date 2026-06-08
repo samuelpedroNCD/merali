@@ -10,6 +10,7 @@ export type TransactionRow = {
   amount_gross: number | null;
   txn_date: string | null;
   property_id: string | null;
+  nominal_code_id: string | null;
   status: string | null;
   reference: string | null;
   notes: string | null;

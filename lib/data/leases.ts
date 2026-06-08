@@ -14,13 +14,21 @@ export type LeaseRow = {
   payment_frequency: string | null;
   status: string | null;
   notes: string | null;
+  rent_nominal_id: string | null;
+  deposit_amount: number | null;
+  deposit_scheme: string | null;
+  deposit_reference: string | null;
+  deposit_protected_date: string | null;
+  deposit_returned_date: string | null;
+  exclude_from_reminders: boolean | null;
   property?: { id: string; address: string | null } | null;
   tenant?: { id: string; full_name: string | null } | null;
   tenants: { id: string; name: string | null; is_lead: boolean }[];
+  reviews: { effective_date: string; new_amount: number }[];
 };
 
 const SELECT =
-  "*, property:property_id(id, address), tenant:tenant_id(id, full_name), lease_tenant(is_lead, tenant:tenant_id(id, full_name))";
+  "*, property:property_id(id, address), tenant:tenant_id(id, full_name), lease_tenant(is_lead, tenant:tenant_id(id, full_name)), rent_review(effective_date, new_amount)";
 
 function mapLease(row: Record<string, unknown>): LeaseRow {
   const lt = (row.lease_tenant ?? []) as {
@@ -33,9 +41,12 @@ function mapLease(row: Record<string, unknown>): LeaseRow {
       return t ? { id: t.id, name: t.full_name, is_lead: x.is_lead } : null;
     })
     .filter(Boolean) as LeaseRow["tenants"];
-  const { lease_tenant, ...rest } = row;
-  void lease_tenant;
-  return { ...(rest as unknown as LeaseRow), tenants };
+  const reviews = ((row.rent_review ?? []) as { effective_date: string; new_amount: number }[])
+    .map((r) => ({ effective_date: r.effective_date, new_amount: Number(r.new_amount) }))
+    .sort((a, b) => a.effective_date.localeCompare(b.effective_date));
+  const { lease_tenant, rent_review, ...rest } = row;
+  void lease_tenant; void rent_review;
+  return { ...(rest as unknown as LeaseRow), tenants, reviews };
 }
 
 export type LeaseScheduleRow = {

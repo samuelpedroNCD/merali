@@ -34,15 +34,25 @@ function toForm(l?: LeaseRow | null): Form {
     rent_amount: l?.rent_amount != null ? String(l.rent_amount) : "",
     payment_frequency: l?.payment_frequency ?? "",
     status: l?.status ?? "",
+    rent_nominal_id: l?.rent_nominal_id ?? "",
+    deposit_amount: l?.deposit_amount != null ? String(l.deposit_amount) : "",
+    deposit_scheme: l?.deposit_scheme ?? "",
+    deposit_reference: l?.deposit_reference ?? "",
+    deposit_protected_date: l?.deposit_protected_date ?? "",
+    deposit_returned_date: l?.deposit_returned_date ?? "",
+    exclude_from_reminders: l?.exclude_from_reminders ? "true" : "false",
     notes: l?.notes ?? "",
   };
 }
+
+type Review = { effective_date: string; new_amount: string };
 
 export function TenanciesClient({
   leases,
   properties,
   tenants,
   options,
+  nominals,
   perms,
   editId,
   renewId,
@@ -51,6 +61,7 @@ export function TenanciesClient({
   properties: Opt[];
   tenants: Opt[];
   options: Record<string, Option[]>;
+  nominals: Opt[];
   perms: Perms;
   editId?: string;
   renewId?: string;
@@ -63,9 +74,12 @@ export function TenanciesClient({
   const [form, setForm] = useState<Form>(toForm());
   const [tenantIds, setTenantIds] = useState<string[]>([]);
   const [lead, setLead] = useState<string>("");
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const reviewsOf = (l?: LeaseRow | null): Review[] =>
+    (l?.reviews ?? []).map((r) => ({ effective_date: r.effective_date, new_amount: String(r.new_amount) }));
 
   function leaseTenants(l?: LeaseRow | null) {
     const ts = l?.tenants ?? [];
@@ -80,11 +94,12 @@ export function TenanciesClient({
   }
 
   function openCreate() {
-    setEditing(null); setForm(toForm()); setTenantIds([]); setLead(""); setError(null); setOpen(true);
+    setEditing(null); setForm(toForm()); setTenantIds([]); setLead(""); setReviews([]); setError(null); setOpen(true);
   }
   function openEdit(l: LeaseRow) {
     setEditing(l); setForm(toForm(l));
     const { ids, lead } = leaseTenants(l); setTenantIds(ids); setLead(lead);
+    setReviews(reviewsOf(l));
     setError(null); setOpen(true);
   }
   function openRenew(l: LeaseRow) {
@@ -104,6 +119,7 @@ export function TenanciesClient({
       status: "Active",
     });
     const { ids, lead } = leaseTenants(l); setTenantIds(ids); setLead(lead);
+    setReviews(reviewsOf(l));
     setError(null);
     setOpen(true);
   }
@@ -119,7 +135,10 @@ export function TenanciesClient({
   }, [editId, renewId]);
   function save() {
     setError(null);
-    const payload = { ...form, tenant_ids: tenantIds, lead_tenant_id: lead };
+    const cleanReviews = reviews
+      .filter((r) => r.effective_date && r.new_amount !== "")
+      .map((r) => ({ effective_date: r.effective_date, new_amount: Number(r.new_amount) }));
+    const payload = { ...form, tenant_ids: tenantIds, lead_tenant_id: lead, reviews: cleanReviews };
     startTransition(async () => {
       const res = editing ? await updateLease(editing.id, payload) : await createLease(payload);
       if (!res.ok) return setError(res.error);
@@ -235,11 +254,41 @@ export function TenanciesClient({
           <Field label="Lease end"><Input type="date" value={form.end_date} onChange={(e) => set("end_date", e.target.value)} /></Field>
           <Field label="Agreed rent (£)"><Input type="number" step="0.01" min={0} value={form.rent_amount} onChange={(e) => set("rent_amount", e.target.value)} /></Field>
           <SelectFieldOpt label="Payment frequency" value={form.payment_frequency} onChange={(v) => set("payment_frequency", v)} options={options.payment_frequency} />
+          <SelectFieldOpt label="Rent nominal" value={form.rent_nominal_id} onChange={(v) => set("rent_nominal_id", v)} options={nominals} />
+          <SelectFieldOpt label="Tenancy code" value={form.tenancy_code} onChange={(v) => set("tenancy_code", v)} options={options.tenancy_code} />
           <Field label="Move-in date"><Input type="date" value={form.move_in_date} onChange={(e) => set("move_in_date", e.target.value)} /></Field>
           <Field label="Renewal date"><Input type="date" value={form.renewal_date} onChange={(e) => set("renewal_date", e.target.value)} /></Field>
-          <SelectFieldOpt label="Status" value={form.status} onChange={(v) => set("status", v)} options={options.lease_status} />
-          <SelectFieldOpt label="Tenancy code" value={form.tenancy_code} onChange={(v) => set("tenancy_code", v)} options={options.tenancy_code} />
-          <Field label="Notes" className="col-span-2"><Textarea rows={4} value={form.notes} onChange={(e) => set("notes", e.target.value)} /></Field>
+          <SelectFieldOpt label="Status" value={form.status} onChange={(v) => set("status", v)} options={options.lease_status} className="col-span-2" />
+
+          {/* Rent reviews */}
+          <div className="col-span-2 rounded-md border border-border p-3">
+            <p className="mb-2 text-[12.5px] font-semibold text-text">Rent reviews / increases <span className="font-normal text-muted">— amount applies from the effective date</span></p>
+            {reviews.length === 0 && <p className="mb-2 text-[12.5px] text-muted">No reviews — rent stays at the agreed amount.</p>}
+            {reviews.map((r, i) => (
+              <div key={i} className="mb-2 grid grid-cols-[1fr_1fr_auto] items-center gap-2">
+                <Input type="date" value={r.effective_date} onChange={(e) => setReviews((rs) => rs.map((x, idx) => idx === i ? { ...x, effective_date: e.target.value } : x))} />
+                <Input type="number" step="0.01" min={0} placeholder="New rent (£)" value={r.new_amount} onChange={(e) => setReviews((rs) => rs.map((x, idx) => idx === i ? { ...x, new_amount: e.target.value } : x))} />
+                <button type="button" onClick={() => setReviews((rs) => rs.filter((_, idx) => idx !== i))} aria-label="Remove" className="grid h-9 w-9 place-items-center rounded-md text-[var(--bad)] hover:bg-[color-mix(in_oklch,var(--bad)_12%,transparent)]"><Trash2 strokeWidth={1.6} className="h-[15px] w-[15px]" /></button>
+              </div>
+            ))}
+            <button type="button" onClick={() => setReviews((rs) => [...rs, { effective_date: "", new_amount: "" }])} className="text-[12.5px] font-semibold text-accent hover:underline">+ Add review</button>
+          </div>
+
+          {/* Deposit */}
+          <div className="col-span-2 grid grid-cols-2 gap-5 rounded-md border border-border p-3">
+            <p className="col-span-2 text-[12.5px] font-semibold text-text">Deposit</p>
+            <Field label="Amount (£)"><Input type="number" step="0.01" min={0} value={form.deposit_amount} onChange={(e) => set("deposit_amount", e.target.value)} /></Field>
+            <SelectFieldOpt label="Scheme" value={form.deposit_scheme} onChange={(v) => set("deposit_scheme", v)} options={options.deposit_scheme} />
+            <Field label="Reference"><Input value={form.deposit_reference} onChange={(e) => set("deposit_reference", e.target.value)} /></Field>
+            <Field label="Protected date"><Input type="date" value={form.deposit_protected_date} onChange={(e) => set("deposit_protected_date", e.target.value)} /></Field>
+            <Field label="Returned date"><Input type="date" value={form.deposit_returned_date} onChange={(e) => set("deposit_returned_date", e.target.value)} /></Field>
+          </div>
+
+          <label className="col-span-2 flex cursor-pointer items-center gap-3 rounded-md border border-border px-4 py-3">
+            <input type="checkbox" checked={form.exclude_from_reminders === "true"} onChange={(e) => set("exclude_from_reminders", e.target.checked ? "true" : "false")} className="h-4 w-4 accent-[var(--gold)]" />
+            <span className="text-[13px] text-text">Exclude this tenancy from overdue-rent reminders</span>
+          </label>
+          <Field label="Notes" className="col-span-2"><Textarea rows={3} value={form.notes} onChange={(e) => set("notes", e.target.value)} /></Field>
           <div className="col-span-2 flex items-center gap-2 rounded-md border border-border bg-surface-2/40 px-4 py-3 text-[13px] text-text-2">
             <CalendarClock strokeWidth={1.6} className="h-4 w-4 text-accent" />
             On save, the rent schedule is generated from the start/end dates at the chosen frequency — paid instalments are preserved.

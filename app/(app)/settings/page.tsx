@@ -1,6 +1,7 @@
 import { requireUser, can } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { listOptionSets } from "@/lib/data/option-admin";
+import { listNominalCodes } from "@/lib/data/nominals";
 import { SettingsClient } from "./settings-client";
 
 export default async function SettingsPage() {
@@ -17,6 +18,7 @@ export default async function SettingsPage() {
       .maybeSingle(),
     canManageOptions ? listOptionSets() : Promise.resolve([]),
   ]);
+  const nominals = canManageOptions ? await listNominalCodes(true) : [];
 
   return (
     <SettingsClient
@@ -35,6 +37,7 @@ export default async function SettingsPage() {
         notify_ending: profile?.notify_ending ?? true,
       }}
       optionSets={optionSets}
+      nominals={nominals}
       canManageOptions={canManageOptions}
     />
   );
