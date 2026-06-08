@@ -9,6 +9,8 @@ import { logActivity } from "@/lib/data/activity";
 const s = (v: unknown) => (v === "" || v === undefined ? null : v);
 
 const Schema = z.object({
+  is_company: z.preprocess((v) => v === true || v === "true", z.boolean()).default(false),
+  company_name: z.preprocess(s, z.string().nullable()),
   first_name: z.preprocess(s, z.string().nullable()),
   last_name: z.preprocess(s, z.string().nullable()),
   email: z.preprocess(s, z.string().nullable()),
@@ -34,7 +36,9 @@ const Schema = z.object({
 export type ActionResult = { ok: true; id?: string } | { ok: false; error: string };
 
 const fullName = (d: z.infer<typeof Schema>) =>
-  [d.first_name, d.last_name].filter(Boolean).join(" ").trim() ||
+  (d.is_company
+    ? d.company_name?.trim()
+    : [d.first_name, d.last_name].filter(Boolean).join(" ").trim()) ||
   d.email ||
   "Unnamed tenant";
 

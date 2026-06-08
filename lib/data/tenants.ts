@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export type TenantRow = {
   id: string;
+  is_company: boolean | null;
+  company_name: string | null;
   first_name: string | null;
   last_name: string | null;
   full_name: string | null;
