@@ -81,6 +81,22 @@ type LeaseLike = {
  */
 export type RentReview = { effective_date: string; new_amount: number };
 
+/**
+ * The rent that applies on a given due date: the base rent unless a review with
+ * an effective date on/before that date has superseded it (latest one wins).
+ */
+export function effectiveRent(base: number, reviews: RentReview[], date: string): number {
+  const sorted = [...reviews]
+    .map((r) => ({ effective_date: r.effective_date, new_amount: Number(r.new_amount) }))
+    .sort((a, b) => a.effective_date.localeCompare(b.effective_date));
+  let amt = base;
+  for (const r of sorted) {
+    if (r.effective_date <= date) amt = r.new_amount;
+    else break;
+  }
+  return amt;
+}
+
 export async function syncRentSchedule(
   supabase: SupabaseClient,
   lease: LeaseLike,
@@ -98,18 +114,8 @@ export async function syncRentSchedule(
       .eq("lease_id", lease.id);
     revs = (data ?? []) as RentReview[];
   }
-  const sorted = [...revs]
-    .map((r) => ({ effective_date: r.effective_date, new_amount: Number(r.new_amount) }))
-    .sort((a, b) => a.effective_date.localeCompare(b.effective_date));
   const base = Number(lease.rent_amount);
-  const amountFor = (date: string) => {
-    let amt = base;
-    for (const r of sorted) {
-      if (r.effective_date <= date) amt = r.new_amount;
-      else break;
-    }
-    return amt;
-  };
+  const amountFor = (date: string) => effectiveRent(base, revs!, date);
 
   const dates = generateDueDates(
     lease.start_date,

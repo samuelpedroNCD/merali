@@ -18,21 +18,33 @@ export async function getTenantRelated(tenantId: string): Promise<TenantRelated>
   const supabase = await createClient();
   const today = new Date().toISOString().slice(0, 10);
 
+  // Tenancies this tenant belongs to — as lead OR co-tenant (via the join).
+  const { data: memberships } = await supabase
+    .from("lease_tenant")
+    .select("lease_id")
+    .eq("tenant_id", tenantId);
+  const leaseIds = (memberships ?? []).map((m) => m.lease_id as string);
+
+  const emptyRes = Promise.resolve({ data: [] as Record<string, unknown>[] });
   const [leases, docs, sched] = await Promise.all([
-    supabase
-      .from("lease")
-      .select("id, rent_amount, start_date, end_date, status, property:property_id(id, address)")
-      .eq("tenant_id", tenantId)
-      .order("start_date", { ascending: false }),
+    leaseIds.length
+      ? supabase
+          .from("lease")
+          .select("id, rent_amount, start_date, end_date, status, property:property_id(id, address)")
+          .in("id", leaseIds)
+          .order("start_date", { ascending: false })
+      : emptyRes,
     supabase
       .from("document")
       .select("id, name, external_link, expiry_date")
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false }),
-    supabase
-      .from("rent_schedule")
-      .select("amount_due, amount_collected, invoice_status, due_date")
-      .eq("tenant_id", tenantId),
+    leaseIds.length
+      ? supabase
+          .from("rent_schedule")
+          .select("amount_due, amount_collected, invoice_status, due_date")
+          .in("lease_id", leaseIds)
+      : emptyRes,
   ]);
 
   const prop = (rel: unknown) => {

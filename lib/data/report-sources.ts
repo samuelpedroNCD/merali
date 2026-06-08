@@ -96,8 +96,10 @@ async function runProperties(f: ReportFilters) {
 async function runOccupancy(f: ReportFilters) {
   const supabase = await sb();
   const today = new Date().toISOString().slice(0, 10);
+  let propsQ = supabase.from("property").select("id, address, internal_code, configuration, status").neq("configuration", "Building").order("address").limit(5000);
+  if (f.property_id) propsQ = propsQ.eq("id", f.property_id);
   const [{ data: props }, { data: leases }] = await Promise.all([
-    supabase.from("property").select("id, address, internal_code, configuration, status").neq("configuration", "Building").order("address").limit(5000),
+    propsQ,
     supabase.from("lease").select("property_id, end_date, status, tenant:tenant_id(full_name)").or(`end_date.is.null,end_date.gte.${today}`),
   ]);
   const active = new Map<string, { tenant: string | null; end: string | null }>();

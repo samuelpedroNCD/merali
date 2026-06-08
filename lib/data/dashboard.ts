@@ -12,6 +12,8 @@ export type DashboardData = {
   rentCollectedPct: number;
   arrearsTotal: number;
   arrearsTenants: number;
+  unprotectedDeposits: number;
+  unprotectedDepositTotal: number;
   rentBars: { label: string; value: number; current?: boolean }[];
   activity: { type: string; label: string | null; at: string; who: string | null }[];
   certs: { name: string; property: string | null; due: string | null }[];
@@ -95,6 +97,22 @@ export async function getDashboardData(now = new Date()): Promise<DashboardData>
   for (const r of overdueRows ?? []) {
     arrearsTotal += Number(r.amount_due ?? 0) - Number(r.amount_collected ?? 0);
     if (r.tenant_id) arrearsTenantSet.add(r.tenant_id as string);
+  }
+
+  // Deposits taken but not yet protected (and not returned) on a live tenancy.
+  const { data: depRows } = await supabase
+    .from("lease")
+    .select("deposit_amount, deposit_protected_date, deposit_returned_date, status")
+    .gt("deposit_amount", 0)
+    .is("deposit_protected_date", null)
+    .is("deposit_returned_date", null);
+  let unprotectedDeposits = 0;
+  let unprotectedDepositTotal = 0;
+  for (const r of depRows ?? []) {
+    const st = (r.status as string | null)?.toLowerCase() ?? "";
+    if (st === "ended" || st === "terminated" || st === "expired") continue;
+    unprotectedDeposits += 1;
+    unprotectedDepositTotal += Number(r.deposit_amount ?? 0);
   }
 
   // Rent bars: collected % per month for the last 6 months
@@ -187,6 +205,8 @@ export async function getDashboardData(now = new Date()): Promise<DashboardData>
     rentCollectedThisMonth,
     rentDueThisMonth,
     rentCollectedPct,
+    unprotectedDeposits,
+    unprotectedDepositTotal,
     arrearsTotal,
     arrearsTenants: arrearsTenantSet.size,
     rentBars: bars,

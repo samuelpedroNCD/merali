@@ -143,6 +143,20 @@ export default async function DashboardPage() {
           </Link>
         )}
 
+        {canFinance && d.unprotectedDeposits > 0 && (
+          <Link
+            href="/tenancies"
+            className="flex items-center gap-3 rounded-lg border border-[var(--warn)]/40 bg-[color-mix(in_oklch,var(--warn)_8%,transparent)] px-5 py-4 transition-colors hover:bg-[color-mix(in_oklch,var(--warn)_14%,transparent)]"
+          >
+            <AlertCircle strokeWidth={1.7} className="h-[20px] w-[20px] text-[var(--warn)]" />
+            <span className="flex-1 text-[14px] text-text">
+              <span className="font-display text-[18px] font-semibold text-[var(--warn)]">{d.unprotectedDeposits}</span>{" "}
+              deposit{d.unprotectedDeposits === 1 ? "" : "s"} ({gbp(d.unprotectedDepositTotal)}) recorded but not marked as protected.
+            </span>
+            <span className="text-[12.5px] font-semibold text-accent">Review tenancies →</span>
+          </Link>
+        )}
+
         {(canFinance || canProps) && (
           <div className={`grid grid-cols-1 gap-[18px] ${canFinance && canProps ? "lg:grid-cols-[1.6fr_1fr]" : ""}`}>
             {canFinance && (
