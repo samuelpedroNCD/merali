@@ -18,6 +18,7 @@ import type { PropertyRow } from "@/lib/data/properties";
 import type { PropertyRelated } from "@/lib/data/property-related";
 import { addUnit, autoGenerateUnits, deleteUnit } from "../unit-actions";
 import { PropertyMedia } from "./property-media";
+import { PropertyUtilities } from "./property-utilities";
 
 const TABS = [
   { key: "tenants", label: "Tenants" },
@@ -40,10 +41,12 @@ export function PropertyDetail({
   property: p,
   related,
   canEdit,
+  utilityTypes,
 }: {
   property: PropertyRow;
   related: PropertyRelated;
   canEdit: boolean;
+  utilityTypes: string[];
 }) {
   const [tab, setTab] = useState("tenants");
   const landlordName = p.landlord?.full_name;
@@ -109,6 +112,10 @@ export function PropertyDetail({
 
         {p.configuration !== "Unit" && (
           <UnitsSection propertyId={p.id} units={related.units} />
+        )}
+
+        {p.configuration !== "Unit" && (
+          <PropertyUtilities propertyId={p.id} utilities={related.utilities} utilityTypes={utilityTypes} canEdit={canEdit} />
         )}
 
         <PropertyMedia

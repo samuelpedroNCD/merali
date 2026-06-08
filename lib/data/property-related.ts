@@ -7,6 +7,7 @@ export type PropertyRelated = {
   transactions: { id: string; date: string | null; type: string | null; category: string | null; gross: number }[];
   keys: { id: string; key_code: string | null; status: string | null; held_by_type: string | null }[];
   units: { id: string; unit_number: string | null; status: string | null }[];
+  utilities: { id: string; utility_type: string | null; supplier: string | null; meter_location: string | null; stop_tap_location: string | null; serial_number: string | null; notes: string | null }[];
   parent: { id: string; address: string | null } | null;
   photos: { id: string; url: string; caption: string | null }[];
   inspections: { id: string; type: string; date: string | null; inspector: string | null; notes: string | null; photos: string[] }[];
@@ -16,7 +17,7 @@ export type PropertyRelated = {
 export async function getPropertyRelated(propertyId: string): Promise<PropertyRelated> {
   const supabase = await createClient();
 
-  const [leases, docs, maint, txns, keys, units, photos, inspections, self] = await Promise.all([
+  const [leases, docs, maint, txns, keys, units, photos, inspections, self, utils] = await Promise.all([
     supabase
       .from("lease")
       .select("id, start_date, end_date, status, tenant:tenant_id(full_name)")
@@ -63,6 +64,11 @@ export async function getPropertyRelated(propertyId: string): Promise<PropertyRe
       .select("parent:parent_property_id(id, address, internal_code)")
       .eq("id", propertyId)
       .maybeSingle(),
+    supabase
+      .from("utility")
+      .select("id, utility_type, supplier, meter_location, stop_tap_location, serial_number, notes")
+      .eq("property_id", propertyId)
+      .order("created_at", { ascending: true }),
   ]);
 
   const parentRel = (self.data as { parent?: unknown } | null)?.parent;
@@ -116,6 +122,7 @@ export async function getPropertyRelated(propertyId: string): Promise<PropertyRe
       status: (u.status as string) ?? null,
     })),
     parent,
+    utilities: (utils.data ?? []) as PropertyRelated["utilities"],
     photos: (photos.data ?? []).map((ph) => ({
       id: ph.id as string,
       url: ph.url as string,
