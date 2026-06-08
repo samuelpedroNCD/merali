@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireUser, can } from "@/lib/auth";
-import { getLease, getLeaseSchedule } from "@/lib/data/leases";
+import { getLease, getLeaseSchedule, getLeaseTransactions } from "@/lib/data/leases";
 import { LeaseDetail } from "./lease-detail";
 
 export default async function LeaseDetailPage({
@@ -10,7 +10,11 @@ export default async function LeaseDetailPage({
 }) {
   const user = await requireUser();
   const { id } = await params;
-  const [lease, schedule] = await Promise.all([getLease(id), getLeaseSchedule(id)]);
+  const [lease, schedule, ledger] = await Promise.all([
+    getLease(id),
+    getLeaseSchedule(id),
+    getLeaseTransactions(id),
+  ]);
   if (!lease) notFound();
-  return <LeaseDetail lease={lease} schedule={schedule} canCreate={can(user, "leases", "create")} />;
+  return <LeaseDetail lease={lease} schedule={schedule} ledger={ledger} canCreate={can(user, "leases", "create")} />;
 }

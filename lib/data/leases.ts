@@ -67,6 +67,39 @@ export async function getLease(id: string): Promise<LeaseRow | null> {
   return data ? mapLease(data as Record<string, unknown>) : null;
 }
 
+export type LeaseTxnRow = {
+  id: string;
+  txn_date: string | null;
+  type: string | null;
+  category: string | null;
+  amount_gross: number | null;
+  status: string | null;
+  nominal: string | null;
+};
+
+/** Transactions linked to a tenancy (its ledger). */
+export async function getLeaseTransactions(id: string): Promise<LeaseTxnRow[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("transaction")
+    .select("id, txn_date, type, category, amount_gross, status, nominal:nominal_code_id(code, name)")
+    .eq("lease_id", id)
+    .order("txn_date", { ascending: false })
+    .limit(500);
+  return (data ?? []).map((t) => {
+    const n = (Array.isArray(t.nominal) ? t.nominal[0] : t.nominal) as { code?: string; name?: string } | null;
+    return {
+      id: t.id as string,
+      txn_date: (t.txn_date as string) ?? null,
+      type: (t.type as string) ?? null,
+      category: (t.category as string) ?? null,
+      amount_gross: t.amount_gross != null ? Number(t.amount_gross) : null,
+      status: (t.status as string) ?? null,
+      nominal: n ? `${n.code} ${n.name}` : null,
+    };
+  });
+}
+
 export async function getLeaseSchedule(id: string): Promise<LeaseScheduleRow[]> {
   const supabase = await createClient();
   const { data } = await supabase

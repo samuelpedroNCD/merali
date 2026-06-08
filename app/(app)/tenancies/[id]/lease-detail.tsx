@@ -10,7 +10,7 @@ import { Badge, type Tone } from "@/components/ui/badge";
 import { Select } from "@/components/ui/input";
 import { leaseStatusTone as leaseTone } from "@/lib/badge-tones";
 import { gbp, fmtDate } from "@/lib/utils";
-import type { LeaseRow, LeaseScheduleRow } from "@/lib/data/leases";
+import type { LeaseRow, LeaseScheduleRow, LeaseTxnRow } from "@/lib/data/leases";
 
 const schedTone = (r: LeaseScheduleRow): Tone => {
   if (r.invoice_status === "Paid") return "good";
@@ -28,10 +28,12 @@ const effStatus = (r: LeaseScheduleRow) => {
 export function LeaseDetail({
   lease: l,
   schedule,
+  ledger,
   canCreate,
 }: {
   lease: LeaseRow;
   schedule: LeaseScheduleRow[];
+  ledger: LeaseTxnRow[];
   canCreate: boolean;
 }) {
   const [yearFilter, setYearFilter] = useState("");
@@ -128,6 +130,28 @@ export function LeaseDetail({
                 <span className="text-right text-text-2">{gbp(Number(r.amount_due))}</span>
                 <span className="text-right text-text-2">{gbp(Number(r.amount_collected))}</span>
                 <span><Badge tone={schedTone(r)} dot>{effStatus(r)}</Badge></span>
+              </div>
+            ))
+          )}
+        </Card>
+
+        {/* Ledger — transactions linked to this tenancy */}
+        <Card className="p-0">
+          <div className="px-6 py-4 text-[16px] font-semibold text-text">Ledger ({ledger.length})</div>
+          <div className="grid grid-cols-[0.9fr_0.7fr_1.3fr_1fr_0.8fr_0.8fr] gap-3 border-y border-border px-6 py-3 text-[11.5px] font-semibold uppercase tracking-[0.05em] text-muted">
+            <span>Date</span><span>Type</span><span>Nominal</span><span>Category</span><span className="text-right">Amount</span><span>Status</span>
+          </div>
+          {ledger.length === 0 ? (
+            <p className="px-6 py-8 text-center text-[13px] text-muted">No transactions linked to this tenancy yet.</p>
+          ) : (
+            ledger.map((t) => (
+              <div key={t.id} className="grid grid-cols-[0.9fr_0.7fr_1.3fr_1fr_0.8fr_0.8fr] items-center gap-3 border-b border-border px-6 py-[10px] text-[13.5px] last:border-b-0">
+                <span className="text-text-2">{t.txn_date ? fmtDate(t.txn_date) : "—"}</span>
+                <span className={t.type === "Income" ? "text-[var(--good)]" : "text-[var(--bad)]"}>{t.type || "—"}</span>
+                <span className="truncate text-text-2">{t.nominal || "—"}</span>
+                <span className="truncate text-text-2">{t.category || "—"}</span>
+                <span className="text-right font-semibold text-text">{t.amount_gross != null ? gbp(t.amount_gross) : "—"}</span>
+                <span className="text-text-2">{t.status || "—"}</span>
               </div>
             ))
           )}

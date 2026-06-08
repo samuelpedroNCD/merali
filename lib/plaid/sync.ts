@@ -112,7 +112,8 @@ export async function syncAll(supabase: SupabaseClient) {
       removed: total.removed + r.removed,
     };
   }
-  // Auto-link confident rent matches; leave the rest for manual review.
-  const autoReconciled = await autoReconcile(supabase);
+  // Manual allocation first: auto-matching is OFF unless explicitly enabled
+  // (set AUTO_RECONCILE=true). Imported bank lines wait in the reconcile queue.
+  const autoReconciled = process.env.AUTO_RECONCILE === "true" ? await autoReconcile(supabase) : 0;
   return { ...total, autoReconciled };
 }
