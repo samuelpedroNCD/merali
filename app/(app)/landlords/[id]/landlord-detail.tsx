@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Pencil, Mail, Phone, ExternalLink, Building2 } from "lucide-react";
+import { ArrowLeft, Pencil, ExternalLink, Building2, Landmark } from "lucide-react";
 import { Topbar } from "@/components/shell/topbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,8 +18,9 @@ export function LandlordDetail({
   landlord: LandlordRow;
   related: LandlordRelated;
 }) {
-  const contactEmail = l.email || l.main_contact_email;
-  const contactPhone = l.phone || l.main_contact_phone;
+  const isTrust = !!l.landlord_type && l.landlord_type.toLowerCase().includes("trust");
+  const isIndividual = !l.landlord_type || l.landlord_type.toLowerCase() === "individual";
+  const hasBank = l.bank_account_name || l.bank_account_number || l.bank_sort_code;
 
   return (
     <>
@@ -44,10 +45,6 @@ export function LandlordDetail({
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {l.landlord_type && <Badge tone="muted">{l.landlord_type}</Badge>}
               {l.vat_number && <Badge tone="muted">VAT: {l.vat_number}</Badge>}
-            </div>
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-[13px] text-text-2">
-              {contactEmail && <a href={`mailto:${contactEmail}`} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 hover:bg-surface-2/60"><Mail strokeWidth={1.6} className="h-[14px] w-[14px]" /> {contactEmail}</a>}
-              {contactPhone && <a href={`tel:${contactPhone}`} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 hover:bg-surface-2/60"><Phone strokeWidth={1.6} className="h-[14px] w-[14px]" /> {contactPhone}</a>}
             </div>
           </div>
         </div>
@@ -79,18 +76,31 @@ export function LandlordDetail({
           )}
         </Card>
 
-        {/* Company/Trust + Documents */}
+        {/* Entity + Bank + Documents */}
         <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-2">
+          {!isIndividual && (
+            <Card>
+              <h3 className="mb-3 text-[16px] font-semibold text-text">{isTrust ? "Trust details" : "Company details"}</h3>
+              <dl className="grid grid-cols-2 gap-y-2 text-[13.5px]">
+                {isTrust ? <Info label="Trustee" value={l.trustee_name} /> : <Info label="Director" value={l.director_name} />}
+                <Info label="VAT number" value={l.vat_number} />
+                <Info label="Registration date" value={l.company_registration_date ? fmtDate(l.company_registration_date) : null} />
+              </dl>
+            </Card>
+          )}
           <Card>
-            <h3 className="mb-3 text-[16px] font-semibold text-text">Company / trust details</h3>
-            <dl className="grid grid-cols-2 gap-y-2 text-[13.5px]">
-              <Info label="Main contact" value={l.main_contact_name} />
-              <Info label="Main contact phone" value={l.main_contact_phone} />
-              <Info label="Director" value={l.director_name} />
-              <Info label="Director email" value={l.director_email} />
-              <Info label="Trustee" value={l.trustee_name} />
-              <Info label="Company reg. date" value={l.company_registration_date ? fmtDate(l.company_registration_date) : null} />
-            </dl>
+            <h3 className="mb-3 flex items-center gap-2 text-[16px] font-semibold text-text"><Landmark strokeWidth={1.6} className="h-[18px] w-[18px] text-accent" /> Bank details</h3>
+            {hasBank ? (
+              <dl className="grid grid-cols-2 gap-y-2 text-[13.5px]">
+                <Info label="Account name" value={l.bank_account_name} />
+                <Info label="Bank" value={l.bank_name} />
+                <Info label="Sort code" value={l.bank_sort_code} />
+                <Info label="Account number" value={l.bank_account_number} />
+                <Info label="Reference" value={l.bank_reference} />
+              </dl>
+            ) : (
+              <p className="text-[13px] text-muted">No bank details recorded.</p>
+            )}
           </Card>
           <Card className="p-0">
             <div className="px-5 py-4 text-[16px] font-semibold text-text">Documents ({related.documents.length})</div>

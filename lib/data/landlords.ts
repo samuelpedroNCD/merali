@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 export type LandlordRow = {
   id: string;
   landlord_type: string | null;
+  entity_name: string | null;
   first_name: string | null;
   last_name: string | null;
   full_name: string | null;
@@ -20,6 +21,11 @@ export type LandlordRow = {
   trustee_name: string | null;
   trustee_email: string | null;
   trustee_phone: string | null;
+  bank_account_name: string | null;
+  bank_sort_code: string | null;
+  bank_account_number: string | null;
+  bank_name: string | null;
+  bank_reference: string | null;
   bio: string | null;
   notes: string | null;
   property_count?: number;

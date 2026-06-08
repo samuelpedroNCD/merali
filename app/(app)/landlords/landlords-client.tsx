@@ -20,31 +20,42 @@ import { createLandlord, updateLandlord, deleteLandlord } from "./actions";
 const TABS = [
   { key: "identity", label: "Identity" },
   { key: "company", label: "Company / Trust" },
+  { key: "bank", label: "Bank details" },
   { key: "notes", label: "Notes" },
 ];
 
 type Perms = { create: boolean; edit: boolean; remove: boolean };
 type Form = Record<string, string>;
 
+const isIndividualType = (t?: string) => !t || t.toLowerCase() === "individual";
+const isTrustType = (t?: string) => !!t && t.toLowerCase().includes("trust");
+
 function toForm(l?: LandlordRow | null): Form {
   return {
     landlord_type: l?.landlord_type ?? "",
+    entity_name: l?.entity_name ?? "",
     first_name: l?.first_name ?? "",
     last_name: l?.last_name ?? "",
+    // Contact fields are no longer shown but kept so editing preserves any old data.
     email: l?.email ?? "",
     phone: l?.phone ?? "",
     preferred_contact: l?.preferred_contact ?? "",
-    vat_number: l?.vat_number ?? "",
-    company_registration_date: l?.company_registration_date ?? "",
     main_contact_name: l?.main_contact_name ?? "",
     main_contact_email: l?.main_contact_email ?? "",
     main_contact_phone: l?.main_contact_phone ?? "",
-    director_name: l?.director_name ?? "",
     director_email: l?.director_email ?? "",
     director_phone: l?.director_phone ?? "",
-    trustee_name: l?.trustee_name ?? "",
     trustee_email: l?.trustee_email ?? "",
     trustee_phone: l?.trustee_phone ?? "",
+    vat_number: l?.vat_number ?? "",
+    company_registration_date: l?.company_registration_date ?? "",
+    director_name: l?.director_name ?? "",
+    trustee_name: l?.trustee_name ?? "",
+    bank_account_name: l?.bank_account_name ?? "",
+    bank_sort_code: l?.bank_sort_code ?? "",
+    bank_account_number: l?.bank_account_number ?? "",
+    bank_name: l?.bank_name ?? "",
+    bank_reference: l?.bank_reference ?? "",
     notes: l?.notes ?? "",
   };
 }
@@ -121,7 +132,8 @@ export function LandlordsClient({
       (l.email ?? "").toLowerCase().includes(s)
     );
   });
-  const isCompany = form.landlord_type && form.landlord_type !== "Individual";
+  const individual = isIndividualType(form.landlord_type);
+  const trust = isTrustType(form.landlord_type);
 
   return (
     <>
@@ -148,10 +160,9 @@ export function LandlordsClient({
           onChange={(e) => setQuery(e.target.value)}
         />
         <Card className="overflow-x-auto p-0">
-          <div className="grid min-w-[680px] grid-cols-[1.6fr_1.6fr_1fr_0.7fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">
+          <div className="grid min-w-[680px] grid-cols-[2fr_1.2fr_0.7fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">
             <span>Name</span>
-            <span>Email</span>
-            <span>Phone</span>
+            <span>Type</span>
             <span>Properties</span>
             <span className="text-right">Action</span>
           </div>
@@ -166,11 +177,10 @@ export function LandlordsClient({
           {filtered.map((l) => (
             <div
               key={l.id}
-              className="grid min-w-[680px] grid-cols-[1.6fr_1.6fr_1fr_0.7fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] last:border-b-0"
+              className="grid min-w-[680px] grid-cols-[2fr_1.2fr_0.7fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] last:border-b-0"
             >
               <Link href={`/landlords/${l.id}`} className="truncate font-medium text-text hover:text-accent">{l.full_name || "—"}</Link>
-              <span className="truncate text-text-2">{l.email || "—"}</span>
-              <span className="text-text-2">{l.phone || "—"}</span>
+              <span className="truncate text-text-2">{l.landlord_type || "—"}</span>
               <span><Badge tone="muted">{l.property_count ?? 0}</Badge></span>
               <span className="flex justify-end gap-1">
                 {perms.edit && (
@@ -209,30 +219,46 @@ export function LandlordsClient({
         {tab === "identity" && (
           <div className="grid grid-cols-2 gap-5">
             <SelectField label="Landlord type" value={form.landlord_type} onChange={(v) => set("landlord_type", v)} options={options.landlord_type} className="col-span-2" />
-            <Field label="First name"><Input value={form.first_name} onChange={(e) => set("first_name", e.target.value)} placeholder="Or company name" /></Field>
-            <Field label="Last name"><Input value={form.last_name} onChange={(e) => set("last_name", e.target.value)} /></Field>
-            <Field label="Email"><Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} /></Field>
-            <Field label="Phone"><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} /></Field>
-            <SelectField label="Preferred contact method" value={form.preferred_contact} onChange={(v) => set("preferred_contact", v)} options={options.preferred_contact} className="col-span-2" />
+            {individual ? (
+              <>
+                <Field label="First name"><Input value={form.first_name} onChange={(e) => set("first_name", e.target.value)} /></Field>
+                <Field label="Last name"><Input value={form.last_name} onChange={(e) => set("last_name", e.target.value)} /></Field>
+              </>
+            ) : (
+              <Field label={trust ? "Trust name" : "Company name"} className="col-span-2">
+                <Input value={form.entity_name} onChange={(e) => set("entity_name", e.target.value)} placeholder={trust ? "e.g. The Smith Family Trust" : "e.g. Acme Properties Ltd"} />
+              </Field>
+            )}
+            <p className="col-span-2 text-[12.5px] text-muted">Contact for all landlords is the office, so contact details aren&apos;t needed here.</p>
           </div>
         )}
         {tab === "company" && (
           <div className="grid grid-cols-2 gap-5">
-            {!isCompany && (
+            {individual ? (
               <p className="col-span-2 rounded-md border border-dashed border-border px-4 py-3 text-[13px] text-muted">
-                These fields apply to Limited Company / Trust landlords.
+                These fields apply to Company / Trust landlords. Set the landlord type to a company or trust to use them.
               </p>
+            ) : (
+              <>
+                <Field label="VAT number"><Input value={form.vat_number} onChange={(e) => set("vat_number", e.target.value)} /></Field>
+                <Field label="Registration date"><Input type="date" value={form.company_registration_date} onChange={(e) => set("company_registration_date", e.target.value)} /></Field>
+                {trust ? (
+                  <Field label="Trustee name" className="col-span-2"><Input value={form.trustee_name} onChange={(e) => set("trustee_name", e.target.value)} /></Field>
+                ) : (
+                  <Field label="Director name" className="col-span-2"><Input value={form.director_name} onChange={(e) => set("director_name", e.target.value)} /></Field>
+                )}
+              </>
             )}
-            <Field label="VAT number"><Input value={form.vat_number} onChange={(e) => set("vat_number", e.target.value)} /></Field>
-            <Field label="Company registration date"><Input type="date" value={form.company_registration_date} onChange={(e) => set("company_registration_date", e.target.value)} /></Field>
-            <Field label="Main contact name"><Input value={form.main_contact_name} onChange={(e) => set("main_contact_name", e.target.value)} /></Field>
-            <Field label="Main contact email"><Input type="email" value={form.main_contact_email} onChange={(e) => set("main_contact_email", e.target.value)} /></Field>
-            <Field label="Main contact phone"><Input value={form.main_contact_phone} onChange={(e) => set("main_contact_phone", e.target.value)} /></Field>
-            <div />
-            <Field label="Director name"><Input value={form.director_name} onChange={(e) => set("director_name", e.target.value)} /></Field>
-            <Field label="Director email"><Input type="email" value={form.director_email} onChange={(e) => set("director_email", e.target.value)} /></Field>
-            <Field label="Trustee name"><Input value={form.trustee_name} onChange={(e) => set("trustee_name", e.target.value)} /></Field>
-            <Field label="Trustee email"><Input type="email" value={form.trustee_email} onChange={(e) => set("trustee_email", e.target.value)} /></Field>
+          </div>
+        )}
+        {tab === "bank" && (
+          <div className="grid grid-cols-2 gap-5">
+            <p className="col-span-2 text-[12.5px] text-muted">Stored once per landlord — used when raising invoices/statements.</p>
+            <Field label="Account name" className="col-span-2"><Input value={form.bank_account_name} onChange={(e) => set("bank_account_name", e.target.value)} /></Field>
+            <Field label="Sort code"><Input value={form.bank_sort_code} onChange={(e) => set("bank_sort_code", e.target.value)} placeholder="00-00-00" /></Field>
+            <Field label="Account number"><Input value={form.bank_account_number} onChange={(e) => set("bank_account_number", e.target.value)} /></Field>
+            <Field label="Bank name"><Input value={form.bank_name} onChange={(e) => set("bank_name", e.target.value)} /></Field>
+            <Field label="Payment reference"><Input value={form.bank_reference} onChange={(e) => set("bank_reference", e.target.value)} /></Field>
           </div>
         )}
         {tab === "notes" && (

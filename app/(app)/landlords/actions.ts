@@ -10,6 +10,7 @@ const s = (v: unknown) => (v === "" || v === undefined ? null : v);
 
 const Schema = z.object({
   landlord_type: z.preprocess(s, z.string().nullable()),
+  entity_name: z.preprocess(s, z.string().nullable()),
   first_name: z.preprocess(s, z.string().nullable()),
   last_name: z.preprocess(s, z.string().nullable()),
   email: z.preprocess(s, z.string().nullable()),
@@ -26,18 +27,24 @@ const Schema = z.object({
   trustee_name: z.preprocess(s, z.string().nullable()),
   trustee_email: z.preprocess(s, z.string().nullable()),
   trustee_phone: z.preprocess(s, z.string().nullable()),
+  bank_account_name: z.preprocess(s, z.string().nullable()),
+  bank_sort_code: z.preprocess(s, z.string().nullable()),
+  bank_account_number: z.preprocess(s, z.string().nullable()),
+  bank_name: z.preprocess(s, z.string().nullable()),
+  bank_reference: z.preprocess(s, z.string().nullable()),
   notes: z.preprocess(s, z.string().nullable()),
 });
 
 export type ActionResult = { ok: true; id?: string } | { ok: false; error: string };
 
+const isIndividual = (t?: string | null) => !t || t.toLowerCase() === "individual";
+
 function withFullName(data: z.infer<typeof Schema>) {
-  const full =
-    [data.first_name, data.last_name].filter(Boolean).join(" ").trim() ||
-    data.main_contact_name ||
-    data.email ||
-    "Unnamed landlord";
-  return { ...data, full_name: full };
+  // Company/trust landlords have a single entity name; individuals use first+last.
+  const full = isIndividual(data.landlord_type)
+    ? [data.first_name, data.last_name].filter(Boolean).join(" ").trim()
+    : data.entity_name?.trim() || "";
+  return { ...data, full_name: full || data.entity_name || "Unnamed landlord" };
 }
 
 export async function createLandlord(input: unknown): Promise<ActionResult> {
