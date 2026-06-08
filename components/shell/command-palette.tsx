@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Search, Building2, Users, Briefcase, Truck, ArrowRight, CornerDownLeft } from "lucide-react";
+import { Search, Building2, Users, Briefcase, Truck, KeyRound, ArrowRight, CornerDownLeft } from "lucide-react";
 import type { SearchHit } from "@/app/api/search/route";
 
 const QUICK: { label: string; href: string }[] = [
@@ -22,6 +22,7 @@ const typeIcon = {
   Tenant: Users,
   Landlord: Briefcase,
   Supplier: Truck,
+  Key: KeyRound,
 } as const;
 
 export function CommandPalette() {

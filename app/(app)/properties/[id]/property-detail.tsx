@@ -78,6 +78,14 @@ export function PropertyDetail({
               {p.class && <Badge tone="muted">Class: {p.class}</Badge>}
               {p.status && <Badge tone={statusTone(p.status)} dot>{p.status}</Badge>}
             </div>
+            {related.parent && (
+              <div className="mt-3 text-[13px] text-text-2">
+                <span className="text-muted">Part of </span>
+                <Link href={`/properties/${related.parent.id}`} className="inline-flex items-center gap-1 font-medium text-accent hover:underline">
+                  <Building2 strokeWidth={1.6} className="h-[14px] w-[14px]" /> {related.parent.address || "building"}
+                </Link>
+              </div>
+            )}
             {landlordName && (
               <div className="mt-4 flex items-center gap-2 text-[13px] text-text-2">
                 <span className="text-muted">Landlord</span>

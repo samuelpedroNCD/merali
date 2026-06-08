@@ -7,6 +7,7 @@ export type PropertyRelated = {
   transactions: { id: string; date: string | null; type: string | null; category: string | null; gross: number }[];
   keys: { id: string; key_code: string | null; status: string | null; held_by_type: string | null }[];
   units: { id: string; unit_number: string | null; status: string | null }[];
+  parent: { id: string; address: string | null } | null;
   photos: { id: string; url: string; caption: string | null }[];
   inspections: { id: string; type: string; date: string | null; inspector: string | null; notes: string | null; photos: string[] }[];
 };
@@ -15,7 +16,7 @@ export type PropertyRelated = {
 export async function getPropertyRelated(propertyId: string): Promise<PropertyRelated> {
   const supabase = await createClient();
 
-  const [leases, docs, maint, txns, keys, units, photos, inspections] = await Promise.all([
+  const [leases, docs, maint, txns, keys, units, photos, inspections, self] = await Promise.all([
     supabase
       .from("lease")
       .select("id, start_date, end_date, status, tenant:tenant_id(full_name)")
@@ -57,7 +58,19 @@ export async function getPropertyRelated(propertyId: string): Promise<PropertyRe
       .select("id, type, inspection_date, notes, photos, inspector:inspector_id(full_name)")
       .eq("property_id", propertyId)
       .order("inspection_date", { ascending: false }),
+    supabase
+      .from("property")
+      .select("parent:parent_property_id(id, address, internal_code)")
+      .eq("id", propertyId)
+      .maybeSingle(),
   ]);
+
+  const parentRel = (self.data as { parent?: unknown } | null)?.parent;
+  const parentObj = (Array.isArray(parentRel) ? parentRel[0] : parentRel) as
+    | { id: string; address: string | null; internal_code: string | null }
+    | null
+    | undefined;
+  const parent = parentObj ? { id: parentObj.id, address: parentObj.address || parentObj.internal_code } : null;
 
   const name = (rel: unknown) => {
     const r = rel as { full_name?: string } | { full_name?: string }[] | null;
@@ -102,6 +115,7 @@ export async function getPropertyRelated(propertyId: string): Promise<PropertyRe
       unit_number: (u.internal_code as string) ?? null,
       status: (u.status as string) ?? null,
     })),
+    parent,
     photos: (photos.data ?? []).map((ph) => ({
       id: ph.id as string,
       url: ph.url as string,
