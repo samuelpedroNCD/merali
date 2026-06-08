@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { signIn } from "./actions";
 
 export function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -18,25 +17,17 @@ export function LoginForm() {
     setLoading(true);
     setError(null);
 
+    // Sign in server-side so the session cookie is set via Set-Cookie and is
+    // reliably present on the next navigation (fixes the prod login bounce).
     const form = new FormData(e.currentTarget);
-    const email = String(form.get("email") ?? "").trim();
-    const password = String(form.get("password") ?? "");
+    form.set("next", params.get("next") || "/dashboard");
 
-    const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (signInError) {
-      setError(signInError.message || "Unable to sign in. Check your details.");
+    const res = await signIn(form);
+    // On success the server action redirects; we only get here on error.
+    if (res?.error) {
+      setError(res.error);
       setLoading(false);
-      return;
     }
-
-    const next = params.get("next") || "/dashboard";
-    router.push(next);
-    router.refresh();
   }
 
   return (
