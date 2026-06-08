@@ -16,7 +16,27 @@ export type LeaseRow = {
   notes: string | null;
   property?: { id: string; address: string | null } | null;
   tenant?: { id: string; full_name: string | null } | null;
+  tenants: { id: string; name: string | null; is_lead: boolean }[];
 };
+
+const SELECT =
+  "*, property:property_id(id, address), tenant:tenant_id(id, full_name), lease_tenant(is_lead, tenant:tenant_id(id, full_name))";
+
+function mapLease(row: Record<string, unknown>): LeaseRow {
+  const lt = (row.lease_tenant ?? []) as {
+    is_lead: boolean;
+    tenant: { id: string; full_name: string | null } | { id: string; full_name: string | null }[] | null;
+  }[];
+  const tenants = lt
+    .map((x) => {
+      const t = Array.isArray(x.tenant) ? x.tenant[0] : x.tenant;
+      return t ? { id: t.id, name: t.full_name, is_lead: x.is_lead } : null;
+    })
+    .filter(Boolean) as LeaseRow["tenants"];
+  const { lease_tenant, ...rest } = row;
+  void lease_tenant;
+  return { ...(rest as unknown as LeaseRow), tenants };
+}
 
 export type LeaseScheduleRow = {
   id: string;
@@ -30,10 +50,10 @@ export async function getLease(id: string): Promise<LeaseRow | null> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("lease")
-    .select("*, property:property_id(id, address), tenant:tenant_id(id, full_name)")
+    .select(SELECT)
     .eq("id", id)
     .maybeSingle();
-  return (data as unknown as LeaseRow) ?? null;
+  return data ? mapLease(data as Record<string, unknown>) : null;
 }
 
 export async function getLeaseSchedule(id: string): Promise<LeaseScheduleRow[]> {
@@ -50,11 +70,9 @@ export async function listLeases(): Promise<LeaseRow[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("lease")
-    .select(
-      "*, property:property_id(id, address), tenant:tenant_id(id, full_name)",
-    )
+    .select(SELECT)
     .order("created_at", { ascending: false });
-  return (data ?? []) as unknown as LeaseRow[];
+  return (data ?? []).map((r) => mapLease(r as Record<string, unknown>));
 }
 
 /** Properties for lease selectors (label = address). */

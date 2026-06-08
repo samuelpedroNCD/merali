@@ -26,7 +26,6 @@ function toForm(l?: LeaseRow | null): Form {
   return {
     property_id: l?.property_id ?? "",
     unit_id: l?.unit_id ?? "",
-    tenant_id: l?.tenant_id ?? "",
     tenancy_code: l?.tenancy_code ?? "",
     start_date: l?.start_date ?? "",
     end_date: l?.end_date ?? "",
@@ -62,15 +61,31 @@ export function TenanciesClient({
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<LeaseRow | null>(null);
   const [form, setForm] = useState<Form>(toForm());
+  const [tenantIds, setTenantIds] = useState<string[]>([]);
+  const [lead, setLead] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
+  function leaseTenants(l?: LeaseRow | null) {
+    const ts = l?.tenants ?? [];
+    return { ids: ts.map((t) => t.id), lead: ts.find((t) => t.is_lead)?.id ?? ts[0]?.id ?? "" };
+  }
+  function toggleTenant(id: string) {
+    setTenantIds((cur) => {
+      const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+      setLead((ld) => (next.includes(ld) ? ld : next[0] ?? ""));
+      return next;
+    });
+  }
+
   function openCreate() {
-    setEditing(null); setForm(toForm()); setError(null); setOpen(true);
+    setEditing(null); setForm(toForm()); setTenantIds([]); setLead(""); setError(null); setOpen(true);
   }
   function openEdit(l: LeaseRow) {
-    setEditing(l); setForm(toForm(l)); setError(null); setOpen(true);
+    setEditing(l); setForm(toForm(l));
+    const { ids, lead } = leaseTenants(l); setTenantIds(ids); setLead(lead);
+    setError(null); setOpen(true);
   }
   function openRenew(l: LeaseRow) {
     // New lease pre-filled from the old one: dates rolled forward 12 months.
@@ -88,6 +103,7 @@ export function TenanciesClient({
       renewal_date: "",
       status: "Active",
     });
+    const { ids, lead } = leaseTenants(l); setTenantIds(ids); setLead(lead);
     setError(null);
     setOpen(true);
   }
@@ -103,8 +119,9 @@ export function TenanciesClient({
   }, [editId, renewId]);
   function save() {
     setError(null);
+    const payload = { ...form, tenant_ids: tenantIds, lead_tenant_id: lead };
     startTransition(async () => {
-      const res = editing ? await updateLease(editing.id, form) : await createLease(form);
+      const res = editing ? await updateLease(editing.id, payload) : await createLease(payload);
       if (!res.ok) return setError(res.error);
       setOpen(false); router.refresh(); toast.success("Lease saved.");
     });
@@ -148,7 +165,10 @@ export function TenanciesClient({
           )}
           {leases.map((l) => (
             <div key={l.id} className="grid min-w-[840px] grid-cols-[1.3fr_1.6fr_0.9fr_1fr_1fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] last:border-b-0">
-              <Link href={`/tenancies/${l.id}`} className="truncate font-medium text-text hover:text-accent">{l.tenant?.full_name || "—"}</Link>
+              <Link href={`/tenancies/${l.id}`} className="truncate font-medium text-text hover:text-accent">
+                {l.tenants.length ? l.tenants.find((t) => t.is_lead)?.name ?? l.tenants[0].name : l.tenant?.full_name || "—"}
+                {l.tenants.length > 1 ? ` +${l.tenants.length - 1}` : ""}
+              </Link>
               <span className="truncate text-text-2">{l.property?.address || "—"}</span>
               <span className="font-display text-[16px] font-semibold text-text">{l.rent_amount != null ? gbp(l.rent_amount) : "—"}</span>
               <span className="text-text-2">{l.start_date ? fmtDate(l.start_date) : "—"}</span>
@@ -189,7 +209,28 @@ export function TenanciesClient({
       >
         <div className="grid grid-cols-2 gap-5">
           <SelectField label="Property" value={form.property_id} onChange={(v) => set("property_id", v)} options={properties} className="col-span-2" placeholder="Choose a property…" />
-          <SelectField label="Tenant" value={form.tenant_id} onChange={(v) => set("tenant_id", v)} options={tenants} className="col-span-2" placeholder="Choose a tenant…" />
+          <div className="col-span-2">
+            <p className="mb-2 text-[12.5px] font-semibold text-text">Tenants <span className="font-normal text-muted">— one or more; the lead receives statements</span></p>
+            <div className="max-h-[200px] overflow-y-auto thin-scroll rounded-md border border-border">
+              {tenants.length === 0 && <p className="px-3 py-3 text-[13px] text-muted">No tenants yet — add tenants first.</p>}
+              {tenants.map((t) => {
+                const checked = tenantIds.includes(t.value);
+                return (
+                  <div key={t.value} className="flex items-center gap-3 border-b border-border px-3 py-2 last:border-b-0">
+                    <label className="flex flex-1 cursor-pointer items-center gap-2 text-[13.5px] text-text">
+                      <input type="checkbox" checked={checked} onChange={() => toggleTenant(t.value)} className="h-4 w-4 accent-[var(--gold)]" />
+                      {t.label}
+                    </label>
+                    {checked && (
+                      <label className="flex cursor-pointer items-center gap-1 text-[12px] text-muted">
+                        <input type="radio" name="lead-tenant" checked={lead === t.value} onChange={() => setLead(t.value)} className="accent-[var(--gold)]" /> Lead
+                      </label>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
           <Field label="Lease start"><Input type="date" value={form.start_date} onChange={(e) => set("start_date", e.target.value)} /></Field>
           <Field label="Lease end"><Input type="date" value={form.end_date} onChange={(e) => set("end_date", e.target.value)} /></Field>
           <Field label="Agreed rent (£)"><Input type="number" step="0.01" min={0} value={form.rent_amount} onChange={(e) => set("rent_amount", e.target.value)} /></Field>

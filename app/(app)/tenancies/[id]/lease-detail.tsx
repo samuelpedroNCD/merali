@@ -76,17 +76,18 @@ export function LeaseDetail({
         <div className="flex items-start justify-between gap-6">
           <div>
             <h1 className="font-display text-[30px] font-semibold tracking-[-0.01em] text-text">
-              {l.tenant?.full_name || "Tenancy"}
+              {l.tenancy_code || l.tenant?.full_name || "Tenancy"}
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-2 text-[13px] text-text-2">
               <Link href={l.property ? `/properties/${l.property.id}` : "#"} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 hover:bg-surface-2/60">
                 <Building2 strokeWidth={1.6} className="h-[14px] w-[14px]" /> {l.property?.address || "—"}
               </Link>
-              <Link href={l.tenant ? `/tenants/${l.tenant.id}` : "#"} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 hover:bg-surface-2/60">
-                <UserRound strokeWidth={1.6} className="h-[14px] w-[14px]" /> {l.tenant?.full_name || "—"}
-              </Link>
+              {(l.tenants.length ? l.tenants : l.tenant ? [{ id: l.tenant.id, name: l.tenant.full_name, is_lead: true }] : []).map((t) => (
+                <Link key={t.id} href={`/tenants/${t.id}`} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 hover:bg-surface-2/60">
+                  <UserRound strokeWidth={1.6} className="h-[14px] w-[14px]" /> {t.name || "—"}{t.is_lead && l.tenants.length > 1 ? <span className="text-[11px] text-muted">(lead)</span> : null}
+                </Link>
+              ))}
               {l.status && <Badge tone={leaseTone(l.status)} dot>{l.status}</Badge>}
-              {l.tenancy_code && <Badge tone="muted">{l.tenancy_code}</Badge>}
             </div>
             <p className="mt-3 text-[13px] text-muted">
               {l.start_date ? fmtDate(l.start_date) : "—"} → {l.end_date ? fmtDate(l.end_date) : "—"}
