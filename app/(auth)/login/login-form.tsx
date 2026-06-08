@@ -4,34 +4,24 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
-import { signIn } from "./actions";
 
 export function LoginForm() {
   const params = useSearchParams();
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    // Sign in server-side so the session cookie is set via Set-Cookie and is
-    // reliably present on the next navigation (fixes the prod login bounce).
-    const form = new FormData(e.currentTarget);
-    form.set("next", params.get("next") || "/dashboard");
-
-    const res = await signIn(form);
-    // On success the server action redirects; we only get here on error.
-    if (res?.error) {
-      setError(res.error);
-      setLoading(false);
-    }
-  }
+  // Sign-in happens via a native POST to the /auth/login route handler, which
+  // sets the Secure session cookie and redirects — reliable across all browsers.
+  const next = params.get("next") || "/dashboard";
+  const error = params.get("error");
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col">
+    <form
+      method="post"
+      action="/auth/login"
+      onSubmit={() => setLoading(true)}
+      className="flex flex-col"
+    >
+      <input type="hidden" name="next" value={next} />
       <Field label="Email address">
         <Mail strokeWidth={1.6} className="h-[18px] w-[18px] text-[var(--ink-3)]" />
         <input

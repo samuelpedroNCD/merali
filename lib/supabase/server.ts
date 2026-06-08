@@ -14,15 +14,17 @@ export async function createClient() {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
+          const secure = process.env.NODE_ENV === "production";
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
+              cookieStore.set(name, value, { ...options, secure }),
             );
           } catch {
             // Called from a Server Component — safe to ignore; middleware refreshes.
           }
         },
       },
+      cookieOptions: { secure: process.env.NODE_ENV === "production" },
     },
   );
 }
