@@ -42,9 +42,15 @@ export async function proxy(request: NextRequest) {
     },
   );
 
+  // Gate on the session read from the cookie (no network call, no token
+  // refresh) so a burst of concurrent requests (e.g. Next.js link prefetching
+  // the whole sidebar) can't trigger a refresh race that wipes the cookie and
+  // bounces every navigation to /login. Pages still call getUser() for trusted
+  // validation, so a forged cookie won't grant access to data.
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   const { pathname } = request.nextUrl;
   const isPublic = PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));

@@ -75,6 +75,7 @@ export function Sidebar({
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={false}
                   className={cn(
                     "relative flex items-center gap-[12px] rounded-[9px] px-[12px] py-[7px] text-[14px] font-medium transition-colors",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]/50",
