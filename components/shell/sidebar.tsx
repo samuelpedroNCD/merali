@@ -114,13 +114,17 @@ export function Sidebar({
             </p>
             <p className="truncate text-[11.5px] text-side-text">{user.role}</p>
           </div>
-          <Link
-            href="/logout"
-            aria-label="Log out"
-            className="grid h-8 w-8 place-items-center rounded-md text-side-text transition-colors hover:text-[#E7DFCB]"
-          >
-            <LogOut strokeWidth={1.6} className="h-[17px] w-[17px]" />
-          </Link>
+          {/* Logout is a POST so the browser can't prefetch/GET it and silently
+              sign the user out (that wiped the session on every navigation). */}
+          <form action="/logout" method="post" className="contents">
+            <button
+              type="submit"
+              aria-label="Log out"
+              className="grid h-8 w-8 place-items-center rounded-md text-side-text transition-colors hover:text-[#E7DFCB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]/50"
+            >
+              <LogOut strokeWidth={1.6} className="h-[17px] w-[17px]" />
+            </button>
+          </form>
         </div>
       </div>
     </aside>
