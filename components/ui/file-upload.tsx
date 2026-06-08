@@ -3,12 +3,19 @@
 import { useRef, useState } from "react";
 import { Upload, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { isPublicBucket } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 
+// A signed URL minted on upload lives long enough to persist for immediate
+// display; private files should be re-signed at render time via resolveStorageUrl.
+const UPLOAD_SIGNED_TTL = 60 * 60 * 24 * 365; // 1 year
+
 /**
- * Upload a file to a Supabase Storage bucket. Calls onUploaded with the public
- * URL (for public buckets) and the storage path. Reusable for avatars,
- * document files, and maintenance photos.
+ * Upload a file to a Supabase Storage bucket. Calls onUploaded with a usable URL
+ * and the storage path. Public buckets (avatars, property-photos) get a public
+ * URL; private buckets (documents, maintenance, …) get a signed URL — so the
+ * component is correct for both. For private files, persist the `path` and
+ * re-sign on read with resolveStorageUrl() rather than storing the signed URL.
  */
 export function FileUpload({
   bucket,
@@ -41,8 +48,20 @@ export function FileUpload({
         setError(upErr.message);
         return;
       }
-      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-      onUploaded(data.publicUrl, path);
+      let url: string;
+      if (isPublicBucket(bucket)) {
+        url = supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+      } else {
+        const { data, error: signErr } = await supabase.storage
+          .from(bucket)
+          .createSignedUrl(path, UPLOAD_SIGNED_TTL);
+        if (signErr || !data) {
+          setError(signErr?.message ?? "Could not generate file URL.");
+          return;
+        }
+        url = data.signedUrl;
+      }
+      onUploaded(url, path);
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";
