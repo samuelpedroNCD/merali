@@ -1,0 +1,89 @@
+/* Merali Lettings — dashboard shared styles + themes */
+
+.dwrap{
+  width:100%; height:100%; display:flex; overflow:hidden;
+  font-family:'Hanken Grotesk',system-ui,sans-serif;
+  background:var(--bg); color:var(--txt);
+  -webkit-font-smoothing:antialiased;
+}
+.dwrap *{ box-sizing:border-box; margin:0; }
+.dserif{ font-family:'Cormorant Garamond',Georgia,serif; }
+
+/* themes */
+.t-light{
+  --bg:#FAF6EC; --panel:#FFFDF7; --panel2:#F6F0E2; --line:#ECE4D3;
+  --txt:#1C1810; --txt2:#6E6757; --muted:#9A917E;
+  --accent:#A9851A; --accent-l:#C9A227;
+  --side-bg:#302915; --side-txt:#C9C0AC; --side-active:#3F351C;
+}
+.t-dark{
+  --bg:#302915; --panel:#3B331E; --panel2:#463D26; --line:#514628;
+  --txt:#F3ECDB; --txt2:#C2B79E; --muted:#9D927B;
+  --accent:#E7CF86; --accent-l:#E7CF86;
+  --side-bg:#29220F; --side-txt:#9D927B; --side-active:#463D26;
+}
+:root{ --good:#5E8C6F; --warn:#C2912F; --bad:#B25C46; }
+
+/* sidebar */
+.side{ width:248px; flex:0 0 248px; background:var(--side-bg); color:var(--side-txt);
+  display:flex; flex-direction:column; padding:26px 18px; gap:6px; }
+.side .logo{ height:38px; width:auto; align-self:flex-start; margin:6px 8px 26px; }
+.side .navlbl{ font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:#6f6856;
+  padding:0 12px; margin:10px 0 6px; }
+.nav-i{ display:flex; align-items:center; gap:13px; padding:11px 13px; border-radius:10px;
+  font-size:14.5px; font-weight:500; color:var(--side-txt); cursor:pointer; position:relative; }
+.nav-i.on{ background:var(--side-active); color:#F0E0C0; }
+.nav-i.on::before{ content:''; position:absolute; left:0; top:9px; bottom:9px; width:3px;
+  border-radius:3px; background:var(--grad-gold); }
+.nav-i:hover:not(.on){ color:#E7DFCB; }
+
+/* topbar */
+.top{ height:74px; flex:0 0 74px; display:flex; align-items:center; gap:20px;
+  padding:0 34px; border-bottom:1px solid var(--line); }
+.search{ flex:1; max-width:380px; height:42px; display:flex; align-items:center; gap:10px;
+  background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:0 14px;
+  color:var(--muted); font-size:14px; }
+.iconbtn{ width:42px; height:42px; border-radius:10px; border:1px solid var(--line);
+  background:var(--panel); color:var(--txt2); display:flex; align-items:center; justify-content:center;
+  cursor:pointer; position:relative; }
+.avatar{ width:42px; height:42px; border-radius:11px; background:var(--grad-gold); color:#241B07;
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; }
+
+/* content */
+.content{ flex:1; padding:30px 34px; overflow:hidden; display:flex; flex-direction:column; gap:22px; }
+
+/* cards */
+.card{ background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:22px 24px; }
+.card-h{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.card-h h3{ font-size:16px; font-weight:600; letter-spacing:-.01em; white-space:nowrap; }
+.card-h a{ white-space:nowrap; }
+.muted{ color:var(--muted); }
+.pill{ font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:999px; letter-spacing:.02em;
+  display:inline-flex; align-items:center; gap:5px; }
+.pill.good{ color:var(--good); background:color-mix(in oklch, var(--good) 14%, transparent); }
+.tag-good{ color:var(--good); } .tag-warn{ color:var(--warn); } .tag-bad{ color:var(--bad); }
+
+/* kpi */
+.kpi{ flex:1; }
+.kpi .lbl{ font-size:13px; color:var(--muted); font-weight:500; }
+.kpi .val{ font-size:32px; font-weight:600; letter-spacing:-.02em; margin:8px 0 6px; }
+.delta{ font-size:12.5px; font-weight:600; display:inline-flex; align-items:center; gap:3px; }
+
+/* bar chart */
+.bars{ display:flex; align-items:flex-end; gap:10px; height:150px; }
+.bars .col{ flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; height:100%; justify-content:flex-end; }
+.bars .bar{ width:100%; max-width:26px; border-radius:6px 6px 3px 3px; background:var(--panel2); position:relative; }
+.bars .bar > span{ position:absolute; left:0; right:0; bottom:0; border-radius:6px 6px 3px 3px; background:var(--grad-gold); }
+.bars .mlbl{ font-size:11px; color:var(--muted); }
+
+/* table rows */
+.trow{ display:flex; align-items:center; padding:13px 0; border-top:1px solid var(--line); font-size:14px; }
+.trow:first-child{ border-top:0; }
+
+/* list item */
+.li{ display:flex; align-items:center; gap:13px; padding:13px 0; border-top:1px solid var(--line); }
+.li:first-child{ border-top:0; }
+.dotmark{ width:9px; height:9px; border-radius:50%; flex:0 0 9px; }
+
+/* scrollbars hidden inside cards if any */
+.noscroll::-webkit-scrollbar{ display:none; }

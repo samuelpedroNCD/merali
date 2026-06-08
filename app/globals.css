@@ -1,0 +1,259 @@
+@import "tailwindcss";
+
+/* =====================================================================
+   MERALI LETTINGS — DESIGN TOKENS (source of truth: design-reference/
+   design-system/tokens.css). Ported to Tailwind v4. Import once; apply
+   .theme-light or .theme-dark to a root container. Sidebars stay dark
+   in both themes. Base dark surface is #302915 (warm espresso-brown).
+   ===================================================================== */
+
+:root {
+  /* ---------- BRAND · GOLD ---------- */
+  --gold-champagne: #f0e0c0;
+  --gold-light: #e7cf86;
+  --gold: #c9a227;
+  --gold-deep: #a9851a;
+  --gold-gradient: linear-gradient(135deg, #e7cf86 0%, #c9a227 52%, #a9851a 100%);
+  --on-gold: #241b07;
+
+  /* ---------- WARM DARK RAMP (anchored at #302915) ---------- */
+  --dark-900: #29220f;
+  --dark-800: #302915;
+  --dark-700: #3b331e;
+  --dark-600: #463d26;
+  --dark-500: #514628;
+
+  /* ---------- WARM LIGHT RAMP ---------- */
+  --cream: #faf6ec;
+  --paper: #fffdf7;
+  --cream-2: #f6f0e2;
+  --line: #ece4d3;
+
+  /* ---------- INK / TEXT ---------- */
+  --ink: #1c1810;
+  --ink-2: #6e6757;
+  --ink-3: #9a917e;
+  --cream-text: #f3ecdb;
+  --cream-text-2: #c2b79e;
+  --cream-text-3: #9d927b;
+
+  /* ---------- STATUS ---------- */
+  --good: #5e8c6f;
+  --warn: #c2912f;
+  --bad: #b25c46;
+
+  /* ---------- RADII ---------- */
+  --r-sm: 8px;
+  --r-md: 11px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-pill: 999px;
+
+  /* ---------- SHADOWS ---------- */
+  --shadow-card: 0 40px 90px -50px rgba(46, 36, 12, 0.55);
+  --shadow-btn: 0 8px 22px -10px rgba(169, 133, 26, 0.7);
+  --shadow-pop: 0 8px 20px -10px rgba(46, 36, 12, 0.4);
+
+  /* ---------- MOTION ---------- */
+  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --dur: 0.18s;
+}
+
+/* =====================================================================
+   SEMANTIC THEME MAPS — use the --c-* tokens in components.
+   ===================================================================== */
+.theme-light {
+  --c-bg: var(--cream);
+  --c-surface: var(--paper);
+  --c-surface-2: var(--cream-2);
+  --c-border: var(--line);
+  --c-text: var(--ink);
+  --c-text-2: var(--ink-2);
+  --c-muted: var(--ink-3);
+  --c-accent: var(--gold-deep);
+  --c-side-bg: var(--dark-800);
+  --c-side-text: #c9c0ac;
+  --c-side-active: #3f351c;
+}
+
+.theme-dark {
+  --c-bg: var(--dark-800);
+  --c-surface: var(--dark-700);
+  --c-surface-2: var(--dark-600);
+  --c-border: var(--dark-500);
+  --c-text: var(--cream-text);
+  --c-text-2: var(--cream-text-2);
+  --c-muted: var(--cream-text-3);
+  --c-accent: var(--gold-light);
+  --c-side-bg: var(--dark-900);
+  --c-side-text: var(--cream-text-3);
+  --c-side-active: var(--dark-600);
+}
+
+/* =====================================================================
+   TAILWIND THEME BINDINGS — expose tokens as utilities
+   (bg-surface, text-muted, border-border, rounded-lg, font-display…).
+   ===================================================================== */
+@theme inline {
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-border: var(--c-border);
+  --color-text: var(--c-text);
+  --color-text-2: var(--c-text-2);
+  --color-muted: var(--c-muted);
+  --color-accent: var(--c-accent);
+
+  --color-side-bg: var(--c-side-bg);
+  --color-side-text: var(--c-side-text);
+  --color-side-active: var(--c-side-active);
+
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-gold-deep: var(--gold-deep);
+  --color-gold-champagne: var(--gold-champagne);
+  --color-on-gold: var(--on-gold);
+
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+
+  --color-paper: var(--paper);
+  --color-cream: var(--cream);
+  --color-ink: var(--ink);
+
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+  --radius-pill: var(--r-pill);
+
+  --font-display: var(--font-cormorant), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-hanken), system-ui, -apple-system, sans-serif;
+
+  --shadow-card: var(--shadow-card);
+  --shadow-btn: var(--shadow-btn);
+  --shadow-pop: var(--shadow-pop);
+
+  --ease-brand: cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+
+/* =====================================================================
+   BASE
+   ===================================================================== */
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--c-bg, var(--cream));
+  color: var(--c-text, var(--ink));
+  font-family: var(--font-hanken), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.font-display {
+  font-family: var(--font-cormorant), Georgia, "Times New Roman", serif;
+  /* Lining + tabular figures so KPI/stat numerals (esp. "1") are unambiguous
+     and money columns align. Cormorant defaults to oldstyle proportional figures. */
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
+}
+
+/* Eyebrow label */
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+
+/* Status pills: status colour text on a 14% tint */
+.pill-good {
+  color: var(--good);
+  background: color-mix(in oklch, var(--good) 14%, transparent);
+}
+.pill-warn {
+  color: var(--warn);
+  background: color-mix(in oklch, var(--warn) 14%, transparent);
+}
+.pill-bad {
+  color: var(--bad);
+  background: color-mix(in oklch, var(--bad) 14%, transparent);
+}
+.pill-muted {
+  color: var(--c-muted);
+  background: color-mix(in oklch, var(--c-muted) 14%, transparent);
+}
+.pill-accent {
+  color: var(--c-accent);
+  background: color-mix(in oklch, var(--c-accent) 16%, transparent);
+}
+
+/* Gold gradient fill helper (buttons, avatars, active rails) */
+.bg-gold-gradient {
+  background: var(--gold-gradient);
+}
+
+/* Entrance animation — fade + 8px rise */
+@keyframes brand-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-rise {
+  animation: brand-rise var(--dur) var(--ease) both;
+}
+
+/* Drawer / scrim entrance */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes slideInRight {
+  from {
+    transform: translateX(24px);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  [class*="animate-["] {
+    animation: none !important;
+  }
+}
+
+/* Hide scrollbars where needed */
+.noscroll::-webkit-scrollbar {
+  display: none;
+}
+.noscroll {
+  scrollbar-width: none;
+}
+
+/* Custom thin scrollbar for content areas */
+.thin-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--c-muted) 35%, transparent);
+  border-radius: 999px;
+}

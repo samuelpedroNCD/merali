@@ -1,0 +1,106 @@
+/* =====================================================================
+   MERALI LETTINGS — DESIGN TOKENS
+   Single source of truth. Import this first, then apply a theme class
+   (.theme-light or .theme-dark) to a root element.
+   Base dark surface is #302915 (warm espresso-brown).
+   ===================================================================== */
+
+:root{
+  /* ---------- BRAND · GOLD ---------- */
+  --gold-champagne: #F0E0C0;  /* lightest highlight, logo bevel        */
+  --gold-light:     #E7CF86;  /* accents/text on dark surfaces         */
+  --gold:           #C9A227;  /* primary gold                          */
+  --gold-deep:      #A9851A;  /* accents/text on light surfaces        */
+  --gold-gradient:  linear-gradient(135deg,#E7CF86 0%,#C9A227 52%,#A9851A 100%);
+  --on-gold:        #241B07;  /* text/icons placed on a gold fill      */
+
+  /* ---------- WARM DARK RAMP (anchored at #302915) ---------- */
+  --dark-900: #29220F;  /* deepest — dark-theme sidebar               */
+  --dark-800: #302915;  /* BASE background (was pure black)           */
+  --dark-700: #3B331E;  /* raised surface / card on dark              */
+  --dark-600: #463D26;  /* hover / inset / panel-2 on dark            */
+  --dark-500: #514628;  /* border / hairline on dark                 */
+
+  /* ---------- WARM LIGHT RAMP ---------- */
+  --cream:    #FAF6EC;  /* light background                           */
+  --paper:    #FFFDF7;  /* card surface on light                      */
+  --cream-2:  #F6F0E2;  /* inset / panel-2 on light                   */
+  --line:     #ECE4D3;  /* border / hairline on light                */
+
+  /* ---------- INK / TEXT ---------- */
+  --ink:        #1C1810;  /* primary text on light                   */
+  --ink-2:      #6E6757;  /* secondary text on light                 */
+  --ink-3:      #9A917E;  /* muted / placeholder on light            */
+  --cream-text:   #F3ECDB; /* primary text on dark                   */
+  --cream-text-2: #C2B79E; /* secondary text on dark                 */
+  --cream-text-3: #9D927B; /* muted text on dark                     */
+
+  /* ---------- STATUS (low-saturation, warm) ---------- */
+  --good: #5E8C6F;  /* healthy / positive                            */
+  --warn: #C2912F;  /* attention / due soon                          */
+  --bad:  #B25C46;  /* urgent / arrears / high priority              */
+
+  /* ---------- TYPE ---------- */
+  --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --font-sans:    'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+
+  --fs-display-xl: 62px;  --lh-display-xl: 1.04;
+  --fs-display-l:  40px;  --lh-display-l:  1.06;
+  --fs-display-m:  34px;  --lh-display-m:  1.1;
+  --fs-display-s:  30px;  --lh-display-s:  1.1;
+  --fs-stat:       32px;  /* serif KPI numbers                       */
+  --fs-h3:         16px;  /* card titles (sans, 600)                 */
+  --fs-body:       15px;
+  --fs-body-s:     14px;
+  --fs-small:      13px;
+  --fs-xs:         12.5px;
+  --fs-eyebrow:    12px;  /* uppercase, .26em tracking               */
+
+  /* ---------- SPACING (4px base) ---------- */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 18px; --sp-6: 22px; --sp-7: 24px; --sp-8: 30px; --sp-9: 34px;
+
+  /* ---------- RADII ---------- */
+  --r-sm: 8px;  --r-md: 11px; --r-lg: 16px; --r-xl: 20px; --r-pill: 999px;
+
+  /* ---------- SHADOWS ---------- */
+  --shadow-card: 0 40px 90px -50px rgba(46,36,12,.55);
+  --shadow-btn:  0 8px 22px -10px rgba(169,133,26,.7);
+  --shadow-pop:  0 8px 20px -10px rgba(46,36,12,.4);
+
+  /* ---------- MOTION ---------- */
+  --ease: cubic-bezier(.2,.6,.2,1);
+  --dur:  .18s;
+}
+
+/* =====================================================================
+   SEMANTIC THEME MAPS
+   Use the --c-* tokens in components; switch theme by class.
+   ===================================================================== */
+.theme-light{
+  --c-bg:        var(--cream);
+  --c-surface:   var(--paper);
+  --c-surface-2: var(--cream-2);
+  --c-border:    var(--line);
+  --c-text:      var(--ink);
+  --c-text-2:    var(--ink-2);
+  --c-muted:     var(--ink-3);
+  --c-accent:    var(--gold-deep);   /* readable gold on light */
+  /* sidebars stay dark even in light theme: */
+  --c-side-bg:     var(--dark-800);
+  --c-side-text:   #C9C0AC;
+  --c-side-active: #3F351C;
+}
+.theme-dark{
+  --c-bg:        var(--dark-800);
+  --c-surface:   var(--dark-700);
+  --c-surface-2: var(--dark-600);
+  --c-border:    var(--dark-500);
+  --c-text:      var(--cream-text);
+  --c-text-2:    var(--cream-text-2);
+  --c-muted:     var(--cream-text-3);
+  --c-accent:    var(--gold-light);  /* readable gold on dark */
+  --c-side-bg:     var(--dark-900);
+  --c-side-text:   var(--cream-text-3);
+  --c-side-active: var(--dark-600);
+}

@@ -1,0 +1,72 @@
+import { createClient } from "@/lib/supabase/server";
+
+export type PropertyRow = {
+  id: string;
+  address: string | null;
+  flat: string | null;
+  town: string | null;
+  post_code: string | null;
+  country: string | null;
+  area: string | null;
+  internal_code: string | null;
+  configuration: string | null;
+  class: string | null;
+  property_type: string | null;
+  status: string | null;
+  tenancy_class: string | null;
+  property_tax: string | null;
+  bedrooms: number | null;
+  parent_property_id: string | null;
+  landlord_id: string | null;
+  assigned_manager_id: string | null;
+  date_acquired: string | null;
+  leasehold_register_number: string | null;
+  target_rent: number | null;
+  target_rent_month: string | null;
+  notes: string | null;
+  landlord?: { id: string; full_name: string | null } | null;
+};
+
+/** List properties (newest first) with landlord name. */
+export async function listProperties(search?: string): Promise<PropertyRow[]> {
+  const supabase = await createClient();
+  let query = supabase
+    .from("property")
+    .select(
+      "id, address, flat, town, post_code, country, area, internal_code, configuration, class, property_type, status, tenancy_class, property_tax, bedrooms, parent_property_id, landlord_id, assigned_manager_id, date_acquired, leasehold_register_number, target_rent, target_rent_month, notes, landlord:landlord_id(id, full_name)",
+    )
+    .order("created_at", { ascending: false });
+
+  if (search?.trim()) {
+    const s = `%${search.trim()}%`;
+    query = query.or(`address.ilike.${s},internal_code.ilike.${s},town.ilike.${s}`);
+  }
+
+  const { data } = await query;
+  return (data ?? []) as unknown as PropertyRow[];
+}
+
+export async function getProperty(id: string): Promise<PropertyRow | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("property")
+    .select("*, landlord:landlord_id(id, full_name)")
+    .eq("id", id)
+    .maybeSingle();
+  return (data as unknown as PropertyRow) ?? null;
+}
+
+/** Landlords for the ownership dropdown. */
+export async function listLandlordOptions(): Promise<
+  { value: string; label: string }[]
+> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("landlord")
+    .select("id, full_name, main_contact_name")
+    .order("full_name", { ascending: true });
+  return (data ?? []).map((l) => ({
+    value: l.id,
+    label: l.full_name || l.main_contact_name || "Unnamed landlord",
+  }));
+}

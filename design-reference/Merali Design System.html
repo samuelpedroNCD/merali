@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Merali Lettings · Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="design-system/tokens.css"/>
+<style>
+  *{ box-sizing:border-box; margin:0; }
+  body{ font-family:var(--font-sans); background:var(--cream); color:var(--ink);
+        -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:64px 40px 100px; }
+  .serif{ font-family:var(--font-display); }
+  .eyebrow{ font-size:var(--fs-eyebrow); font-weight:600; letter-spacing:.26em;
+            text-transform:uppercase; color:var(--gold-deep); }
+  h1.title{ font-family:var(--font-display); font-size:56px; font-weight:600; letter-spacing:-.01em; margin:14px 0 10px; }
+  .lead{ color:var(--ink-2); font-size:18px; max-width:620px; line-height:1.6; }
+  .sec{ margin-top:64px; }
+  .sec > h2{ font-family:var(--font-display); font-size:30px; font-weight:600; margin-bottom:6px; }
+  .sec > .sub{ color:var(--ink-3); font-size:14px; margin-bottom:26px; }
+  .rule{ height:1px; background:var(--line); margin:26px 0 0; }
+
+  /* swatches */
+  .swgrid{ display:grid; grid-template-columns:repeat(5,1fr); gap:16px; }
+  .sw{ border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; background:var(--paper); }
+  .sw .chip{ height:88px; }
+  .sw .meta{ padding:12px 14px; }
+  .sw .nm{ font-size:13.5px; font-weight:600; }
+  .sw .hx{ font-size:12px; color:var(--ink-3); font-family:ui-monospace,monospace; margin-top:3px; text-transform:uppercase; }
+  .sw .use{ font-size:12px; color:var(--ink-2); margin-top:6px; line-height:1.45; }
+
+  /* type specimens */
+  .spec{ display:flex; align-items:baseline; gap:20px; padding:16px 0; border-top:1px solid var(--line); }
+  .spec:first-of-type{ border-top:0; }
+  .spec .tag{ flex:0 0 150px; font-size:12px; color:var(--ink-3); font-family:ui-monospace,monospace; padding-top:8px; }
+  .spec .ex{ flex:1; }
+
+  /* component canvas */
+  .demo{ border:1px solid var(--line); border-radius:var(--r-lg); padding:30px; background:var(--paper); display:flex; flex-wrap:wrap; gap:30px; }
+  .demo.dark{ background:var(--dark-800); border-color:var(--dark-500); }
+  .col{ display:flex; flex-direction:column; gap:14px; min-width:240px; }
+  .clbl{ font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-3); }
+  .demo.dark .clbl{ color:var(--cream-text-3); }
+
+  /* atoms */
+  .btn-gold{ height:54px; padding:0 26px; border:0; border-radius:var(--r-md); background:var(--gold-gradient);
+    color:var(--on-gold); font:inherit; font-weight:700; font-size:15px; cursor:pointer; box-shadow:var(--shadow-btn);
+    display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+  .btn-ghost{ height:54px; padding:0 24px; border:1px solid var(--c-border); border-radius:var(--r-md);
+    background:transparent; color:var(--c-text); font:inherit; font-weight:600; cursor:pointer; }
+  .iconbtn{ width:42px; height:42px; border-radius:var(--r-md); border:1px solid var(--c-border);
+    background:var(--c-surface); color:var(--c-text-2); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+  .field{ display:flex; flex-direction:column; gap:9px; }
+  .field label{ font-size:12.5px; font-weight:600; color:var(--c-text); }
+  .input{ height:54px; min-width:280px; border-radius:var(--r-md); border:1px solid var(--c-border);
+    background:var(--c-surface); padding:0 16px; display:flex; align-items:center; gap:10px; color:var(--c-muted); font-size:15px; }
+  .card{ background:var(--c-surface); border:1px solid var(--c-border); border-radius:var(--r-lg); padding:22px 24px; min-width:280px; color:var(--c-text); }
+  .pill{ font-size:12px; font-weight:600; padding:4px 10px; border-radius:var(--r-pill); display:inline-flex; align-items:center; gap:6px; }
+  .delta{ font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:3px; }
+  .kpi .lbl{ font-size:13px; color:var(--c-muted); }
+  .kpi .val{ font-family:var(--font-display); font-size:var(--fs-stat); font-weight:600; margin:8px 0 6px; }
+  .li{ display:flex; align-items:center; gap:13px; padding:13px 0; border-top:1px solid var(--c-border); }
+  .li:first-child{ border-top:0; }
+  .dot{ width:9px; height:9px; border-radius:50%; }
+  .navitem{ display:flex; align-items:center; gap:13px; padding:11px 13px; border-radius:10px; font-size:14.5px; font-weight:500; position:relative; }
+  .navitem.on{ background:var(--c-side-active); color:#F0E0C0; }
+  .navitem.on::before{ content:''; position:absolute; left:0; top:9px; bottom:9px; width:3px; border-radius:3px; background:var(--gold-gradient); }
+  .donut{ width:120px; height:120px; border-radius:50%; position:relative;
+    background:conic-gradient(var(--c-accent) 0 339deg, var(--c-surface-2) 0); }
+  .donut .hole{ position:absolute; inset:14px; border-radius:50%; background:var(--c-surface);
+    display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:600; font-size:26px; color:var(--c-text); }
+  .bars{ display:flex; align-items:flex-end; gap:8px; height:90px; }
+  .bars i{ width:18px; border-radius:5px 5px 2px 2px; background:var(--gold-gradient); display:block; }
+  .radii{ display:flex; gap:16px; align-items:flex-end; }
+  .radii div{ width:84px; height:64px; background:var(--cream-2); border:1px solid var(--line); }
+  .radii span{ display:block; font-size:11px; color:var(--ink-3); margin-top:8px; font-family:ui-monospace,monospace; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <img src="assets/logo-ink.png" alt="Merali Lettings" style="height:44px; width:auto; display:block; margin-bottom:22px;"/>
+    <div class="eyebrow">Property Operations Platform</div>
+    <h1 class="title">Design System</h1>
+    <p class="lead">A warm, editorial language: champagne-gold brand, an espresso-brown dark base of <strong>#302915</strong>, soft cream light surfaces, and a serif / grotesk type pairing.</p>
+  </header>
+
+  <!-- COLOR -->
+  <section class="sec">
+    <h2>Gold · brand</h2>
+    <p class="sub">Used sparingly — accents, primary actions, active states.</p>
+    <div class="swgrid">
+      <div class="sw"><div class="chip" style="background:#F0E0C0"></div><div class="meta"><div class="nm">Champagne</div><div class="hx">#F0E0C0</div><div class="use">Logo highlight, faint fills</div></div></div>
+      <div class="sw"><div class="chip" style="background:#E7CF86"></div><div class="meta"><div class="nm">Gold light</div><div class="hx">#E7CF86</div><div class="use">Accent / text on dark</div></div></div>
+      <div class="sw"><div class="chip" style="background:#C9A227"></div><div class="meta"><div class="nm">Gold</div><div class="hx">#C9A227</div><div class="use">Primary gold</div></div></div>
+      <div class="sw"><div class="chip" style="background:#A9851A"></div><div class="meta"><div class="nm">Gold deep</div><div class="hx">#A9851A</div><div class="use">Accent / text on light</div></div></div>
+      <div class="sw"><div class="chip" style="background:linear-gradient(135deg,#E7CF86,#C9A227 52%,#A9851A)"></div><div class="meta"><div class="nm">Gradient</div><div class="hx">135°</div><div class="use">Buttons, rails, avatars</div></div></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>Warm dark ramp</h2>
+    <p class="sub">Anchored at #302915 — the base background that replaces black.</p>
+    <div class="swgrid">
+      <div class="sw"><div class="chip" style="background:#29220F"></div><div class="meta"><div class="nm">dark-900</div><div class="hx">#29220F</div><div class="use">Dark sidebar</div></div></div>
+      <div class="sw"><div class="chip" style="background:#302915"></div><div class="meta"><div class="nm">dark-800 · base</div><div class="hx">#302915</div><div class="use">Background</div></div></div>
+      <div class="sw"><div class="chip" style="background:#3B331E"></div><div class="meta"><div class="nm">dark-700</div><div class="hx">#3B331E</div><div class="use">Card / surface</div></div></div>
+      <div class="sw"><div class="chip" style="background:#463D26"></div><div class="meta"><div class="nm">dark-600</div><div class="hx">#463D26</div><div class="use">Hover / inset</div></div></div>
+      <div class="sw"><div class="chip" style="background:#514628"></div><div class="meta"><div class="nm">dark-500</div><div class="hx">#514628</div><div class="use">Border</div></div></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>Light ramp &amp; status</h2>
+    <p class="sub">Cream surfaces; warm, desaturated status colors.</p>
+    <div class="swgrid">
+      <div class="sw"><div class="chip" style="background:#FAF6EC"></div><div class="meta"><div class="nm">cream · bg</div><div class="hx">#FAF6EC</div><div class="use">Background</div></div></div>
+      <div class="sw"><div class="chip" style="background:#FFFDF7; border-bottom:1px solid #ECE4D3"></div><div class="meta"><div class="nm">paper</div><div class="hx">#FFFDF7</div><div class="use">Card surface</div></div></div>
+      <div class="sw"><div class="chip" style="background:#5E8C6F"></div><div class="meta"><div class="nm">good</div><div class="hx">#5E8C6F</div><div class="use">Healthy / positive</div></div></div>
+      <div class="sw"><div class="chip" style="background:#C2912F"></div><div class="meta"><div class="nm">warn</div><div class="hx">#C2912F</div><div class="use">Attention / due soon</div></div></div>
+      <div class="sw"><div class="chip" style="background:#B25C46"></div><div class="meta"><div class="nm">bad</div><div class="hx">#B25C46</div><div class="use">Urgent / arrears</div></div></div>
+    </div>
+  </section>
+
+  <!-- TYPE -->
+  <section class="sec">
+    <h2>Typography</h2>
+    <p class="sub">Cormorant Garamond (display &amp; numerals) · Hanken Grotesk (UI &amp; body).</p>
+    <div class="spec"><div class="tag">Display L · serif 40</div><div class="ex serif" style="font-size:40px; font-weight:600;">Welcome back</div></div>
+    <div class="spec"><div class="tag">Display M · serif 34</div><div class="ex serif" style="font-size:34px; font-weight:600;">Good morning, Imran</div></div>
+    <div class="spec"><div class="tag">Stat · serif 32</div><div class="ex serif" style="font-size:32px; font-weight:600;">£182,400</div></div>
+    <div class="spec"><div class="tag">Card title · sans 16/600</div><div class="ex" style="font-size:16px; font-weight:600;">Rent collection</div></div>
+    <div class="spec"><div class="tag">Body · sans 15</div><div class="ex" style="font-size:15px;">Tenancies, rent, maintenance and compliance — managed in one calm, considered place.</div></div>
+    <div class="spec"><div class="tag">Eyebrow · 12 caps</div><div class="ex eyebrow">Property Operations Platform</div></div>
+  </section>
+
+  <!-- COMPONENTS LIGHT -->
+  <section class="sec">
+    <h2>Components — light</h2>
+    <p class="sub">.theme-light · sidebars remain dark.</p>
+    <div class="demo theme-light">
+      <div class="col">
+        <span class="clbl">Buttons</span>
+        <button class="btn-gold">Sign in →</button>
+        <button class="btn-ghost">Continue with SSO</button>
+      </div>
+      <div class="col">
+        <span class="clbl">Input</span>
+        <div class="field"><label>Email address</label><div class="input">✉&nbsp; you@meralilettings.com</div></div>
+      </div>
+      <div class="col">
+        <span class="clbl">KPI</span>
+        <div class="card kpi" style="min-width:230px;">
+          <div class="lbl">Rent collected · June</div>
+          <div class="val">£182,400</div>
+          <div class="delta" style="color:var(--good)">▲ +4.1%</div>
+        </div>
+      </div>
+      <div class="col">
+        <span class="clbl">Pills</span>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="pill" style="color:var(--good); background:color-mix(in oklch, var(--good) 14%, transparent)"><span class="dot" style="background:var(--good)"></span>Healthy</span>
+          <span class="pill" style="color:var(--warn); background:color-mix(in oklch, var(--warn) 14%, transparent)"><span class="dot" style="background:var(--warn)"></span>Attention</span>
+          <span class="pill" style="color:var(--bad); background:color-mix(in oklch, var(--bad) 14%, transparent)"><span class="dot" style="background:var(--bad)"></span>4 high</span>
+        </div>
+        <span class="clbl" style="margin-top:8px;">Occupancy donut</span>
+        <div class="donut"><div class="hole">94%</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPONENTS DARK -->
+  <section class="sec">
+    <h2>Components — dark</h2>
+    <p class="sub">.theme-dark · base #302915.</p>
+    <div class="demo dark theme-dark">
+      <div class="col">
+        <span class="clbl">Surfaces</span>
+        <div class="card" style="min-width:240px;">
+          <div style="font-size:16px; font-weight:600; margin-bottom:6px;">Maintenance queue</div>
+          <div class="li"><span class="dot" style="background:var(--bad)"></span><div style="flex:1"><div style="font-size:14px; font-weight:500;">Boiler fault — no hot water</div><div style="font-size:12.5px; color:var(--c-muted)">Carlton Mews · Flat 4</div></div></div>
+          <div class="li"><span class="dot" style="background:var(--warn)"></span><div style="flex:1"><div style="font-size:14px; font-weight:500;">Leaking kitchen tap</div><div style="font-size:12.5px; color:var(--c-muted)">Ashcombe House · Flat 11</div></div></div>
+        </div>
+      </div>
+      <div class="col">
+        <span class="clbl">Nav (sidebar)</span>
+        <div style="background:var(--c-side-bg); border-radius:14px; padding:12px; width:230px;">
+          <div class="navitem on" style="color:#F0E0C0">▦&nbsp; Overview</div>
+          <div class="navitem" style="color:var(--c-side-text)">▢&nbsp; Properties</div>
+          <div class="navitem" style="color:var(--c-side-text)">▢&nbsp; Finance</div>
+        </div>
+      </div>
+      <div class="col">
+        <span class="clbl">Bar chart</span>
+        <div class="bars">
+          <i style="height:54px"></i><i style="height:48px"></i><i style="height:66px"></i><i style="height:72px"></i><i style="height:82px; opacity:1"></i><i style="height:60px; opacity:.62"></i><i style="height:70px; opacity:.62"></i>
+        </div>
+        <span class="clbl" style="margin-top:8px;">Buttons</span>
+        <button class="btn-gold">Add</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RADII -->
+  <section class="sec">
+    <h2>Radii</h2>
+    <p class="sub">sm chips · md inputs/buttons · lg cards · xl modals.</p>
+    <div class="radii">
+      <div><div style="border-radius:8px"></div><span>8 · sm</span></div>
+      <div><div style="border-radius:11px"></div><span>11 · md</span></div>
+      <div><div style="border-radius:16px"></div><span>16 · lg</span></div>
+      <div><div style="border-radius:20px"></div><span>20 · xl</span></div>
+      <div><div style="border-radius:999px; width:64px"></div><span>999 · pill</span></div>
+    </div>
+    <div class="rule"></div>
+    <p class="sub" style="margin-top:22px;">Full spec &amp; tokens: <strong>design-system/DESIGN_SYSTEM.md</strong> · <strong>design-system/tokens.css</strong></p>
+  </section>
+
+</div>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap"/>
+</body>
+</html>

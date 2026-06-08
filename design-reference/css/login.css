@@ -1,0 +1,103 @@
+/* Merali Lettings — login explorations
+   Shared tokens + reusable form atoms */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+
+:root{
+  /* warm darks — base anchored at #302915 */
+  --char:    #302915;
+  --char-2:  #3B331E;
+  --char-3:  #463D26;
+  /* warm lights */
+  --cream:   #FAF6EC;
+  --cream-2: #F3ECDB;
+  --paper:   #FFFDF7;
+  /* ink + lines */
+  --ink:     #1C1810;
+  --muted:   #8C8472;
+  --muted-2: #B4AB97;
+  --line:    #E6DCC7;
+  --line-d:  #3A3122;
+  /* gold */
+  --gold:    #C9A227;
+  --gold-d:  #A9851A;
+  --gold-l:  #E7CF86;
+  --champ:   #F0E0C0;
+  --grad-gold: linear-gradient(135deg,#E7CF86 0%,#C9A227 52%,#A9851A 100%);
+}
+
+/* ---- artboard reset ---- */
+.lp{
+  width:100%; height:100%;
+  font-family:'Hanken Grotesk',system-ui,sans-serif;
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  display:flex; overflow:hidden; position:relative;
+}
+.lp *{ box-sizing:border-box; margin:0; }
+.serif{ font-family:'Cormorant Garamond',Georgia,serif; }
+.eyebrow{
+  font-size:12px; font-weight:600; letter-spacing:.26em;
+  text-transform:uppercase; color:var(--gold-d);
+}
+
+/* ---- form atoms ---- */
+.field{ display:flex; flex-direction:column; gap:9px; }
+.field > label{
+  font-size:12.5px; font-weight:600; letter-spacing:.04em;
+  color:var(--ink);
+}
+.input{
+  height:54px; border-radius:11px;
+  border:1px solid var(--line);
+  background:var(--paper);
+  padding:0 16px;
+  font:inherit; font-size:15px; color:var(--ink);
+  display:flex; align-items:center; gap:10px;
+}
+.input input{
+  border:0; outline:0; background:transparent; flex:1;
+  font:inherit; font-size:15px; color:var(--ink);
+}
+.input input::placeholder{ color:var(--muted-2); }
+.input .tail{
+  font-size:12px; font-weight:600; color:var(--muted);
+  letter-spacing:.04em; cursor:pointer; white-space:nowrap;
+}
+.input .ico{ color:var(--muted); display:flex; }
+
+.btn-gold{
+  height:54px; border:0; border-radius:11px; width:100%;
+  background:var(--grad-gold); color:#241B07;
+  font:inherit; font-weight:700; font-size:15px; letter-spacing:.02em;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
+  box-shadow:0 8px 22px -10px rgba(169,133,26,.7);
+}
+.btn-ghost{
+  height:54px; border:1px solid var(--line); border-radius:11px; width:100%;
+  background:transparent; color:var(--ink);
+  font:inherit; font-weight:600; font-size:14.5px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;
+}
+.row-between{ display:flex; align-items:center; justify-content:space-between; }
+.check{ display:flex; align-items:center; gap:9px; font-size:13.5px; color:var(--muted); cursor:pointer; }
+.check .box{ width:17px; height:17px; border:1.5px solid var(--line); border-radius:5px; background:var(--paper); }
+.link-gold{ color:var(--gold-d); font-size:13.5px; font-weight:600; text-decoration:none; cursor:pointer; }
+.link-gold:hover{ color:var(--gold); }
+
+.divider{ display:flex; align-items:center; gap:14px; color:var(--muted-2); font-size:12px; letter-spacing:.08em; }
+.divider::before,.divider::after{ content:''; height:1px; flex:1; background:var(--line); }
+
+/* striped image placeholder */
+.ph{
+  background:
+    repeating-linear-gradient(135deg, rgba(201,162,39,.10) 0 2px, transparent 2px 11px),
+    linear-gradient(160deg,#3B331E,#302915);
+  display:flex; align-items:flex-end; justify-content:flex-start;
+}
+.ph .tag{
+  font-family:'Hanken Grotesk',monospace; font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--gold-l); opacity:.7;
+  border:1px solid rgba(231,207,134,.3); border-radius:999px;
+  padding:6px 12px; margin:22px;
+}
