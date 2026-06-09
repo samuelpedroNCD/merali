@@ -99,7 +99,11 @@ export function Drawer({
       clearTimeout(t);
       previouslyFocused?.focus?.();
     };
-  }, [open, onClose]);
+    // Depends ONLY on `open` — NOT onClose. onClose is an inline arrow recreated
+    // every parent render; including it here made the effect tear down and re-run
+    // on each keystroke, refocusing the first field. The latest onClose is read
+    // via onCloseRef instead.
+  }, [open]);
 
   if (!mounted || !open) return null;
 
