@@ -19,6 +19,7 @@ import type { PropertyRelated } from "@/lib/data/property-related";
 import { addUnit, autoGenerateUnits, deleteUnit } from "../unit-actions";
 import { PropertyMedia } from "./property-media";
 import { PropertyUtilities } from "./property-utilities";
+import { PropertyAddDrawer, type PropertyAddData } from "./property-add-drawers";
 
 const TABS = [
   { key: "tenants", label: "Tenants" },
@@ -29,12 +30,12 @@ const TABS = [
 ];
 
 
-const addAction: Record<string, { label: string; href: string }> = {
-  tenants: { label: "Add tenants", href: "/tenancies" },
-  documents: { label: "Upload document", href: "/documents" },
-  maintenance: { label: "Book new job", href: "/maintenance" },
-  financial: { label: "Add transaction", href: "/nominal" },
-  keys: { label: "Issue new key", href: "/keys" },
+const addLabel: Record<string, string> = {
+  tenants: "Add tenancy",
+  documents: "Upload document",
+  maintenance: "Book new job",
+  financial: "Add transaction",
+  keys: "Issue new key",
 };
 
 export function PropertyDetail({
@@ -42,15 +43,19 @@ export function PropertyDetail({
   related,
   canEdit,
   utilityTypes,
+  addData,
 }: {
   property: PropertyRow;
   related: PropertyRelated;
   canEdit: boolean;
   utilityTypes: string[];
+  addData: PropertyAddData;
 }) {
+  const router = useRouter();
   const [tab, setTab] = useState("tenants");
+  const [addOpen, setAddOpen] = useState(false);
   const landlordName = p.landlord?.full_name;
-  const add = addAction[tab];
+  const add = addLabel[tab];
 
   return (
     <>
@@ -133,11 +138,9 @@ export function PropertyDetail({
               {TABS.find((t) => t.key === tab)?.label}
             </h3>
             {add && (
-              <Link href={add.href}>
-                <Button size="toolbar" className="gap-[6px]">
-                  <Plus strokeWidth={1.8} className="h-[16px] w-[16px]" /> {add.label}
-                </Button>
-              </Link>
+              <Button size="toolbar" className="gap-[6px]" onClick={() => setAddOpen(true)}>
+                <Plus strokeWidth={1.8} className="h-[16px] w-[16px]" /> {add}
+              </Button>
             )}
           </div>
 
@@ -191,6 +194,15 @@ export function PropertyDetail({
             />
           )}
         </Card>
+
+        <PropertyAddDrawer
+          tab={tab}
+          propertyId={p.id}
+          open={addOpen}
+          onClose={() => setAddOpen(false)}
+          onSaved={() => router.refresh()}
+          data={addData}
+        />
       </main>
     </>
   );

@@ -43,7 +43,18 @@ export function Drawer({
 
   const panelRef = React.useRef<HTMLDivElement>(null);
 
+  // Keep the latest onClose in a ref so the focus-trap effect below does NOT
+  // depend on it. onClose is typically an inline arrow recreated on every parent
+  // render; if the effect depended on it, each keystroke (which re-renders the
+  // parent that owns the form state) would tear down and re-run the effect,
+  // refocusing the first field and stealing focus after a single character.
+  const onCloseRef = React.useRef(onClose);
+  React.useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
   // Escape to close + lock body scroll + focus trap while open.
+  // Runs once per open/close — never on keystrokes (see onCloseRef above).
   React.useEffect(() => {
     if (!open) return;
     const previouslyFocused = document.activeElement as HTMLElement | null;
@@ -57,7 +68,7 @@ export function Drawer({
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key === "Tab") {
