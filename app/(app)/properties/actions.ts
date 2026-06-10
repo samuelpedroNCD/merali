@@ -5,9 +5,40 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/data/activity";
+import { isChildConfig, isContainerConfig, isTopLevelConfig } from "@/lib/property-config";
 
 const emptyToNull = (v: unknown) =>
   v === "" || v === undefined ? null : v;
+
+/**
+ * Friendly, app-level hierarchy checks (the DB trigger is the hard backstop).
+ * Crucially also enforces that a Sub-building/Unit HAS a parent — the trigger
+ * permits orphans, so this is what actually closes the orphan-unit hole.
+ * Returns an error message, or null when valid.
+ */
+async function hierarchyError(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  configuration: string | null,
+  parentId: string | null,
+  selfId?: string,
+): Promise<string | null> {
+  if (parentId) {
+    if (isTopLevelConfig(configuration))
+      return `A "${configuration}" is a top-level property and cannot have a parent.`;
+    if (selfId && parentId === selfId) return "A property cannot be its own parent.";
+    const { data: parent } = await supabase
+      .from("property")
+      .select("configuration")
+      .eq("id", parentId)
+      .maybeSingle();
+    if (!parent) return "The selected parent property was not found.";
+    if (!isContainerConfig(parent.configuration as string | null))
+      return `A ${parent.configuration ?? "property"} cannot contain other properties — choose a building or sub-building.`;
+  } else if (isChildConfig(configuration)) {
+    return `A "${configuration}" must belong to a parent — choose a building or sub-building.`;
+  }
+  return null;
+}
 
 const PropertySchema = z.object({
   address: z.preprocess(emptyToNull, z.string().nullable()),
@@ -27,6 +58,7 @@ const PropertySchema = z.object({
     (v) => (v === "" || v == null ? null : Number(v)),
     z.number().int().nonnegative().nullable(),
   ),
+  parent_property_id: z.preprocess(emptyToNull, z.string().uuid().nullable()),
   landlord_id: z.preprocess(emptyToNull, z.string().uuid().nullable()),
   date_acquired: z.preprocess(emptyToNull, z.string().nullable()),
   leasehold_register_number: z.preprocess(emptyToNull, z.string().nullable()),
@@ -52,6 +84,9 @@ export async function createProperty(input: unknown): Promise<ActionResult> {
   if (!parsed.success) return { ok: false, error: "Invalid property data." };
 
   const supabase = await createClient();
+  const hErr = await hierarchyError(supabase, parsed.data.configuration, parsed.data.parent_property_id);
+  if (hErr) return { ok: false, error: hErr };
+
   const { data, error } = await supabase
     .from("property")
     .insert(parsed.data)
@@ -85,6 +120,9 @@ export async function updateProperty(
   if (!parsed.success) return { ok: false, error: "Invalid property data." };
 
   const supabase = await createClient();
+  const hErr = await hierarchyError(supabase, parsed.data.configuration, parsed.data.parent_property_id, id);
+  if (hErr) return { ok: false, error: hErr };
+
   const { data, error } = await supabase
     .from("property")
     .update(parsed.data)
@@ -114,6 +152,19 @@ export async function deleteProperty(id: string): Promise<ActionResult> {
     return { ok: false, error: (e as Error).message };
   }
   const supabase = await createClient();
+
+  // Guard: don't silently orphan children (the FK is ON DELETE SET NULL).
+  const { count } = await supabase
+    .from("property")
+    .select("id", { count: "exact", head: true })
+    .eq("parent_property_id", id);
+  if (count && count > 0) {
+    return {
+      ok: false,
+      error: `This property contains ${count} sub-${count === 1 ? "property" : "properties"} (sub-buildings or units). Delete or move them first.`,
+    };
+  }
+
   const { error } = await supabase.from("property").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
 

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { LEASABLE_CONFIGS } from "@/lib/property-config";
 
 export type ReportField = { key: string; label: string };
 export type ReportFilters = {
@@ -96,7 +97,7 @@ async function runProperties(f: ReportFilters) {
 async function runOccupancy(f: ReportFilters) {
   const supabase = await sb();
   const today = new Date().toISOString().slice(0, 10);
-  let propsQ = supabase.from("property").select("id, address, internal_code, configuration, status").neq("configuration", "Building").order("address").limit(5000);
+  let propsQ = supabase.from("property").select("id, address, internal_code, configuration, status").in("configuration", LEASABLE_CONFIGS as unknown as string[]).order("address").limit(5000);
   if (f.property_id) propsQ = propsQ.eq("id", f.property_id);
   const [{ data: props }, { data: leases }] = await Promise.all([
     propsQ,

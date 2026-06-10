@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { CONTAINER_CONFIGS } from "@/lib/property-config";
 
 export type PropertyRow = {
   id: string;
@@ -54,6 +55,28 @@ export async function getProperty(id: string): Promise<PropertyRow | null> {
     .eq("id", id)
     .maybeSingle();
   return (data as unknown as PropertyRow) ?? null;
+}
+
+/**
+ * Container properties (Buildings + Sub-buildings) that can be chosen as a parent
+ * when creating/editing a Unit or Sub-building. Excludes the property itself
+ * (passed as `excludeId`) so it can't become its own parent.
+ */
+export async function listContainerOptions(
+  excludeId?: string,
+): Promise<{ value: string; label: string }[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("property")
+    .select("id, address, internal_code, configuration")
+    .in("configuration", CONTAINER_CONFIGS as unknown as string[])
+    .order("address", { ascending: true });
+  return (data ?? [])
+    .filter((p) => p.id !== excludeId)
+    .map((p) => ({
+      value: p.id as string,
+      label: `${p.address || p.internal_code || "Property"} · ${p.configuration}`,
+    }));
 }
 
 /** Landlords for the ownership dropdown. */

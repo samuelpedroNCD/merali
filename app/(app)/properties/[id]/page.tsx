@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireUser, can } from "@/lib/auth";
 import { getProperty } from "@/lib/data/properties";
-import { getPropertyRelated } from "@/lib/data/property-related";
+import { getPropertyRelated, getAncestors, getPropertyRollup } from "@/lib/data/property-related";
 import { getOptions } from "@/lib/data/options";
 import { listTenantOptions } from "@/lib/data/tenants";
 import { listStaffOptions } from "@/lib/data/staff";
@@ -16,9 +16,11 @@ export default async function PropertyDetailPage({
 }) {
   const user = await requireUser();
   const { id } = await params;
-  const [property, related, options, tenants, staff, suppliers, nominals] = await Promise.all([
+  const [property, related, ancestors, rollup, options, tenants, staff, suppliers, nominals] = await Promise.all([
     getProperty(id),
     getPropertyRelated(id),
+    getAncestors(id),
+    getPropertyRollup(id),
     // All option sets the in-place "quick add" drawers need (+ utility_type for the utilities panel).
     getOptions([
       "utility_type",
@@ -39,6 +41,8 @@ export default async function PropertyDetailPage({
     <PropertyDetail
       property={property}
       related={related}
+      ancestors={ancestors}
+      rollup={rollup}
       canEdit={can(user, "properties", "edit")}
       utilityTypes={utilityTypes}
       addData={{ tenants, staff, suppliers, nominals, options }}

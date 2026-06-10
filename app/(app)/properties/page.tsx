@@ -1,5 +1,5 @@
 import { requireUser, can } from "@/lib/auth";
-import { listProperties, listLandlordOptions } from "@/lib/data/properties";
+import { listProperties, listLandlordOptions, listContainerOptions } from "@/lib/data/properties";
 import { getOptions } from "@/lib/data/options";
 import { PropertiesClient } from "./properties-client";
 
@@ -10,9 +10,10 @@ export default async function PropertiesPage({
 }) {
   const user = await requireUser();
   const { edit } = await searchParams;
-  const [properties, landlords, options] = await Promise.all([
+  const [properties, landlords, containers, options] = await Promise.all([
     listProperties(),
     listLandlordOptions(),
+    listContainerOptions(),
     getOptions([
       "property_configuration",
       "property_class",
@@ -27,6 +28,7 @@ export default async function PropertiesPage({
     <PropertiesClient
       properties={properties}
       landlords={landlords}
+      containers={containers}
       options={options}
       editId={edit}
       perms={{

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { LEASABLE_CONFIGS } from "@/lib/property-config";
 
 export type DashboardData = {
   totalProperties: number;
@@ -44,6 +45,7 @@ export async function getDashboardData(now = new Date()): Promise<DashboardData>
   const [
     totalProperties,
     newPropertiesThisMonth,
+    leasableCount,
     occupiedCount,
     openMaintenance,
     urgentMaintenance,
@@ -52,6 +54,8 @@ export async function getDashboardData(now = new Date()): Promise<DashboardData>
     countOf("property", (q) =>
       q.is("parent_property_id", null).gte("created_at", thisMonth.start),
     ),
+    // Leasable leaves (Units + Standalone Properties) — the denominator for occupancy.
+    countOf("property", (q) => q.in("configuration", LEASABLE_CONFIGS as unknown as string[])),
     // distinct active-lease properties (approx: count active leases)
     countOf("lease", (q) => q.eq("status", "Active")),
     countOf("maintenance", (q) => q.neq("status", "Completed")),
@@ -61,10 +65,10 @@ export async function getDashboardData(now = new Date()): Promise<DashboardData>
   ]);
 
   const occupancyRate =
-    totalProperties > 0
-      ? Math.min(100, Math.round((occupiedCount / totalProperties) * 100))
+    leasableCount > 0
+      ? Math.min(100, Math.round((occupiedCount / leasableCount) * 100))
       : 0;
-  const vacantUnits = Math.max(0, totalProperties - occupiedCount);
+  const vacantUnits = Math.max(0, leasableCount - occupiedCount);
 
   // Rent this month
   const { data: thisMonthSched } = await supabase

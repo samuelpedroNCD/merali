@@ -19,6 +19,7 @@ import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { gbp } from "@/lib/utils";
 import type { Option } from "@/lib/data/options";
 import type { PropertyRow } from "@/lib/data/properties";
+import { isChildConfig } from "@/lib/property-config";
 import { createProperty, updateProperty, deleteProperty } from "./actions";
 
 const TABS = [
@@ -41,6 +42,7 @@ function toForm(p?: PropertyRow | null): Form {
     area: p?.area ?? "",
     internal_code: p?.internal_code ?? "",
     configuration: p?.configuration ?? "",
+    parent_property_id: p?.parent_property_id ?? "",
     class: p?.class ?? "",
     property_type: p?.property_type ?? "",
     status: p?.status ?? "",
@@ -59,12 +61,14 @@ function toForm(p?: PropertyRow | null): Form {
 export function PropertiesClient({
   properties,
   landlords,
+  containers,
   options,
   perms,
   editId,
 }: {
   properties: PropertyRow[];
   landlords: Option[];
+  containers: Option[];
   options: Record<string, Option[]>;
   perms: Perms;
   editId?: string;
@@ -81,6 +85,10 @@ export function PropertiesClient({
   const [pending, startTransition] = useTransition();
 
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  // Parent options exclude the property being edited so it can't be its own parent.
+  const parentOptions = containers.filter((c) => c.value !== editing?.id);
+  const needsParent = isChildConfig(form.configuration);
 
   function openCreate() {
     setEditing(null);
@@ -133,9 +141,11 @@ export function PropertiesClient({
     });
   }
 
+  // Default to top-level properties (buildings + standalones); a search spans all
+  // levels so units/sub-buildings remain findable.
   const filtered = properties.filter((p) => {
-    if (!query.trim()) return true;
-    const s = query.toLowerCase();
+    const s = query.trim().toLowerCase();
+    if (!s) return p.parent_property_id == null;
     return (
       (p.address ?? "").toLowerCase().includes(s) ||
       (p.internal_code ?? "").toLowerCase().includes(s) ||
@@ -163,7 +173,7 @@ export function PropertiesClient({
             Properties
           </h1>
           <p className="mt-[2px] text-[14px] text-muted">
-            Property records, units and compliance.
+            Buildings and standalone properties — open one to see its sub-buildings and units. Search spans every level.
           </p>
         </div>
 
@@ -200,12 +210,15 @@ export function PropertiesClient({
               key={p.id}
               className="grid min-w-[760px] grid-cols-[1.8fr_0.7fr_1fr_0.9fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] last:border-b-0"
             >
-              <Link
-                href={`/properties/${p.id}`}
-                className="truncate font-medium text-text hover:text-accent"
-              >
-                {p.address || "—"}
-              </Link>
+              <div className="flex min-w-0 items-center gap-2">
+                <Link
+                  href={`/properties/${p.id}`}
+                  className="truncate font-medium text-text hover:text-accent"
+                >
+                  {p.address || "—"}
+                </Link>
+                {p.configuration && <Badge tone="muted">{p.configuration}</Badge>}
+              </div>
               <span className="text-text-2">{p.internal_code || "—"}</span>
               <span className="text-text-2">{p.class || "—"}</span>
               <span>
@@ -298,6 +311,16 @@ export function PropertiesClient({
               />
             </Field>
             <SelectField label="Property configuration" value={form.configuration} onChange={(v) => set("configuration", v)} options={options.property_configuration} />
+            {needsParent && (
+              <SelectField
+                label="Parent (building or sub-building)"
+                value={form.parent_property_id}
+                onChange={(v) => set("parent_property_id", v)}
+                options={parentOptions}
+                placeholder="Choose a parent…"
+                className="col-span-2"
+              />
+            )}
             <Field label="Internal code">
               <Input value={form.internal_code} onChange={(e) => set("internal_code", e.target.value)} placeholder="e.g. 323A" />
             </Field>
