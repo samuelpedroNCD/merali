@@ -17,6 +17,7 @@ const Schema = z.object({
   vat_rate: z.preprocess((v) => (v === "" || v == null ? 0 : Number(v)), z.number().min(0)),
   txn_date: z.preprocess(s, z.string().nullable()),
   property_id: z.preprocess(s, z.string().uuid().nullable()),
+  lease_id: z.preprocess(s, z.string().uuid().nullable()),
   nominal_code_id: z.preprocess(s, z.string().uuid().nullable()),
   status: z.preprocess(s, z.string().nullable()),
   reference: z.preprocess(s, z.string().nullable()),
@@ -38,6 +39,7 @@ function buildRow(d: z.infer<typeof Schema>) {
     amount_net: net,
     txn_date: d.txn_date,
     property_id: d.property_id,
+    lease_id: d.lease_id,
     nominal_code_id: d.nominal_code_id,
     status: d.status,
     reference: d.reference,
@@ -45,6 +47,25 @@ function buildRow(d: z.infer<typeof Schema>) {
     notes: d.notes,
     manual_entry: true,
   };
+}
+
+/**
+ * Resolve the tenancy a transaction belongs to: an explicit lease_id wins;
+ * otherwise, if the property has exactly one Active lease, link to it.
+ */
+async function resolveLeaseId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  leaseId: string | null,
+  propertyId: string | null,
+): Promise<string | null> {
+  if (leaseId) return leaseId;
+  if (!propertyId) return null;
+  const { data } = await supabase
+    .from("lease")
+    .select("id")
+    .eq("property_id", propertyId)
+    .eq("status", "Active");
+  return data && data.length === 1 ? (data[0].id as string) : null;
 }
 
 export async function createTransaction(input: unknown): Promise<ActionResult> {
@@ -58,9 +79,10 @@ export async function createTransaction(input: unknown): Promise<ActionResult> {
   if (!parsed.success) return { ok: false, error: "Invalid transaction data." };
 
   const supabase = await createClient();
+  const lease_id = await resolveLeaseId(supabase, parsed.data.lease_id, parsed.data.property_id);
   const { data, error } = await supabase
     .from("transaction")
-    .insert(buildRow(parsed.data))
+    .insert({ ...buildRow(parsed.data), lease_id })
     .select("id")
     .single();
   if (error) return { ok: false, error: error.message };
@@ -74,6 +96,7 @@ export async function createTransaction(input: unknown): Promise<ActionResult> {
   });
   revalidatePath("/nominal");
   revalidatePath("/finances");
+  if (lease_id) revalidatePath(`/tenancies/${lease_id}`);
   return { ok: true, id: data.id };
 }
 
@@ -88,7 +111,8 @@ export async function updateTransaction(id: string, input: unknown): Promise<Act
   if (!parsed.success) return { ok: false, error: "Invalid transaction data." };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("transaction").update(buildRow(parsed.data)).eq("id", id);
+  const lease_id = await resolveLeaseId(supabase, parsed.data.lease_id, parsed.data.property_id);
+  const { error } = await supabase.from("transaction").update({ ...buildRow(parsed.data), lease_id }).eq("id", id);
   if (error) return { ok: false, error: error.message };
 
   await logActivity({
@@ -99,6 +123,7 @@ export async function updateTransaction(id: string, input: unknown): Promise<Act
   });
   revalidatePath("/nominal");
   revalidatePath("/finances");
+  if (lease_id) revalidatePath(`/tenancies/${lease_id}`);
   return { ok: true, id };
 }
 

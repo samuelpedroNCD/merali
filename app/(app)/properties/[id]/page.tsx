@@ -7,6 +7,7 @@ import { listTenantOptions } from "@/lib/data/tenants";
 import { listStaffOptions } from "@/lib/data/staff";
 import { listSupplierOptions } from "@/lib/data/suppliers";
 import { nominalOptions } from "@/lib/data/nominals";
+import { listLeaseOptions } from "@/lib/data/leases";
 import { PropertyDetail } from "./property-detail";
 
 export default async function PropertyDetailPage({
@@ -16,7 +17,7 @@ export default async function PropertyDetailPage({
 }) {
   const user = await requireUser();
   const { id } = await params;
-  const [property, related, ancestors, rollup, options, tenants, staff, suppliers, nominals] = await Promise.all([
+  const [property, related, ancestors, rollup, options, tenants, staff, suppliers, nominals, leases] = await Promise.all([
     getProperty(id),
     getPropertyRelated(id),
     getAncestors(id),
@@ -33,6 +34,7 @@ export default async function PropertyDetailPage({
     listStaffOptions(),
     listSupplierOptions(),
     nominalOptions(),
+    listLeaseOptions(),
   ]);
   if (!property) notFound();
   const utilityTypes = (options.utility_type ?? []).map((o) => o.value);
@@ -45,7 +47,7 @@ export default async function PropertyDetailPage({
       rollup={rollup}
       canEdit={can(user, "properties", "edit")}
       utilityTypes={utilityTypes}
-      addData={{ tenants, staff, suppliers, nominals, options }}
+      addData={{ tenants, staff, suppliers, nominals, leases, options }}
     />
   );
 }

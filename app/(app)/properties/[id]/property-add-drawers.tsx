@@ -7,6 +7,7 @@ import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
 import { useToast } from "@/components/ui/toast";
 import type { Option } from "@/lib/data/options";
+import type { LeaseOption } from "@/lib/data/leases";
 import { createMaintenance } from "../../maintenance/actions";
 import { createTransaction } from "../../nominal/actions";
 import { createKey } from "../../keys/actions";
@@ -21,6 +22,7 @@ export type PropertyAddData = {
   staff: Opt[];
   suppliers: Opt[];
   nominals: Opt[];
+  leases: LeaseOption[];
   options: Record<string, Option[]>;
 };
 
@@ -131,10 +133,15 @@ function MaintenanceAdd({ propertyId, open, onClose, onSaved, data }: SubProps) 
 
 // ---------------------------------------------------------------- Transaction
 function TransactionAdd({ propertyId, open, onClose, onSaved, data }: SubProps) {
-  const { options, nominals } = data;
+  const { options, nominals, leases } = data;
+  // Tenancies for this property; default to the single active one if unambiguous.
+  const propertyLeases = leases.filter((l) => l.property_id === propertyId);
+  const activeLeases = propertyLeases.filter((l) => l.active);
+  const defaultLease = activeLeases.length === 1 ? activeLeases[0].value : "";
   const blank = (): Form => ({
     type: "Income", category: "", amount_gross: "", vat_rate: "0",
     txn_date: new Date().toISOString().slice(0, 10), nominal_code_id: "",
+    lease_id: defaultLease,
     status: "", reference: "", receipt_link: "", notes: "",
   });
   const [form, setForm] = useState<Form>(blank());
@@ -154,6 +161,9 @@ function TransactionAdd({ propertyId, open, onClose, onSaved, data }: SubProps) 
         <SelectField label="Type" value={form.type} onChange={(v) => set("type", v)} options={options.transaction_type} />
         <SelectField label="Category" value={form.category} onChange={(v) => set("category", v)} options={options.transaction_category} />
         <SelectFieldOpt label="Nominal code" value={form.nominal_code_id} onChange={(v) => set("nominal_code_id", v)} options={nominals} className="col-span-2" />
+        {propertyLeases.length > 0 && (
+          <SelectFieldOpt label="Tenancy" value={form.lease_id} onChange={(v) => set("lease_id", v)} options={propertyLeases} className="col-span-2" />
+        )}
         <Field label="Amount (gross, £)"><Input type="number" step="0.01" min={0} value={form.amount_gross} onChange={(e) => set("amount_gross", e.target.value)} /></Field>
         <SelectField label="VAT rate (%)" value={form.vat_rate} onChange={(v) => set("vat_rate", v)} options={options.vat_rate} />
         <Field label="Date"><Input type="date" value={form.txn_date} onChange={(e) => set("txn_date", e.target.value)} /></Field>

@@ -98,14 +98,14 @@ export async function reconcileTransaction(
 
   const { data: sched } = await supabase
     .from("rent_schedule")
-    .select("amount_due")
+    .select("amount_due, lease_id")
     .eq("id", scheduleId)
     .maybeSingle();
   if (!sched) return { ok: false, error: "Schedule row not found." };
 
   const { error: e1 } = await supabase
     .from("transaction")
-    .update({ reconciled_with: scheduleId, linked_invoice_id: scheduleId, needs_review: false })
+    .update({ reconciled_with: scheduleId, linked_invoice_id: scheduleId, lease_id: sched.lease_id, needs_review: false })
     .eq("id", txnId);
   if (e1) return { ok: false, error: e1.message };
 
@@ -124,6 +124,7 @@ export async function reconcileTransaction(
   revalidatePath("/nominal");
   revalidatePath("/finances");
   revalidatePath("/payments");
+  if (sched.lease_id) revalidatePath(`/tenancies/${sched.lease_id}`);
   return { ok: true };
 }
 

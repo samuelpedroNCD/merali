@@ -15,6 +15,7 @@ import { Drawer } from "@/components/ui/drawer";
 import { gbp, fmtDate } from "@/lib/utils";
 import type { Option } from "@/lib/data/options";
 import type { TransactionRow, LedgerTotals } from "@/lib/data/transactions";
+import type { LeaseOption } from "@/lib/data/leases";
 import { createTransaction, updateTransaction, deleteTransaction } from "./actions";
 import { ReconcileDrawer } from "./reconcile-drawer";
 
@@ -30,6 +31,7 @@ function toForm(t?: TransactionRow | null): Form {
     vat_rate: t?.vat_rate != null ? String(t.vat_rate) : "0",
     txn_date: t?.txn_date ?? new Date().toISOString().slice(0, 10),
     property_id: t?.property_id ?? "",
+    lease_id: t?.lease_id ?? "",
     nominal_code_id: t?.nominal_code_id ?? "",
     status: t?.status ?? "",
     reference: t?.reference ?? "",
@@ -42,6 +44,7 @@ export function NominalClient({
   transactions,
   totals,
   properties,
+  leases,
   options,
   nominals,
   perms,
@@ -49,6 +52,7 @@ export function NominalClient({
   transactions: TransactionRow[];
   totals: LedgerTotals;
   properties: Opt[];
+  leases: LeaseOption[];
   options: Record<string, Option[]>;
   nominals: Opt[];
   perms: Perms;
@@ -65,6 +69,14 @@ export function NominalClient({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  // Picking a property auto-selects its single active tenancy (still overridable).
+  function onPropertyChange(v: string) {
+    setForm((f) => {
+      const active = leases.filter((l) => l.property_id === v && l.active);
+      return { ...f, property_id: v, lease_id: active.length === 1 ? active[0].value : "" };
+    });
+  }
 
   const rows = useMemo(
     () =>
@@ -242,7 +254,8 @@ export function NominalClient({
           <SelectFieldOpt label="Nominal code" value={form.nominal_code_id} onChange={(v) => set("nominal_code_id", v)} options={nominals} placeholder="Choose…" className="col-span-2" />
           <Field label="Amount (gross, £)"><Input type="number" step="0.01" min={0} value={form.amount_gross} onChange={(e) => set("amount_gross", e.target.value)} /></Field>
           <SelectField label="VAT rate (%)" value={form.vat_rate} onChange={(v) => set("vat_rate", v)} options={options.vat_rate} />
-          <SelectFieldOpt label="Property" value={form.property_id} onChange={(v) => set("property_id", v)} options={properties} placeholder="Choose…" />
+          <SelectFieldOpt label="Property" value={form.property_id} onChange={onPropertyChange} options={properties} placeholder="Choose…" />
+          <SelectFieldOpt label="Tenancy" value={form.lease_id} onChange={(v) => set("lease_id", v)} options={leases} placeholder="None / not tenancy-specific" />
           <Field label="Date"><Input type="date" value={form.txn_date} onChange={(e) => set("txn_date", e.target.value)} /></Field>
           <SelectField label="Status" value={form.status} onChange={(v) => set("status", v)} options={options.invoice_status} />
           <Field label="Reference"><Input value={form.reference} onChange={(e) => set("reference", e.target.value)} placeholder="e.g. #J083" /></Field>

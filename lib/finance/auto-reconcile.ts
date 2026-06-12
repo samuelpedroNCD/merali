@@ -22,12 +22,13 @@ export async function autoReconcile(supabase: SupabaseClient): Promise<number> {
   for (const t of txns ?? []) {
     let q = supabase
       .from("rent_schedule")
-      .select("id, due_date, amount_due, amount_collected, invoice_status")
+      .select("id, due_date, amount_due, amount_collected, invoice_status, lease_id")
       .neq("invoice_status", "Paid")
       .limit(200);
     if (t.property_id) q = q.eq("property_id", t.property_id);
     const { data: rows } = await q;
 
+    const leaseById = new Map<string, string | null>((rows ?? []).map((r) => [r.id as string, (r.lease_id as string) ?? null]));
     const candidates: ScheduleCandidate[] = (rows ?? []).map((r) => ({
       id: r.id as string,
       due_date: r.due_date as string,
@@ -48,7 +49,7 @@ export async function autoReconcile(supabase: SupabaseClient): Promise<number> {
 
     await supabase
       .from("transaction")
-      .update({ reconciled_with: best.candidate.id, linked_invoice_id: best.candidate.id, needs_review: false })
+      .update({ reconciled_with: best.candidate.id, linked_invoice_id: best.candidate.id, lease_id: leaseById.get(best.candidate.id) ?? null, needs_review: false })
       .eq("id", t.id);
     await supabase
       .from("rent_schedule")
