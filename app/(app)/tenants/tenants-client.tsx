@@ -14,6 +14,7 @@ import { tenantStatusTone as statusTone } from "@/lib/badge-tones";
 import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
 import { Tabs } from "@/components/ui/tabs";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import type { Option } from "@/lib/data/options";
 import type { TenantRow } from "@/lib/data/tenants";
 import { createTenant, updateTenant, deleteTenant } from "./actions";
@@ -143,16 +144,16 @@ export function TenantsClient({
           {filtered.length === 0 && (
             <div className="grid place-items-center py-16 text-center">
               <p className="text-[15px] font-medium text-text-2">No tenants yet</p>
-              <p className="mt-1 text-[13px] text-muted">{perms.create ? "Add your first tenant to get started." : "No records available."}</p>
+              <p className="mt-1 text-[15px] text-muted">{perms.create ? "Add your first tenant to get started." : "No records available."}</p>
             </div>
           )}
           {filtered.map((t) => (
-            <div key={t.id} className="grid min-w-[680px] grid-cols-[1.4fr_1.6fr_1fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] last:border-b-0">
+            <div key={t.id} onClick={() => router.push(`/tenants/${t.id}`)} className="grid min-w-[680px] cursor-pointer grid-cols-[1.4fr_1.6fr_1fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] transition-colors last:border-b-0 hover:bg-surface-2/40">
               <Link href={`/tenants/${t.id}`} className="truncate font-medium text-text hover:text-accent">{t.full_name || "—"}</Link>
               <span className="truncate text-text-2">{t.email || "—"}</span>
               <span className="text-text-2">{t.phone || "—"}</span>
               <span>{t.status ? <Badge tone={statusTone(t.status)} dot>{t.status}</Badge> : <span className="text-muted">—</span>}</span>
-              <span className="flex justify-end gap-1">
+              <span className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                 {perms.edit && (
                   <button onClick={() => openEdit(t)} className="grid h-8 w-8 place-items-center rounded-md text-text-2 transition-colors hover:bg-surface-2/60" aria-label="Edit">
                     <Pencil strokeWidth={1.6} className="h-[16px] w-[16px]" />
@@ -176,7 +177,7 @@ export function TenantsClient({
         subtitle="Add or edit the tenant information"
         footer={
           <>
-            {error && <span className="mr-auto text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+            {error && <span className="mr-auto text-[15px] font-medium text-[var(--bad)]">{error}</span>}
             <Button variant="ghost" size="toolbar" onClick={() => setOpen(false)}>Cancel</Button>
             <Button size="toolbar" onClick={save} disabled={pending}>
               {pending && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -209,8 +210,12 @@ export function TenantsClient({
           </div>
         )}
         {tab === "forwarding" && (
-          <Field label="Forwarding address">
-            <Textarea rows={4} value={form.forwarding_address} onChange={(e) => set("forwarding_address", e.target.value)} placeholder="Where to forward post after the tenancy ends…" />
+          <Field label="Forwarding address" hint="Where to forward post after the tenancy ends.">
+            <AddressAutocomplete
+              value={form.forwarding_address}
+              onChange={(v) => set("forwarding_address", v)}
+              onResolve={(a) => set("forwarding_address", a.address)}
+            />
           </Field>
         )}
         {tab === "nok" && (

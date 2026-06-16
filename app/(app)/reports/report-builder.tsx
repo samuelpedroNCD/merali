@@ -121,7 +121,7 @@ export function ReportBuilder({
             <p className="mb-2 text-[12.5px] font-semibold text-text">Columns</p>
             <div className="flex flex-col gap-1.5 rounded-md border border-border p-3">
               {source?.fields.map((f) => (
-                <label key={f.key} className="flex cursor-pointer items-center gap-2 text-[13px] text-text-2">
+                <label key={f.key} className="flex cursor-pointer items-center gap-2 text-[15px] text-text-2">
                   <input type="checkbox" checked={fields.includes(f.key)} onChange={() => toggleField(f.key)} className="h-3.5 w-3.5 accent-[var(--gold)]" />
                   {f.label}
                 </label>
@@ -162,7 +162,7 @@ export function ReportBuilder({
               <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.05em] text-muted">Saved reports</p>
               <ul className="flex flex-col gap-1">
                 {templates.map((t) => (
-                  <li key={t.id} className="flex items-center justify-between gap-2 text-[13px]">
+                  <li key={t.id} className="flex items-center justify-between gap-2 text-[15px]">
                     <button onClick={() => load(t)} className="truncate text-left text-text-2 hover:text-accent">{t.name}</button>
                     <button onClick={() => removeTemplate(t)} aria-label="Delete" className="text-[var(--bad)] hover:opacity-80"><Trash2 strokeWidth={1.6} className="h-[14px] w-[14px]" /></button>
                   </li>
@@ -175,11 +175,11 @@ export function ReportBuilder({
         {/* Preview */}
         <div className="min-w-0 overflow-x-auto rounded-md border border-border">
           {!preview ? (
-            <p className="px-4 py-10 text-center text-[13px] text-muted">Choose a source and columns, then <strong>Run</strong> to preview.</p>
+            <p className="px-4 py-10 text-center text-[15px] text-muted">Choose a source and columns, then <strong>Run</strong> to preview.</p>
           ) : preview.rows.length === 0 ? (
-            <p className="px-4 py-10 text-center text-[13px] text-muted">No matching rows.</p>
+            <p className="px-4 py-10 text-center text-[15px] text-muted">No matching rows.</p>
           ) : (
-            <table className="w-full text-[13px]">
+            <table className="w-full text-[15px]">
               <thead>
                 <tr className="border-b border-border bg-surface-2/40 text-left text-[11.5px] font-semibold uppercase tracking-[0.05em] text-muted">
                   {preview.header.map((h, i) => (<th key={i} className="whitespace-nowrap px-3 py-2">{h}</th>))}

@@ -179,11 +179,11 @@ export function TenanciesClient({
           {leases.length === 0 && (
             <div className="grid place-items-center py-16 text-center">
               <p className="text-[15px] font-medium text-text-2">No leases yet</p>
-              <p className="mt-1 text-[13px] text-muted">{perms.create ? "Create a lease — the rent schedule generates automatically." : "No records available."}</p>
+              <p className="mt-1 text-[15px] text-muted">{perms.create ? "Create a lease — the rent schedule generates automatically." : "No records available."}</p>
             </div>
           )}
           {leases.map((l) => (
-            <div key={l.id} className="grid min-w-[840px] grid-cols-[1.3fr_1.6fr_0.9fr_1fr_1fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] last:border-b-0">
+            <div key={l.id} onClick={() => router.push(`/tenancies/${l.id}`)} className="grid min-w-[840px] cursor-pointer grid-cols-[1.3fr_1.6fr_0.9fr_1fr_1fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] transition-colors last:border-b-0 hover:bg-surface-2/40">
               <Link href={`/tenancies/${l.id}`} className="truncate font-medium text-text hover:text-accent">
                 {l.tenants.length ? l.tenants.find((t) => t.is_lead)?.name ?? l.tenants[0].name : l.tenant?.full_name || "—"}
                 {l.tenants.length > 1 ? ` +${l.tenants.length - 1}` : ""}
@@ -193,7 +193,7 @@ export function TenanciesClient({
               <span className="text-text-2">{l.start_date ? fmtDate(l.start_date) : "—"}</span>
               <span className="text-text-2">{l.end_date ? fmtDate(l.end_date) : "—"}</span>
               <span>{l.status ? <Badge tone={statusTone(l.status)} dot>{l.status}</Badge> : <span className="text-muted">—</span>}</span>
-              <span className="flex justify-end gap-1">
+              <span className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                 {perms.edit && (
                   <button onClick={() => openEdit(l)} className="grid h-8 w-8 place-items-center rounded-md text-text-2 transition-colors hover:bg-surface-2/60" aria-label="Edit">
                     <Pencil strokeWidth={1.6} className="h-[16px] w-[16px]" />
@@ -217,7 +217,7 @@ export function TenanciesClient({
         subtitle="Lease terms — the rent schedule regenerates on save"
         footer={
           <>
-            {error && <span className="mr-auto text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+            {error && <span className="mr-auto text-[15px] font-medium text-[var(--bad)]">{error}</span>}
             <Button variant="ghost" size="toolbar" onClick={() => setOpen(false)}>Cancel</Button>
             <Button size="toolbar" onClick={save} disabled={pending}>
               {pending && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -231,7 +231,7 @@ export function TenanciesClient({
           <div className="col-span-2">
             <p className="mb-2 text-[12.5px] font-semibold text-text">Tenants <span className="font-normal text-muted">— one or more; the lead receives statements</span></p>
             <div className="max-h-[200px] overflow-y-auto thin-scroll rounded-md border border-border">
-              {tenants.length === 0 && <p className="px-3 py-3 text-[13px] text-muted">No tenants yet — add tenants first.</p>}
+              {tenants.length === 0 && <p className="px-3 py-3 text-[15px] text-muted">No tenants yet — add tenants first.</p>}
               {tenants.map((t) => {
                 const checked = tenantIds.includes(t.value);
                 return (
@@ -286,10 +286,10 @@ export function TenanciesClient({
 
           <label className="col-span-2 flex cursor-pointer items-center gap-3 rounded-md border border-border px-4 py-3">
             <input type="checkbox" checked={form.exclude_from_reminders === "true"} onChange={(e) => set("exclude_from_reminders", e.target.checked ? "true" : "false")} className="h-4 w-4 accent-[var(--gold)]" />
-            <span className="text-[13px] text-text">Exclude this tenancy from overdue-rent reminders</span>
+            <span className="text-[15px] text-text">Exclude this tenancy from overdue-rent reminders</span>
           </label>
           <Field label="Notes" className="col-span-2"><Textarea rows={3} value={form.notes} onChange={(e) => set("notes", e.target.value)} /></Field>
-          <div className="col-span-2 flex items-center gap-2 rounded-md border border-border bg-surface-2/40 px-4 py-3 text-[13px] text-text-2">
+          <div className="col-span-2 flex items-center gap-2 rounded-md border border-border bg-surface-2/40 px-4 py-3 text-[15px] text-text-2">
             <CalendarClock strokeWidth={1.6} className="h-4 w-4 text-accent" />
             On save, the rent schedule is generated from the start/end dates at the chosen frequency — paid instalments are preserved.
           </div>

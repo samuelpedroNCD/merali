@@ -32,7 +32,7 @@ export function OptionSetsManager({ optionSets }: { optionSets: OptionCategory[]
   return (
     <Card className="max-w-[760px]">
       <h3 className="text-[16px] font-semibold text-text">Option sets</h3>
-      <p className="mb-5 mt-1 text-[13px] text-muted">
+      <p className="mb-5 mt-1 text-[15px] text-muted">
         Manage the dropdown values used across the app. Deactivating hides a value from new
         forms without affecting existing records.
       </p>
@@ -60,7 +60,7 @@ export function OptionSetsManager({ optionSets }: { optionSets: OptionCategory[]
           />
         ))}
         {(!current || current.values.length === 0) && (
-          <p className="text-[13px] text-muted">No values in this category yet.</p>
+          <p className="text-[15px] text-muted">No values in this category yet.</p>
         )}
       </div>
 

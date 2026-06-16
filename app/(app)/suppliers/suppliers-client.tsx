@@ -107,9 +107,9 @@ export function SuppliersClient({
           <p className="mt-[2px] text-[14px] text-muted">Manage contractors and service providers.</p>
         </div>
         <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-3">
-          <Card><p className="text-[13px] text-muted">Total suppliers</p><p className="mt-2 font-display text-[28px] font-semibold text-text">{stats.total}</p></Card>
-          <Card><p className="text-[13px] text-muted">Active suppliers</p><p className="mt-2 font-display text-[28px] font-semibold text-text">{stats.active}</p></Card>
-          <Card><p className="text-[13px] text-muted">Outstanding bills</p><p className="mt-2 font-display text-[28px] font-semibold text-text">{gbp(stats.outstanding)}</p></Card>
+          <Card><p className="text-[15px] text-muted">Total suppliers</p><p className="mt-2 font-display text-[28px] font-semibold text-text">{stats.total}</p></Card>
+          <Card><p className="text-[15px] text-muted">Active suppliers</p><p className="mt-2 font-display text-[28px] font-semibold text-text">{stats.active}</p></Card>
+          <Card><p className="text-[15px] text-muted">Outstanding bills</p><p className="mt-2 font-display text-[28px] font-semibold text-text">{gbp(stats.outstanding)}</p></Card>
         </div>
         <Input placeholder="Search suppliers…" className="max-w-[460px]" value={query} onChange={(e) => setQuery(e.target.value)} />
         <Card className="overflow-x-auto p-0">
@@ -119,17 +119,17 @@ export function SuppliersClient({
           {filtered.length === 0 && (
             <div className="grid place-items-center py-16 text-center">
               <p className="text-[15px] font-medium text-text-2">No suppliers yet</p>
-              <p className="mt-1 text-[13px] text-muted">{perms.create ? "Add your first supplier." : "No records available."}</p>
+              <p className="mt-1 text-[15px] text-muted">{perms.create ? "Add your first supplier." : "No records available."}</p>
             </div>
           )}
           {filtered.map((s) => (
-            <div key={s.id} className="grid min-w-[720px] grid-cols-[1.5fr_1.5fr_1fr_0.9fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] last:border-b-0">
+            <div key={s.id} onClick={() => perms.edit && openEdit(s)} className="grid min-w-[720px] cursor-pointer grid-cols-[1.5fr_1.5fr_1fr_0.9fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] transition-colors last:border-b-0 hover:bg-surface-2/40">
               <span className="truncate font-medium text-text">{s.business_name}</span>
               <span className="truncate text-text-2">{s.primary_contact_name || s.primary_contact_email || "—"}</span>
               <span className="text-text-2">{s.type || "—"}</span>
               <span>{s.status ? <Badge tone={statusTone(s.status)} dot>{s.status}</Badge> : <span className="text-muted">—</span>}</span>
               <span className="text-right text-text-2">{s.outstanding != null ? gbp(Number(s.outstanding)) : "—"}</span>
-              <span className="flex justify-end gap-1">
+              <span className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                 {perms.edit && (
                   <button onClick={() => openEdit(s)} className="grid h-8 w-8 place-items-center rounded-md text-text-2 transition-colors hover:bg-surface-2/60" aria-label="Edit">
                     <Pencil strokeWidth={1.6} className="h-[16px] w-[16px]" />
@@ -154,7 +154,7 @@ export function SuppliersClient({
         size="md"
         footer={
           <>
-            {error && <span className="mr-auto text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+            {error && <span className="mr-auto text-[15px] font-medium text-[var(--bad)]">{error}</span>}
             <Button variant="ghost" size="toolbar" onClick={() => setOpen(false)}>Cancel</Button>
             <Button size="toolbar" onClick={save} disabled={pending}>
               {pending && <Loader2 className="h-4 w-4 animate-spin" />}

@@ -105,7 +105,7 @@ function PersonalInfo({
   return (
     <Card className="max-w-[680px]">
       <h3 className="text-[16px] font-semibold text-text">Personal information</h3>
-      <p className="mb-5 mt-1 text-[13px] text-muted">Modify your profile details here.</p>
+      <p className="mb-5 mt-1 text-[15px] text-muted">Modify your profile details here.</p>
       <div className="mb-5 flex items-center gap-4">
         {profile.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -128,11 +128,11 @@ function PersonalInfo({
           Save
         </Button>
         {msg && (
-          <span className="inline-flex items-center gap-1 text-[13px] font-medium text-[var(--good)]">
+          <span className="inline-flex items-center gap-1 text-[15px] font-medium text-[var(--good)]">
             <Check className="h-4 w-4" /> {msg}
           </span>
         )}
-        {error && <span className="text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+        {error && <span className="text-[15px] font-medium text-[var(--bad)]">{error}</span>}
       </div>
     </Card>
   );
@@ -166,7 +166,7 @@ function NotificationPrefs({ prefs, onSaved }: { prefs: NotifyPrefs; onSaved: ()
   return (
     <Card className="max-w-[680px]">
       <h3 className="text-[16px] font-semibold text-text">Notification preferences</h3>
-      <p className="mb-5 mt-1 text-[13px] text-muted">Choose which alerts you receive and how.</p>
+      <p className="mb-5 mt-1 text-[15px] text-muted">Choose which alerts you receive and how.</p>
 
       <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">Channels</p>
       <Toggle
@@ -188,11 +188,11 @@ function NotificationPrefs({ prefs, onSaved }: { prefs: NotifyPrefs; onSaved: ()
           {pending && <Loader2 className="h-4 w-4 animate-spin" />} Save preferences
         </Button>
         {msg && (
-          <span className="inline-flex items-center gap-1 text-[13px] font-medium text-[var(--good)]">
+          <span className="inline-flex items-center gap-1 text-[15px] font-medium text-[var(--good)]">
             <Check className="h-4 w-4" /> {msg}
           </span>
         )}
-        {error && <span className="text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+        {error && <span className="text-[15px] font-medium text-[var(--bad)]">{error}</span>}
       </div>
     </Card>
   );
@@ -236,7 +236,7 @@ function AccountSettings({ email }: { email: string }) {
       <ChangePasswordCard />
       <Card>
         <h3 className="text-[16px] font-semibold text-text">Delete account</h3>
-        <p className="mt-1 text-[13px] text-muted">
+        <p className="mt-1 text-[15px] text-muted">
           Account removal is restricted — ask an administrator. (Wired with staff admin in a later phase.)
         </p>
         <Button variant="danger" size="toolbar" className="mt-4" disabled>
@@ -264,14 +264,14 @@ function ChangeEmailCard({ currentEmail }: { currentEmail: string }) {
   return (
     <Card>
       <h3 className="text-[16px] font-semibold text-text">Change email</h3>
-      <p className="mb-4 mt-1 text-[13px] text-muted">Update your registered email address.</p>
+      <p className="mb-4 mt-1 text-[15px] text-muted">Update your registered email address.</p>
       <Field label="Email"><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
       <div className="mt-4 flex items-center gap-3">
         <Button size="toolbar" onClick={save} disabled={pending}>
           {pending && <Loader2 className="h-4 w-4 animate-spin" />} Update email
         </Button>
-        {msg && <span className="text-[13px] font-medium text-[var(--good)]">{msg}</span>}
-        {error && <span className="text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+        {msg && <span className="text-[15px] font-medium text-[var(--good)]">{msg}</span>}
+        {error && <span className="text-[15px] font-medium text-[var(--bad)]">{error}</span>}
       </div>
     </Card>
   );
@@ -298,7 +298,7 @@ function ChangePasswordCard() {
   return (
     <Card>
       <h3 className="text-[16px] font-semibold text-text">Change password</h3>
-      <p className="mb-4 mt-1 text-[13px] text-muted">Use a mix of letters, numbers and symbols.</p>
+      <p className="mb-4 mt-1 text-[15px] text-muted">Use a mix of letters, numbers and symbols.</p>
       <div className="grid grid-cols-2 gap-5">
         <Field label="New password"><Input type="password" value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
         <Field label="Confirm password"><Input type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} /></Field>
@@ -307,8 +307,8 @@ function ChangePasswordCard() {
         <Button size="toolbar" onClick={save} disabled={pending}>
           {pending && <Loader2 className="h-4 w-4 animate-spin" />} Change password
         </Button>
-        {msg && <span className="text-[13px] font-medium text-[var(--good)]">{msg}</span>}
-        {error && <span className="text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+        {msg && <span className="text-[15px] font-medium text-[var(--good)]">{msg}</span>}
+        {error && <span className="text-[15px] font-medium text-[var(--bad)]">{error}</span>}
       </div>
     </Card>
   );

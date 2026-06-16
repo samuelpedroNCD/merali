@@ -42,7 +42,7 @@ export function NominalManager({ nominals }: { nominals: NominalCode[] }) {
   return (
     <Card className="max-w-[760px]">
       <h3 className="text-[16px] font-semibold text-text">Nominal codes</h3>
-      <p className="mb-4 mt-1 text-[13px] text-muted">Your chart of accounts — assign these to transactions and to a tenancy&apos;s rent. Used to group finance for your accountant.</p>
+      <p className="mb-4 mt-1 text-[15px] text-muted">Your chart of accounts — assign these to transactions and to a tenancy&apos;s rent. Used to group finance for your accountant.</p>
 
       <div className="mb-5 grid grid-cols-[0.8fr_1.6fr_1fr_auto] items-end gap-3 rounded-md border border-border bg-surface-2/40 p-3">
         <Field label="Code"><Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="4000" /></Field>
@@ -60,7 +60,7 @@ export function NominalManager({ nominals }: { nominals: NominalCode[] }) {
           {editId && <Button variant="ghost" size="toolbar" onClick={reset}>Cancel</Button>}
         </div>
       </div>
-      {error && <p className="mb-3 text-[13px] font-medium text-[var(--bad)]">{error}</p>}
+      {error && <p className="mb-3 text-[15px] font-medium text-[var(--bad)]">{error}</p>}
 
       <div className="overflow-hidden rounded-md border border-border">
         <div className="grid grid-cols-[0.7fr_1.8fr_0.8fr_0.8fr_auto] items-center gap-3 border-b border-border bg-surface-2/40 px-4 py-2 text-[11.5px] font-semibold uppercase tracking-[0.05em] text-muted">

@@ -24,7 +24,7 @@ export function Tabs({
             type="button"
             onClick={() => onChange(t.key)}
             className={cn(
-              "rounded-pill px-[14px] py-[7px] text-[13px] font-semibold transition-colors",
+              "rounded-pill px-[14px] py-[7px] text-[15px] font-semibold transition-colors",
               active
                 ? "bg-gold-gradient text-on-gold"
                 : "border border-border bg-surface text-text-2 hover:bg-surface-2/60",

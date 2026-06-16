@@ -97,7 +97,7 @@ export function StaffClient({
             <span>Name</span><span>Email</span><span>Role</span><span>Status</span><span className="text-right">Action</span>
           </div>
           {staff.map((s) => (
-            <div key={s.id} className="grid min-w-[680px] grid-cols-[1.6fr_1.8fr_1fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] last:border-b-0">
+            <div key={s.id} onClick={() => perms.edit && openEdit(s)} className="grid min-w-[680px] cursor-pointer grid-cols-[1.6fr_1.8fr_1fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] transition-colors last:border-b-0 hover:bg-surface-2/40">
               <span className="flex items-center gap-3">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-gold-gradient text-[12px] font-bold text-on-gold">{initials(s.full_name || s.email)}</span>
                 <span className="truncate font-medium text-text">{s.full_name || "—"}</span>
@@ -105,7 +105,7 @@ export function StaffClient({
               <span className="truncate text-text-2">{s.email}</span>
               <span>{s.role ? <Badge tone="accent">{s.role}</Badge> : <span className="text-muted">—</span>}</span>
               <span>{s.is_active ? <Badge tone="good" dot>Active</Badge> : <Badge tone="muted">Inactive</Badge>}</span>
-              <span className="flex justify-end gap-2">
+              <span className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                 {perms.edit && (
                   <>
                     <button onClick={() => toggleActive(s)} className="rounded-md border border-border px-2 py-1 text-[12px] text-text-2 hover:bg-surface-2/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40">
@@ -133,7 +133,7 @@ export function StaffClient({
             <Button size="toolbar" onClick={() => setOpen(false)}>Done</Button>
           ) : (
             <>
-              {error && <span className="mr-auto text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+              {error && <span className="mr-auto text-[15px] font-medium text-[var(--bad)]">{error}</span>}
               <Button variant="ghost" size="toolbar" onClick={() => setOpen(false)}>Cancel</Button>
               <Button size="toolbar" onClick={save} disabled={pending}>
                 {pending && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -146,7 +146,7 @@ export function StaffClient({
         {tempPw ? (
           <div className="rounded-lg border border-border bg-surface-2/40 p-5">
             <p className="text-[14px] font-semibold text-text">Team member invited</p>
-            <p className="mt-1 text-[13px] text-muted">
+            <p className="mt-1 text-[15px] text-muted">
               Share this temporary password — they can change it in Settings, or use “Forgot password”.
             </p>
             <div className="mt-4 flex items-center gap-2">

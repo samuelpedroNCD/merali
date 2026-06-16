@@ -128,7 +128,7 @@ export function CommandPalette() {
         </div>
         <div className="max-h-[50vh] overflow-y-auto thin-scroll py-2">
           {items.length === 0 && (
-            <p className="px-4 py-6 text-center text-[13px] text-muted">
+            <p className="px-4 py-6 text-center text-[15px] text-muted">
               {q.trim().length < 2 ? "Type to search…" : "No results."}
             </p>
           )}

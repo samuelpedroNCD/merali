@@ -33,7 +33,7 @@ export function Stat({
   return (
     <Card className={cn("flex-1", className)}>
       <div className="flex items-start justify-between">
-        <p className="text-[13px] font-medium text-muted">{label}</p>
+        <p className="text-[15px] font-medium text-muted">{label}</p>
         {Icon && (
           <Icon strokeWidth={1.6} className="h-[18px] w-[18px] text-muted" />
         )}

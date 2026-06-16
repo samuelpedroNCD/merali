@@ -103,7 +103,7 @@ export function RemindersClient({
           <Card>
             <div className="grid place-items-center py-16 text-center">
               <p className="text-[15px] font-medium text-text-2">No reminders yet</p>
-              <p className="mt-1 text-[13px] text-muted">{perms.create ? "Create your first reminder." : "No records available."}</p>
+              <p className="mt-1 text-[15px] text-muted">{perms.create ? "Create your first reminder." : "No records available."}</p>
             </div>
           </Card>
         ) : (
@@ -159,7 +159,7 @@ export function RemindersClient({
         size="md"
         footer={
           <>
-            {error && <span className="mr-auto text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+            {error && <span className="mr-auto text-[15px] font-medium text-[var(--bad)]">{error}</span>}
             <Button variant="ghost" size="toolbar" onClick={() => setOpen(false)}>Cancel</Button>
             <Button size="toolbar" onClick={save} disabled={pending}>
               {pending && <Loader2 className="h-4 w-4 animate-spin" />}

@@ -92,7 +92,7 @@ export function PropertyMedia({
           {canEdit && <FileUpload bucket="property-photos" label="Add photo" onUploaded={onPhotoUploaded} />}
         </div>
         {photos.length === 0 ? (
-          <p className="py-6 text-center text-[13px] text-muted">No photos yet.</p>
+          <p className="py-6 text-center text-[15px] text-muted">No photos yet.</p>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {photos.map((ph) => (
@@ -127,7 +127,7 @@ export function PropertyMedia({
           )}
         </div>
         {inspections.length === 0 ? (
-          <p className="py-6 text-center text-[13px] text-muted">No inspections recorded.</p>
+          <p className="py-6 text-center text-[15px] text-muted">No inspections recorded.</p>
         ) : (
           <ul>
             {inspections.map((i) => (
@@ -166,7 +166,7 @@ export function PropertyMedia({
         size="md"
         footer={
           <>
-            {error && <span className="mr-auto text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+            {error && <span className="mr-auto text-[15px] font-medium text-[var(--bad)]">{error}</span>}
             <Button variant="ghost" size="toolbar" onClick={() => setOpen(false)}>Cancel</Button>
             <Button size="toolbar" onClick={saveInspection} disabled={pending}>
               {pending && <Loader2 className="h-4 w-4 animate-spin" />} Save inspection

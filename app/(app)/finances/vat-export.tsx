@@ -25,7 +25,7 @@ export function VatExportButton({
   return (
     <button
       onClick={exportCsv}
-      className="inline-flex items-center gap-1 text-[13px] font-semibold text-accent hover:underline"
+      className="inline-flex items-center gap-1 text-[15px] font-semibold text-accent hover:underline"
     >
       <Download strokeWidth={1.6} className="h-[14px] w-[14px]" /> VAT CSV
     </button>

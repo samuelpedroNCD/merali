@@ -10,7 +10,7 @@ const base =
 const sizes: Record<Size, string> = {
   form: "h-[54px] px-5 text-[15px]",
   toolbar: "h-[42px] px-4 text-[14px]",
-  sm: "h-9 px-3 text-[13px]",
+  sm: "h-9 px-3 text-[15px]",
 };
 
 const variants: Record<Variant, string> = {

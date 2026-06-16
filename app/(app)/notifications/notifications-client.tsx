@@ -49,7 +49,7 @@ export function NotificationsClient({ notifications }: { notifications: Notifica
             <div className="grid place-items-center py-16 text-center">
               <BellRing strokeWidth={1.4} className="mb-2 h-8 w-8 text-muted" />
               <p className="text-[15px] font-medium text-text-2">You're all caught up</p>
-              <p className="mt-1 text-[13px] text-muted">Notifications about expiries, renewals and overdue rent appear here.</p>
+              <p className="mt-1 text-[15px] text-muted">Notifications about expiries, renewals and overdue rent appear here.</p>
             </div>
           )}
           {notifications.map((n) => (
@@ -64,7 +64,7 @@ export function NotificationsClient({ notifications }: { notifications: Notifica
               <span className={cn("mt-1 h-2 w-2 shrink-0 rounded-full", n.read_at ? "bg-transparent" : "bg-[var(--warn)]")} />
               <div className="min-w-0 flex-1">
                 <p className="text-[14px] font-medium text-text">{n.type}</p>
-                <p className="mt-[2px] text-[13px] text-text-2">{n.message}</p>
+                <p className="mt-[2px] text-[15px] text-text-2">{n.message}</p>
               </div>
               <span className="shrink-0 text-[12px] text-muted">{fmt(n.created_at)}</span>
             </button>

@@ -287,7 +287,7 @@ function LeaseAdd({ propertyId, open, onClose, onSaved, data }: SubProps) {
         <div className="col-span-2">
           <p className="mb-2 text-[12.5px] font-semibold text-text">Tenants <span className="font-normal text-muted">— one or more; the lead receives statements</span></p>
           <div className="max-h-[200px] overflow-y-auto thin-scroll rounded-md border border-border">
-            {tenants.length === 0 && <p className="px-3 py-3 text-[13px] text-muted">No tenants yet — add tenants first.</p>}
+            {tenants.length === 0 && <p className="px-3 py-3 text-[15px] text-muted">No tenants yet — add tenants first.</p>}
             {tenants.map((t) => {
               const checked = tenantIds.includes(t.value);
               return (
@@ -340,10 +340,10 @@ function LeaseAdd({ propertyId, open, onClose, onSaved, data }: SubProps) {
 
         <label className="col-span-2 flex cursor-pointer items-center gap-3 rounded-md border border-border px-4 py-3">
           <input type="checkbox" checked={form.exclude_from_reminders === "true"} onChange={(e) => set("exclude_from_reminders", e.target.checked ? "true" : "false")} className="h-4 w-4 accent-[var(--gold)]" />
-          <span className="text-[13px] text-text">Exclude this tenancy from overdue-rent reminders</span>
+          <span className="text-[15px] text-text">Exclude this tenancy from overdue-rent reminders</span>
         </label>
         <Field label="Notes" className="col-span-2"><Textarea rows={3} value={form.notes} onChange={(e) => set("notes", e.target.value)} /></Field>
-        <div className="col-span-2 flex items-center gap-2 rounded-md border border-border bg-surface-2/40 px-4 py-3 text-[13px] text-text-2">
+        <div className="col-span-2 flex items-center gap-2 rounded-md border border-border bg-surface-2/40 px-4 py-3 text-[15px] text-text-2">
           <CalendarClock strokeWidth={1.6} className="h-4 w-4 text-accent" />
           On save, the rent schedule is generated from the start/end dates at the chosen frequency — paid instalments are preserved.
         </div>
@@ -356,7 +356,7 @@ function LeaseAdd({ propertyId, open, onClose, onSaved, data }: SubProps) {
 function FooterButtons({ error, pending, onClose, onSave, label }: { error: string | null; pending: boolean; onClose: () => void; onSave: () => void; label: string }) {
   return (
     <>
-      {error && <span className="mr-auto text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+      {error && <span className="mr-auto text-[15px] font-medium text-[var(--bad)]">{error}</span>}
       <Button variant="ghost" size="toolbar" onClick={onClose}>Cancel</Button>
       <Button size="toolbar" onClick={onSave} disabled={pending}>
         {pending && <Loader2 className="h-4 w-4 animate-spin" />} {label}

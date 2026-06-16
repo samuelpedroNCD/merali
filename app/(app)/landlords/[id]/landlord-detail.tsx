@@ -35,7 +35,7 @@ export function LandlordDetail({
         }
       />
       <main className="flex flex-1 flex-col gap-[22px] overflow-y-auto thin-scroll px-[34px] py-[30px]">
-        <Link href="/landlords" className="inline-flex items-center gap-2 text-[13px] font-medium text-muted hover:text-accent">
+        <Link href="/landlords" className="inline-flex items-center gap-2 text-[15px] font-medium text-muted hover:text-accent">
           <ArrowLeft strokeWidth={1.6} className="h-4 w-4" /> All landlords
         </Link>
 
@@ -51,9 +51,9 @@ export function LandlordDetail({
 
         {/* Finance summary */}
         <div className="grid grid-cols-3 gap-[18px]">
-          <Card><p className="text-[13px] text-muted">Rent expected</p><p className="mt-2 font-display text-[24px] font-semibold text-text">{gbp(related.finance.expected)}</p></Card>
-          <Card><p className="text-[13px] text-muted">Collected</p><p className="mt-2 font-display text-[24px] font-semibold text-[var(--good)]">{gbp(related.finance.collected)}</p></Card>
-          <Card><p className="text-[13px] text-muted">Arrears</p><p className="mt-2 font-display text-[24px] font-semibold text-[var(--bad)]">{gbp(related.finance.arrears)}</p></Card>
+          <Card><p className="text-[15px] text-muted">Rent expected</p><p className="mt-2 font-display text-[24px] font-semibold text-text">{gbp(related.finance.expected)}</p></Card>
+          <Card><p className="text-[15px] text-muted">Collected</p><p className="mt-2 font-display text-[24px] font-semibold text-[var(--good)]">{gbp(related.finance.collected)}</p></Card>
+          <Card><p className="text-[15px] text-muted">Arrears</p><p className="mt-2 font-display text-[24px] font-semibold text-[var(--bad)]">{gbp(related.finance.arrears)}</p></Card>
         </div>
 
         {/* Portfolio */}
@@ -62,7 +62,7 @@ export function LandlordDetail({
             <Building2 strokeWidth={1.6} className="h-[18px] w-[18px] text-accent" /> Property portfolio ({related.properties.length})
           </div>
           {related.properties.length === 0 ? (
-            <p className="px-6 pb-5 text-[13px] text-muted">No properties assigned to this landlord.</p>
+            <p className="px-6 pb-5 text-[15px] text-muted">No properties assigned to this landlord.</p>
           ) : (
             <div className="border-t border-border">
               {related.properties.map((p) => (
@@ -99,13 +99,13 @@ export function LandlordDetail({
                 <Info label="Reference" value={l.bank_reference} />
               </dl>
             ) : (
-              <p className="text-[13px] text-muted">No bank details recorded.</p>
+              <p className="text-[15px] text-muted">No bank details recorded.</p>
             )}
           </Card>
           <Card className="p-0">
             <div className="px-5 py-4 text-[16px] font-semibold text-text">Documents ({related.documents.length})</div>
             {related.documents.length === 0 ? (
-              <p className="px-5 pb-5 text-[13px] text-muted">No documents linked to this landlord.</p>
+              <p className="px-5 pb-5 text-[15px] text-muted">No documents linked to this landlord.</p>
             ) : (
               <ul className="border-t border-border">
                 {related.documents.map((d) => (

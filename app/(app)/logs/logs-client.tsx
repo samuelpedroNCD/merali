@@ -81,7 +81,7 @@ export function LogsClient({ logs }: { logs: LogRow[] }) {
           </div>
           {filtered.length === 0 && (
             <div className="grid place-items-center py-16 text-center">
-              <p className="text-[13px] text-muted">No activity logged.</p>
+              <p className="text-[15px] text-muted">No activity logged.</p>
             </div>
           )}
           {filtered.map((l) => (

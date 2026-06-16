@@ -78,7 +78,7 @@ export function PropertyUtilities({
           )}
         </div>
         {utilities.length === 0 ? (
-          <p className="py-6 text-center text-[13px] text-muted">No utilities recorded.</p>
+          <p className="py-6 text-center text-[15px] text-muted">No utilities recorded.</p>
         ) : (
           <ul>
             {utilities.map((u) => (
@@ -112,7 +112,7 @@ export function PropertyUtilities({
         size="md"
         footer={
           <>
-            {error && <span className="mr-auto text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+            {error && <span className="mr-auto text-[15px] font-medium text-[var(--bad)]">{error}</span>}
             <Button variant="ghost" size="toolbar" onClick={() => setOpen(false)}>Cancel</Button>
             <Button size="toolbar" onClick={save} disabled={pending}>{pending && <Loader2 className="h-4 w-4 animate-spin" />} Save</Button>
           </>

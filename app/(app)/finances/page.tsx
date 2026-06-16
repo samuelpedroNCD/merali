@@ -57,7 +57,7 @@ export default async function FinancesPage() {
               <VatRow label="VAT collected (on income)" value={gbp(d.vatCollected)} />
               <VatRow label="VAT paid (on expenses)" value={`-${gbp(d.vatPaid)}`} />
               <div className="mt-1 flex items-center justify-between border-t border-border pt-3">
-                <span className="text-[13px] font-semibold text-text">Net VAT due</span>
+                <span className="text-[15px] font-semibold text-text">Net VAT due</span>
                 <span className="font-display text-[22px] font-semibold text-text">{gbp(d.vatNet)}</span>
               </div>
               <p className="text-[12px] text-muted">
@@ -70,14 +70,14 @@ export default async function FinancesPage() {
         <Card className="p-0">
           <div className="flex items-center justify-between px-6 py-4">
             <h3 className="text-[16px] font-semibold text-text">Recent transactions</h3>
-            <Link href="/nominal" className="text-[13px] font-semibold text-accent">Open ledger</Link>
+            <Link href="/nominal" className="text-[15px] font-semibold text-accent">Open ledger</Link>
           </div>
           <div className="grid grid-cols-[0.9fr_1.6fr_0.8fr_1fr_0.9fr_0.7fr] items-center gap-3 border-y border-border px-6 py-3 text-[11.5px] font-semibold uppercase tracking-[0.05em] text-muted">
             <span>Date</span><span>Property</span><span>Type</span><span>Category</span><span className="text-right">Amount</span><span>Status</span>
           </div>
           {d.recent.length === 0 && (
             <div className="grid place-items-center py-16 text-center">
-              <p className="text-[13px] text-muted">No transactions yet — add one in the Nominal ledger.</p>
+              <p className="text-[15px] text-muted">No transactions yet — add one in the Nominal ledger.</p>
             </div>
           )}
           {d.recent.map((t) => (
@@ -99,7 +99,7 @@ export default async function FinancesPage() {
 function VatRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[13px] text-text-2">{label}</span>
+      <span className="text-[15px] text-text-2">{label}</span>
       <span className="text-[14px] font-medium text-text">{value}</span>
     </div>
   );

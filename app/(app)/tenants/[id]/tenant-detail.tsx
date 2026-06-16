@@ -31,7 +31,7 @@ export function TenantDetail({
         }
       />
       <main className="flex flex-1 flex-col gap-[22px] overflow-y-auto thin-scroll px-[34px] py-[30px]">
-        <Link href="/tenants" className="inline-flex items-center gap-2 text-[13px] font-medium text-muted hover:text-accent">
+        <Link href="/tenants" className="inline-flex items-center gap-2 text-[15px] font-medium text-muted hover:text-accent">
           <ArrowLeft strokeWidth={1.6} className="h-4 w-4" /> All tenants
         </Link>
 
@@ -44,7 +44,7 @@ export function TenantDetail({
               {t.tenant_type && <Badge tone="muted">{t.tenant_type}</Badge>}
               {t.status && <Badge tone={statusTone(t.status)} dot>{t.status}</Badge>}
             </div>
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-[13px] text-text-2">
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-[15px] text-text-2">
               {t.email && <a href={`mailto:${t.email}`} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 hover:bg-surface-2/60"><Mail strokeWidth={1.6} className="h-[14px] w-[14px]" /> {t.email}</a>}
               {t.phone && <a href={`tel:${t.phone}`} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 hover:bg-surface-2/60"><Phone strokeWidth={1.6} className="h-[14px] w-[14px]" /> {t.phone}</a>}
             </div>
@@ -59,9 +59,9 @@ export function TenantDetail({
 
         {/* Finance summary */}
         <div className="grid grid-cols-3 gap-[18px]">
-          <Card><p className="text-[13px] text-muted">Rent expected</p><p className="mt-2 font-display text-[24px] font-semibold text-text">{gbp(related.finance.due)}</p></Card>
-          <Card><p className="text-[13px] text-muted">Collected</p><p className="mt-2 font-display text-[24px] font-semibold text-[var(--good)]">{gbp(related.finance.collected)}</p></Card>
-          <Card><p className="text-[13px] text-muted">Arrears</p><p className="mt-2 font-display text-[24px] font-semibold text-[var(--bad)]">{gbp(related.finance.arrears)}</p></Card>
+          <Card><p className="text-[15px] text-muted">Rent expected</p><p className="mt-2 font-display text-[24px] font-semibold text-text">{gbp(related.finance.due)}</p></Card>
+          <Card><p className="text-[15px] text-muted">Collected</p><p className="mt-2 font-display text-[24px] font-semibold text-[var(--good)]">{gbp(related.finance.collected)}</p></Card>
+          <Card><p className="text-[15px] text-muted">Arrears</p><p className="mt-2 font-display text-[24px] font-semibold text-[var(--bad)]">{gbp(related.finance.arrears)}</p></Card>
         </div>
 
         {/* Leases */}
@@ -70,7 +70,7 @@ export function TenantDetail({
             <ScrollText strokeWidth={1.6} className="h-[18px] w-[18px] text-accent" /> Tenancies ({related.leases.length})
           </div>
           {related.leases.length === 0 ? (
-            <p className="px-6 pb-5 text-[13px] text-muted">No tenancies recorded.</p>
+            <p className="px-6 pb-5 text-[15px] text-muted">No tenancies recorded.</p>
           ) : (
             <div className="border-t border-border">
               {related.leases.map((l) => (
@@ -101,7 +101,7 @@ export function TenantDetail({
           <Card className="p-0">
             <div className="px-5 py-4 text-[16px] font-semibold text-text">Documents ({related.documents.length})</div>
             {related.documents.length === 0 ? (
-              <p className="px-5 pb-5 text-[13px] text-muted">No documents linked to this tenant.</p>
+              <p className="px-5 pb-5 text-[15px] text-muted">No documents linked to this tenant.</p>
             ) : (
               <ul className="border-t border-border">
                 {related.documents.map((d) => (

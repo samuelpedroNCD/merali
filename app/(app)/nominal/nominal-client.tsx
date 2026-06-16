@@ -196,11 +196,11 @@ export function NominalClient({
           {rows.length === 0 && (
             <div className="grid place-items-center py-16 text-center">
               <p className="text-[15px] font-medium text-text-2">No transactions yet</p>
-              <p className="mt-1 text-[13px] text-muted">{perms.create ? "Add a transaction or sync a bank account." : "No records available."}</p>
+              <p className="mt-1 text-[15px] text-muted">{perms.create ? "Add a transaction or sync a bank account." : "No records available."}</p>
             </div>
           )}
           {rows.map((t) => (
-            <div key={t.id} className="grid min-w-[1040px] grid-cols-[0.9fr_1.5fr_0.7fr_1fr_0.8fr_0.7fr_0.8fr_0.7fr_auto] items-center gap-3 border-b border-border px-6 py-4 text-[13.5px] last:border-b-0">
+            <div key={t.id} onClick={() => perms.edit && openEdit(t)} className="grid min-w-[1040px] cursor-pointer grid-cols-[0.9fr_1.5fr_0.7fr_1fr_0.8fr_0.7fr_0.8fr_0.7fr_auto] items-center gap-3 border-b border-border px-6 py-4 text-[13.5px] transition-colors last:border-b-0 hover:bg-surface-2/40">
               <span className="text-text-2">{t.txn_date ? fmtDate(t.txn_date) : "—"}</span>
               <span className="truncate text-text-2">{t.property?.address || t.plaid_institution || "—"}</span>
               <span className={t.type === "Income" ? "text-[var(--good)]" : "text-[var(--bad)]"}>{t.type || "—"}</span>
@@ -209,7 +209,7 @@ export function NominalClient({
               <span className="text-right text-muted">{t.vat_amount != null ? gbp(t.vat_amount) : "—"}</span>
               <span className="text-right font-semibold text-text">{t.amount_gross != null ? gbp(t.amount_gross) : "—"}</span>
               <span>{t.needs_review ? <Badge tone="warn" dot>Review</Badge> : t.status ? <Badge tone={statusTone(t.status)}>{t.status}</Badge> : <span className="text-muted">—</span>}</span>
-              <span className="flex justify-end gap-1">
+              <span className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                 {perms.edit && t.needs_review && (
                   <button onClick={() => setReconcileId(t.id)} className="grid h-8 w-8 place-items-center rounded-md text-accent transition-colors hover:bg-surface-2/60" aria-label="Reconcile" title="Reconcile">
                     <Link2 strokeWidth={1.7} className="h-[16px] w-[16px]" />
@@ -239,7 +239,7 @@ export function NominalClient({
         size="md"
         footer={
           <>
-            {error && <span className="mr-auto text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+            {error && <span className="mr-auto text-[15px] font-medium text-[var(--bad)]">{error}</span>}
             <Button variant="ghost" size="toolbar" onClick={() => setOpen(false)}>Cancel</Button>
             <Button size="toolbar" onClick={save} disabled={pending}>
               {pending && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -277,7 +277,7 @@ export function NominalClient({
 function TotalCard({ label, value, tone }: { label: string; value: string; tone: "good" | "bad" }) {
   return (
     <Card>
-      <p className="text-[13px] font-medium text-muted">{label}</p>
+      <p className="text-[15px] font-medium text-muted">{label}</p>
       <p className={`mt-2 font-display text-[28px] font-semibold ${tone === "good" ? "text-text" : "text-[var(--bad)]"}`}>{value}</p>
     </Card>
   );

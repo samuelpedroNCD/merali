@@ -86,15 +86,15 @@ export function ReconcileDrawer({
           <div className="rounded-lg border border-border bg-surface-2/40 p-4">
             <p className="text-[12px] uppercase tracking-[0.12em] text-muted">Bank payment</p>
             <p className="mt-1 font-display text-[24px] font-semibold text-text">{gbp(data.txn.amount)}</p>
-            <p className="text-[13px] text-muted">{data.txn.date ? fmtDate(data.txn.date) : "—"}{data.txn.reference ? ` · ${data.txn.reference}` : ""}</p>
+            <p className="text-[15px] text-muted">{data.txn.date ? fmtDate(data.txn.date) : "—"}{data.txn.reference ? ` · ${data.txn.reference}` : ""}</p>
           </div>
 
           <div>
-            <p className="mb-2 flex items-center gap-2 text-[13px] font-semibold text-text">
+            <p className="mb-2 flex items-center gap-2 text-[15px] font-semibold text-text">
               <Sparkles strokeWidth={1.6} className="h-4 w-4 text-accent" /> Suggested matches
             </p>
             {data.suggestions.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border p-4 text-[13px] text-muted">
+              <p className="rounded-md border border-dashed border-border p-4 text-[15px] text-muted">
                 No matching rent instalments found. You can dismiss this as reviewed, or record it as a manual transaction.
               </p>
             ) : (

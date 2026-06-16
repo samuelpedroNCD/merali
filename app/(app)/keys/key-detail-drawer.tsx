@@ -132,7 +132,7 @@ export function KeyDetailDrawer({
               {detail.spares.map((sp) => (
                 <SpareRowItem key={sp.id} spare={sp} keyId={k!.id} heldByTypes={heldByTypes} statuses={statuses} onAct={act} pending={pending} />
               ))}
-              {detail.spares.length === 0 && <p className="text-[13px] text-muted">No spares yet.</p>}
+              {detail.spares.length === 0 && <p className="text-[15px] text-muted">No spares yet.</p>}
             </div>
             <div className="mt-3 flex gap-2">
               <Input placeholder="Spare reference…" value={spareRef} onChange={(e) => setSpareRef(e.target.value)} className="h-[44px]" />
@@ -146,7 +146,7 @@ export function KeyDetailDrawer({
           <div>
             <p className="mb-3 text-[14px] font-semibold text-text">History</p>
             {detail.log.length === 0 ? (
-              <p className="text-[13px] text-muted">No issue/return events yet.</p>
+              <p className="text-[15px] text-muted">No issue/return events yet.</p>
             ) : (
               <ul className="flex flex-col">
                 {detail.log.map((l) => {
@@ -159,7 +159,7 @@ export function KeyDetailDrawer({
                           ? <ArrowDownLeft strokeWidth={1.7} className="h-[16px] w-[16px] text-[var(--good)]" />
                           : <ArrowUpRight strokeWidth={1.7} className="h-[16px] w-[16px] text-[var(--warn)]" />}
                       </span>
-                      <div className="min-w-0 flex-1 text-[13px]">
+                      <div className="min-w-0 flex-1 text-[15px]">
                         <p className="font-medium text-text">
                           {l.is_spare_snapshot ? "Spare " : ""}{out && !returned ? "Issued" : l.is_open ? "Issued (out)" : "Returned"}
                           {l.held_by_type_snapshot ? ` · ${l.held_by_type_snapshot}` : ""}
@@ -217,11 +217,11 @@ function SpareRowItem({
             </Button>
           ) : (
             <>
-              <Select value={heldBy} onChange={(e) => setHeldBy(e.target.value)} className="h-9 max-w-[150px] text-[13px]">
+              <Select value={heldBy} onChange={(e) => setHeldBy(e.target.value)} className="h-9 max-w-[150px] text-[15px]">
                 <option value="">Held by…</option>
                 {heldByTypes.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
               </Select>
-              <Input value={holder} onChange={(e) => setHolder(e.target.value)} placeholder="Holder" className="h-9 max-w-[160px] text-[13px]" />
+              <Input value={holder} onChange={(e) => setHolder(e.target.value)} placeholder="Holder" className="h-9 max-w-[160px] text-[15px]" />
               <Button size="sm" onClick={() => onAct(async () => { const r = await issueSpare(keyId, spare.id, { held_by_type: heldBy, holder, date_given: "", notes: "" }); setExpand(false); return r; })} disabled={pending}>
                 Confirm issue
               </Button>

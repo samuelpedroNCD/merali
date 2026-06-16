@@ -71,7 +71,7 @@ export function LeaseDetail({
         }
       />
       <main className="flex flex-1 flex-col gap-[22px] overflow-y-auto thin-scroll px-[34px] py-[30px]">
-        <Link href="/tenancies" className="inline-flex items-center gap-2 text-[13px] font-medium text-muted hover:text-accent">
+        <Link href="/tenancies" className="inline-flex items-center gap-2 text-[15px] font-medium text-muted hover:text-accent">
           <ArrowLeft strokeWidth={1.6} className="h-4 w-4" /> All tenancies
         </Link>
 
@@ -80,7 +80,7 @@ export function LeaseDetail({
             <h1 className="font-display text-[30px] font-semibold tracking-[-0.01em] text-text">
               {l.tenancy_code || l.tenant?.full_name || "Tenancy"}
             </h1>
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-[13px] text-text-2">
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-[15px] text-text-2">
               <Link href={l.property ? `/properties/${l.property.id}` : "#"} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 hover:bg-surface-2/60">
                 <Building2 strokeWidth={1.6} className="h-[14px] w-[14px]" /> {l.property?.address || "—"}
               </Link>
@@ -91,7 +91,7 @@ export function LeaseDetail({
               ))}
               {l.status && <Badge tone={leaseTone(l.status)} dot>{l.status}</Badge>}
             </div>
-            <p className="mt-3 text-[13px] text-muted">
+            <p className="mt-3 text-[15px] text-muted">
               {l.start_date ? fmtDate(l.start_date) : "—"} → {l.end_date ? fmtDate(l.end_date) : "—"}
               {l.payment_frequency ? ` · ${l.payment_frequency}` : ""}
             </p>
@@ -103,9 +103,9 @@ export function LeaseDetail({
         </div>
 
         <div className="grid grid-cols-3 gap-[18px]">
-          <Card><p className="text-[13px] text-muted">Total scheduled</p><p className="mt-2 font-display text-[24px] font-semibold text-text">{gbp(totals.due)}</p></Card>
-          <Card><p className="text-[13px] text-muted">Collected</p><p className="mt-2 font-display text-[24px] font-semibold text-[var(--good)]">{gbp(totals.collected)}</p></Card>
-          <Card><p className="text-[13px] text-muted">Outstanding</p><p className="mt-2 font-display text-[24px] font-semibold text-[var(--bad)]">{gbp(totals.outstanding)}</p></Card>
+          <Card><p className="text-[15px] text-muted">Total scheduled</p><p className="mt-2 font-display text-[24px] font-semibold text-text">{gbp(totals.due)}</p></Card>
+          <Card><p className="text-[15px] text-muted">Collected</p><p className="mt-2 font-display text-[24px] font-semibold text-[var(--good)]">{gbp(totals.collected)}</p></Card>
+          <Card><p className="text-[15px] text-muted">Outstanding</p><p className="mt-2 font-display text-[24px] font-semibold text-[var(--bad)]">{gbp(totals.outstanding)}</p></Card>
         </div>
 
         <Card className="p-0">
@@ -122,7 +122,7 @@ export function LeaseDetail({
             <span>Due date</span><span className="text-right">Due</span><span className="text-right">Collected</span><span>Status</span>
           </div>
           {rows.length === 0 ? (
-            <p className="px-6 py-8 text-center text-[13px] text-muted">No instalments.</p>
+            <p className="px-6 py-8 text-center text-[15px] text-muted">No instalments.</p>
           ) : (
             rows.map((r) => (
               <div key={r.id} className="grid grid-cols-[1fr_1fr_1fr_0.8fr] items-center gap-4 border-b border-border px-6 py-[10px] text-[13.5px] last:border-b-0">
@@ -142,7 +142,7 @@ export function LeaseDetail({
             <span>Date</span><span>Type</span><span>Nominal</span><span>Category</span><span className="text-right">Amount</span><span>Status</span>
           </div>
           {ledger.length === 0 ? (
-            <p className="px-6 py-8 text-center text-[13px] text-muted">No transactions linked to this tenancy yet.</p>
+            <p className="px-6 py-8 text-center text-[15px] text-muted">No transactions linked to this tenancy yet.</p>
           ) : (
             ledger.map((t) => (
               <div key={t.id} className="grid grid-cols-[0.9fr_0.7fr_1.3fr_1fr_0.8fr_0.8fr] items-center gap-3 border-b border-border px-6 py-[10px] text-[13.5px] last:border-b-0">

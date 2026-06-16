@@ -104,7 +104,7 @@ export function RolesClient({
               key={r.id}
               onClick={() => setSelectedId(r.id)}
               className={cn(
-                "inline-flex items-center gap-2 rounded-pill border px-[14px] py-[8px] text-[13px] font-semibold transition-colors",
+                "inline-flex items-center gap-2 rounded-pill border px-[14px] py-[8px] text-[15px] font-semibold transition-colors",
                 selectedId === r.id ? "border-transparent bg-gold-gradient text-on-gold" : "border-border text-text-2 hover:bg-surface-2/60",
               )}
             >
@@ -120,7 +120,7 @@ export function RolesClient({
             <div className="flex items-center justify-between px-6 py-4">
               <div>
                 <h3 className="text-[16px] font-semibold text-text">{role.name}</h3>
-                {role.description && <p className="text-[13px] text-muted">{role.description}</p>}
+                {role.description && <p className="text-[15px] text-muted">{role.description}</p>}
               </div>
               {perms.remove && !role.is_system && (
                 <Button variant="danger" size="toolbar" className="gap-[6px]" onClick={() => remove(role)} disabled={pending}>

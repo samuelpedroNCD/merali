@@ -72,9 +72,9 @@ export function PaymentsClient({
         </div>
 
         <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-3">
-          <Card><p className="text-[13px] text-muted">Expected (all time)</p><p className="mt-2 font-display text-[28px] font-semibold text-text">{gbp(summary.due)}</p></Card>
-          <Card><p className="text-[13px] text-muted">Collected</p><p className="mt-2 font-display text-[28px] font-semibold text-[var(--good)]">{gbp(summary.collected)}</p></Card>
-          <Card><p className="text-[13px] text-muted">Overdue</p><p className="mt-2 font-display text-[28px] font-semibold text-[var(--bad)]">{gbp(summary.overdue)}</p></Card>
+          <Card><p className="text-[15px] text-muted">Expected (all time)</p><p className="mt-2 font-display text-[28px] font-semibold text-text">{gbp(summary.due)}</p></Card>
+          <Card><p className="text-[15px] text-muted">Collected</p><p className="mt-2 font-display text-[28px] font-semibold text-[var(--good)]">{gbp(summary.collected)}</p></Card>
+          <Card><p className="text-[15px] text-muted">Overdue</p><p className="mt-2 font-display text-[28px] font-semibold text-[var(--bad)]">{gbp(summary.overdue)}</p></Card>
         </div>
 
         <div className="flex gap-3">
@@ -91,7 +91,7 @@ export function PaymentsClient({
           {filtered.length === 0 && (
             <div className="grid place-items-center py-16 text-center">
               <p className="text-[15px] font-medium text-text-2">No payments</p>
-              <p className="mt-1 text-[13px] text-muted">Rent schedules appear here once a lease is created.</p>
+              <p className="mt-1 text-[15px] text-muted">Rent schedules appear here once a lease is created.</p>
             </div>
           )}
           {filtered.map((r) => (

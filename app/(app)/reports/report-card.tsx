@@ -48,7 +48,7 @@ export function ReportCard({
         <FileSpreadsheet strokeWidth={1.6} className="h-5 w-5" />
       </span>
       <h3 className="mt-3 text-[15px] font-semibold text-text">{label}</h3>
-      <p className="mt-1 flex-1 text-[13px] text-muted">{description}</p>
+      <p className="mt-1 flex-1 text-[15px] text-muted">{description}</p>
       <Button size="toolbar" variant="ghost" className="mt-4 gap-[6px] self-start" onClick={download} disabled={busy}>
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download strokeWidth={1.6} className="h-[16px] w-[16px]" />}
         Export CSV

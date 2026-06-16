@@ -199,7 +199,7 @@ export function PropertiesClient({
               <p className="text-[15px] font-medium text-text-2">
                 No properties yet
               </p>
-              <p className="mt-1 text-[13px] text-muted">
+              <p className="mt-1 text-[15px] text-muted">
                 {perms.create ? "Add your first property to get started." : "No records available."}
               </p>
             </div>
@@ -208,7 +208,8 @@ export function PropertiesClient({
           {filtered.map((p) => (
             <div
               key={p.id}
-              className="grid min-w-[760px] grid-cols-[1.8fr_0.7fr_1fr_0.9fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] last:border-b-0"
+              onClick={() => router.push(`/properties/${p.id}`)}
+              className="grid min-w-[760px] cursor-pointer grid-cols-[1.8fr_0.7fr_1fr_0.9fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] transition-colors last:border-b-0 hover:bg-surface-2/40"
             >
               <div className="flex min-w-0 items-center gap-2">
                 <Link
@@ -233,7 +234,7 @@ export function PropertiesClient({
               <span className="font-display text-[17px] font-semibold text-text">
                 {p.target_rent != null ? gbp(p.target_rent) : "—"}
               </span>
-              <span className="flex justify-end gap-1">
+              <span className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                 {perms.edit && (
                   <button
                     onClick={() => openEdit(p)}
@@ -267,7 +268,7 @@ export function PropertiesClient({
         footer={
           <>
             {error && (
-              <span className="mr-auto text-[13px] font-medium text-[var(--bad)]">
+              <span className="mr-auto text-[15px] font-medium text-[var(--bad)]">
                 {error}
               </span>
             )}

@@ -77,7 +77,7 @@ export function PropertyDetail({
 
       <main className="flex flex-1 flex-col gap-[22px] overflow-y-auto thin-scroll px-[34px] py-[30px]">
         {ancestors.length > 0 ? (
-          <nav className="flex flex-wrap items-center gap-1.5 text-[13px] text-muted">
+          <nav className="flex flex-wrap items-center gap-1.5 text-[15px] text-muted">
             <Link href="/properties" className="font-medium hover:text-accent">Properties</Link>
             {ancestors.map((a) => (
               <span key={a.id} className="inline-flex items-center gap-1.5">
@@ -89,7 +89,7 @@ export function PropertyDetail({
             <span className="font-medium text-text-2">{p.address || p.internal_code || "This property"}</span>
           </nav>
         ) : (
-          <Link href="/properties" className="inline-flex items-center gap-2 text-[13px] font-medium text-muted hover:text-accent">
+          <Link href="/properties" className="inline-flex items-center gap-2 text-[15px] font-medium text-muted hover:text-accent">
             <ArrowLeft strokeWidth={1.6} className="h-4 w-4" />
             All properties
           </Link>
@@ -107,7 +107,7 @@ export function PropertyDetail({
               {p.status && <Badge tone={statusTone(p.status)} dot>{p.status}</Badge>}
             </div>
             {landlordName && (
-              <div className="mt-4 flex items-center gap-2 text-[13px] text-text-2">
+              <div className="mt-4 flex items-center gap-2 text-[15px] text-text-2">
                 <span className="text-muted">Landlord</span>
                 <Link
                   href={p.landlord ? `/landlords/${p.landlord.id}` : "#"}
@@ -320,7 +320,7 @@ function ContentsSection({
               ))}
             </div>
           ) : (
-            <p className="mb-3 text-[13px] text-muted">No sub-buildings yet.</p>
+            <p className="mb-3 text-[15px] text-muted">No sub-buildings yet.</p>
           )}
           {canAddSub && (
             <div className="flex items-end gap-2">
@@ -353,7 +353,7 @@ function ContentsSection({
             ))}
           </ul>
         ) : (
-          <p className="mb-4 text-[13px] text-muted">No units yet.{canAddUnit ? " Add one or auto-generate a set." : ""}</p>
+          <p className="mb-4 text-[15px] text-muted">No units yet.{canAddUnit ? " Add one or auto-generate a set." : ""}</p>
         )}
 
         {canAddUnit && (
@@ -364,7 +364,7 @@ function ContentsSection({
                 <Plus strokeWidth={1.8} className="h-[16px] w-[16px]" /> Add unit
               </Button>
             </div>
-            <span className="text-[13px] text-muted">or</span>
+            <span className="text-[15px] text-muted">or</span>
             <div className="flex items-end gap-2">
               <Input value={prefix} onChange={(e) => setPrefix(e.target.value)} placeholder="Prefix" className="h-[44px] max-w-[110px]" />
               <Input type="number" min={1} max={100} value={count} onChange={(e) => setCount(e.target.value)} className="h-[44px] max-w-[80px]" />
@@ -383,7 +383,7 @@ function RecordList<T>({ rows, render, empty }: { rows: T[]; render: (r: T) => R
   if (rows.length === 0) {
     return (
       <div className="grid place-items-center rounded-lg border border-dashed border-border py-12 text-center">
-        <p className="text-[13px] text-muted">{empty}</p>
+        <p className="text-[15px] text-muted">{empty}</p>
       </div>
     );
   }

@@ -75,7 +75,7 @@ export function LoginForm() {
       </div>
 
       {error && (
-        <p className="mb-3 text-[13px] font-medium text-[var(--bad)]">{error}</p>
+        <p className="mb-3 text-[15px] font-medium text-[var(--bad)]">{error}</p>
       )}
 
       <button

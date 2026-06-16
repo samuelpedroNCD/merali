@@ -131,17 +131,17 @@ export function CertificationsClient({
           {certs.length === 0 && (
             <div className="grid place-items-center py-16 text-center">
               <p className="text-[15px] font-medium text-text-2">No certifications yet</p>
-              <p className="mt-1 text-[13px] text-muted">{perms.create ? "Add a certification to track its expiry." : "No records available."}</p>
+              <p className="mt-1 text-[15px] text-muted">{perms.create ? "Add a certification to track its expiry." : "No records available."}</p>
             </div>
           )}
           {certs.map((c) => {
             const info = expiryInfo(c.expiry_date);
             return (
-              <div key={c.id} className="grid min-w-[640px] grid-cols-[1.4fr_1.6fr_1fr_0.9fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] last:border-b-0">
+              <div key={c.id} onClick={() => perms.edit && openEdit(c)} className="grid min-w-[640px] cursor-pointer grid-cols-[1.4fr_1.6fr_1fr_0.9fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] transition-colors last:border-b-0 hover:bg-surface-2/40">
                 <span className="inline-flex items-center gap-2 truncate font-medium text-text">
                   {c.type?.name || "—"}
                   {c.document_link && (
-                    <a href={c.document_link} target="_blank" rel="noreferrer" className="text-muted hover:text-accent">
+                    <a href={c.document_link} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="text-muted hover:text-accent">
                       <ExternalLink strokeWidth={1.6} className="h-[14px] w-[14px]" />
                     </a>
                   )}
@@ -149,7 +149,7 @@ export function CertificationsClient({
                 <span className="truncate text-text-2">{c.property?.address || "—"}</span>
                 <span className="text-text-2">{c.expiry_date ? fmtDate(c.expiry_date) : "—"}</span>
                 <span><Badge tone={info.tone} dot>{info.label}</Badge></span>
-                <span className="flex justify-end gap-1">
+                <span className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                   {perms.edit && (
                     <button onClick={() => openEdit(c)} className="grid h-8 w-8 place-items-center rounded-md text-text-2 transition-colors hover:bg-surface-2/60" aria-label="Edit">
                       <Pencil strokeWidth={1.6} className="h-[16px] w-[16px]" />
@@ -175,7 +175,7 @@ export function CertificationsClient({
         size="md"
         footer={
           <>
-            {error && <span className="mr-auto text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+            {error && <span className="mr-auto text-[15px] font-medium text-[var(--bad)]">{error}</span>}
             <Button variant="ghost" size="toolbar" onClick={() => setOpen(false)}>Cancel</Button>
             <Button size="toolbar" onClick={save} disabled={pending}>
               {pending && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -211,7 +211,7 @@ export function CertificationsClient({
         size="md"
         footer={
           <>
-            {bulkError && <span className="mr-auto text-[13px] font-medium text-[var(--bad)]">{bulkError}</span>}
+            {bulkError && <span className="mr-auto text-[15px] font-medium text-[var(--bad)]">{bulkError}</span>}
             <Button variant="ghost" size="toolbar" onClick={() => setBulkOpen(false)}>Cancel</Button>
             <Button size="toolbar" onClick={saveBulk} disabled={pending}>{pending && <Loader2 className="h-4 w-4 animate-spin" />} Add all</Button>
           </>

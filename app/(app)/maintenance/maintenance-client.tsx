@@ -155,7 +155,7 @@ export function MaintenanceClient({
               {!isCollapsed && items.length > 0 && (
                 <div className="border-t border-border">
                   {items.map((m) => (
-                    <div key={m.id} className="flex items-center gap-4 border-b border-border px-6 py-3 last:border-b-0">
+                    <div key={m.id} onClick={() => perms.edit && openEdit(m)} className="flex cursor-pointer items-center gap-4 border-b border-border px-6 py-3 transition-colors last:border-b-0 hover:bg-surface-2/40">
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[14px] font-medium text-text">{m.description || "Untitled job"}</p>
                         <p className="mt-[2px] flex items-center gap-1 truncate text-[12.5px] text-muted">
@@ -169,19 +169,20 @@ export function MaintenanceClient({
                           {m.supplier?.business_name && <span>· {m.supplier.business_name}</span>}
                         </p>
                       </div>
-                      {m.cost != null && <span className="text-[13px] text-text-2">{gbp(Number(m.cost))}</span>}
+                      {m.cost != null && <span className="text-[15px] text-text-2">{gbp(Number(m.cost))}</span>}
                       {m.planned_date && <span className="text-[12.5px] text-muted">{fmtDate(m.planned_date)}</span>}
                       {m.urgency && <Badge tone={urgencyTone(m.urgency)}>{m.urgency}</Badge>}
                       {perms.edit && (
                         <select
                           value={m.status ?? st}
                           onChange={(e) => move(m.id, e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
                           className="h-8 rounded-md border border-border bg-surface px-2 text-[12.5px] text-text-2 outline-none"
                         >
                           {MAINTENANCE_STATUSES.map((s) => (<option key={s} value={s}>{s}</option>))}
                         </select>
                       )}
-                      <div className="flex gap-1">
+                      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                         {perms.edit && (
                           <button onClick={() => openEdit(m)} className="grid h-8 w-8 place-items-center rounded-md text-text-2 transition-colors hover:bg-surface-2/60" aria-label="Edit">
                             <Pencil strokeWidth={1.6} className="h-[16px] w-[16px]" />
@@ -210,7 +211,7 @@ export function MaintenanceClient({
         size="lg"
         footer={
           <>
-            {error && <span className="mr-auto text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+            {error && <span className="mr-auto text-[15px] font-medium text-[var(--bad)]">{error}</span>}
             <Button variant="ghost" size="toolbar" onClick={() => setOpen(false)}>Cancel</Button>
             <Button size="toolbar" onClick={save} disabled={pending}>
               {pending && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -274,7 +275,7 @@ function CommentsSection({ maintenanceId }: { maintenanceId: string }) {
             </p>
           </div>
         ))}
-        {comments.length === 0 && <p className="text-[13px] text-muted">No comments yet.</p>}
+        {comments.length === 0 && <p className="text-[15px] text-muted">No comments yet.</p>}
       </div>
       <div className="mt-3 flex gap-2">
         <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Add a comment…" className="h-[44px]" />

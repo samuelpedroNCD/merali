@@ -37,7 +37,7 @@ export function ForgotForm() {
         <Mail strokeWidth={1.6} className="h-[18px] w-[18px] text-[var(--ink-3)]" />
         <input name="email" type="email" required placeholder="you@meralilettings.com" className="min-w-0 flex-1 border-0 bg-transparent text-[15px] text-[var(--ink)] outline-none placeholder:text-[var(--ink-3)]" />
       </div>
-      {error && <p className="text-[13px] font-medium text-[var(--bad)]">{error}</p>}
+      {error && <p className="text-[15px] font-medium text-[var(--bad)]">{error}</p>}
       <button type="submit" disabled={loading} className="flex h-[54px] w-full items-center justify-center gap-2 rounded-[11px] bg-gold-gradient text-[15px] font-bold tracking-[0.02em] text-[var(--on-gold)] shadow-[var(--shadow-btn)] hover:brightness-[1.03] disabled:opacity-60">
         {loading ? "Sending…" : "Send reset link"}
         {!loading && <ArrowRight strokeWidth={1.8} className="h-[17px] w-[17px]" />}

@@ -13,7 +13,7 @@
   --gold-light: #e7cf86;
   --gold: #c9a227;
   --gold-deep: #a9851a;
-  --gold-gradient: linear-gradient(135deg, #e7cf86 0%, #c9a227 52%, #a9851a 100%);
+  --gold-gradient: linear-gradient(135deg, #f1e0ad 0%, #d8b94a 52%, #c4a02e 100%);
   --on-gold: #241b07;
 
   /* ---------- WARM DARK RAMP (anchored at #302915) ---------- */

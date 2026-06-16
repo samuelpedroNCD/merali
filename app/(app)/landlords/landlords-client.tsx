@@ -170,7 +170,7 @@ export function LandlordsClient({
           {filtered.length === 0 && (
             <div className="grid place-items-center py-16 text-center">
               <p className="text-[15px] font-medium text-text-2">No landlords yet</p>
-              <p className="mt-1 text-[13px] text-muted">
+              <p className="mt-1 text-[15px] text-muted">
                 {perms.create ? "Add your first landlord to get started." : "No records available."}
               </p>
             </div>
@@ -178,12 +178,13 @@ export function LandlordsClient({
           {filtered.map((l) => (
             <div
               key={l.id}
-              className="grid min-w-[680px] grid-cols-[2fr_1.2fr_0.7fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] last:border-b-0"
+              onClick={() => router.push(`/landlords/${l.id}`)}
+              className="grid min-w-[680px] cursor-pointer grid-cols-[2fr_1.2fr_0.7fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] transition-colors last:border-b-0 hover:bg-surface-2/40"
             >
               <Link href={`/landlords/${l.id}`} className="truncate font-medium text-text hover:text-accent">{l.full_name || "—"}</Link>
               <span className="truncate text-text-2">{l.landlord_type || "—"}</span>
               <span><Badge tone="muted">{l.property_count ?? 0}</Badge></span>
-              <span className="flex justify-end gap-1">
+              <span className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                 {perms.edit && (
                   <button onClick={() => openEdit(l)} className="grid h-8 w-8 place-items-center rounded-md text-text-2 transition-colors hover:bg-surface-2/60" aria-label="Edit">
                     <Pencil strokeWidth={1.6} className="h-[16px] w-[16px]" />
@@ -207,7 +208,7 @@ export function LandlordsClient({
         subtitle="Add or edit the landlord information"
         footer={
           <>
-            {error && <span className="mr-auto text-[13px] font-medium text-[var(--bad)]">{error}</span>}
+            {error && <span className="mr-auto text-[15px] font-medium text-[var(--bad)]">{error}</span>}
             <Button variant="ghost" size="toolbar" onClick={() => setOpen(false)}>Cancel</Button>
             <Button size="toolbar" onClick={save} disabled={pending}>
               {pending && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -236,7 +237,7 @@ export function LandlordsClient({
         {tab === "company" && (
           <div className="grid grid-cols-2 gap-5">
             {individual ? (
-              <p className="col-span-2 rounded-md border border-dashed border-border px-4 py-3 text-[13px] text-muted">
+              <p className="col-span-2 rounded-md border border-dashed border-border px-4 py-3 text-[15px] text-muted">
                 These fields apply to Company / Trust landlords. Set the landlord type to a company or trust to use them.
               </p>
             ) : (

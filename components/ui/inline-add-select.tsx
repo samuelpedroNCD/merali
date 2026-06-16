@@ -68,7 +68,7 @@ export function InlineAddSelect({
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
               placeholder="New value"
-              className="h-9 flex-1 rounded-md border border-border bg-surface px-2 text-[13px] text-text outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="h-9 flex-1 rounded-md border border-border bg-surface px-2 text-[15px] text-text outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             />
             <button type="button" onClick={add} disabled={pending} aria-label="Save" className="grid h-9 w-9 place-items-center rounded-md bg-gold-gradient text-on-gold">
               {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check strokeWidth={2} className="h-4 w-4" />}

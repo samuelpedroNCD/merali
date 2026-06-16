@@ -118,7 +118,7 @@ export default async function DashboardPage() {
           <h2 className="font-display text-[34px] font-semibold leading-[1.1] text-text">
             {greeting(now)}, {firstName}
           </h2>
-          <p className="mt-1 text-[13px] text-muted">{focusLabel}</p>
+          <p className="mt-1 text-[15px] text-muted">{focusLabel}</p>
         </div>
 
         {kpis.length > 0 && (
@@ -188,7 +188,7 @@ export default async function DashboardPage() {
             <CardHeader
               title="Recent activity"
               action={
-                <Link href="/logs" className="text-[13px] font-semibold text-accent">
+                <Link href="/logs" className="text-[15px] font-semibold text-accent">
                   View all
                 </Link>
               }
@@ -225,7 +225,7 @@ export default async function DashboardPage() {
                   <CardHeader
                     title="Certifications to expire"
                     action={
-                      <Link href="/certifications" className="text-[13px] font-semibold text-accent">
+                      <Link href="/certifications" className="text-[15px] font-semibold text-accent">
                         View all
                       </Link>
                     }
@@ -284,7 +284,7 @@ export default async function DashboardPage() {
 function EmptyRow({ text }: { text: string }) {
   return (
     <div className="grid place-items-center py-8 text-center">
-      <p className="text-[13px] text-muted">{text}</p>
+      <p className="text-[15px] text-muted">{text}</p>
     </div>
   );
 }
