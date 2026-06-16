@@ -187,7 +187,7 @@ function DocumentAdd({ propertyId, open, onClose, onSaved }: Omit<SubProps, "dat
     <Drawer
       open={open}
       onClose={onClose}
-      title="Upload document"
+      title="Add document link"
       subtitle="Add an external document link for this property"
       size="md"
       footer={<FooterButtons error={error} pending={pending} onClose={onClose} onSave={() => run(() => createDocument({ ...form, linked_to: "Property", entity_id: propertyId }))} label="Save document" />}

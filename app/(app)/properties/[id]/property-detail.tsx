@@ -33,7 +33,7 @@ const TABS = [
 
 const addLabel: Record<string, string> = {
   tenants: "Add tenancy",
-  documents: "Upload document",
+  documents: "Add document link",
   maintenance: "Book new job",
   financial: "Add transaction",
   keys: "Issue new key",

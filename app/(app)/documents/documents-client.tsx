@@ -90,7 +90,7 @@ export function DocumentsClient({
               }}
             >
               <Plus strokeWidth={1.8} className="h-[16px] w-[16px]" />
-              Upload document
+              Add document link
             </Button>
           ) : undefined
         }
@@ -134,7 +134,7 @@ export function DocumentsClient({
       <Drawer
         open={open}
         onClose={() => setOpen(false)}
-        title="Upload document"
+        title="Add document link"
         subtitle="Add an external document link"
         size="md"
         footer={
