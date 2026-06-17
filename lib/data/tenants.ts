@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { decryptFields, TENANT_SECRET_FIELDS } from "@/lib/crypto/secrets";
 
 export type TenantRow = {
   id: string;
@@ -34,7 +35,7 @@ export async function listTenants(): Promise<TenantRow[]> {
     .from("tenant")
     .select("*")
     .order("created_at", { ascending: false });
-  return (data ?? []) as unknown as TenantRow[];
+  return (data ?? []).map((t) => decryptFields(t as unknown as TenantRow, TENANT_SECRET_FIELDS));
 }
 
 export async function getTenant(id: string): Promise<TenantRow | null> {
@@ -44,7 +45,7 @@ export async function getTenant(id: string): Promise<TenantRow | null> {
     .select("*")
     .eq("id", id)
     .maybeSingle();
-  return (data as unknown as TenantRow) ?? null;
+  return data ? decryptFields(data as unknown as TenantRow, TENANT_SECRET_FIELDS) : null;
 }
 
 /** Tenants for lease/relationship dropdowns. */

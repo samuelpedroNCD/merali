@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { decryptFields, LANDLORD_SECRET_FIELDS } from "@/lib/crypto/secrets";
 
 export type LandlordRow = {
   id: string;
@@ -42,7 +43,7 @@ export async function listLandlords(): Promise<LandlordRow[]> {
       property?: { count: number }[];
     };
     return {
-      ...(rest as unknown as LandlordRow),
+      ...decryptFields(rest as unknown as LandlordRow, LANDLORD_SECRET_FIELDS),
       property_count: property?.[0]?.count ?? 0,
     };
   });
@@ -55,5 +56,5 @@ export async function getLandlord(id: string): Promise<LandlordRow | null> {
     .select("*")
     .eq("id", id)
     .maybeSingle();
-  return (data as unknown as LandlordRow) ?? null;
+  return data ? decryptFields(data as unknown as LandlordRow, LANDLORD_SECRET_FIELDS) : null;
 }

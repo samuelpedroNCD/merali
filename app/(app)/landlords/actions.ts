@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/data/activity";
+import { encryptFields, LANDLORD_SECRET_FIELDS } from "@/lib/crypto/secrets";
 
 const s = (v: unknown) => (v === "" || v === undefined ? null : v);
 
@@ -60,7 +61,7 @@ export async function createLandlord(input: unknown): Promise<ActionResult> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("landlord")
-    .insert(withFullName(parsed.data))
+    .insert(encryptFields(withFullName(parsed.data), LANDLORD_SECRET_FIELDS))
     .select("id, full_name")
     .single();
   if (error) return { ok: false, error: error.message };
@@ -89,7 +90,7 @@ export async function updateLandlord(id: string, input: unknown): Promise<Action
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("landlord")
-    .update(withFullName(parsed.data))
+    .update(encryptFields(withFullName(parsed.data), LANDLORD_SECRET_FIELDS))
     .eq("id", id)
     .select("id, full_name")
     .single();

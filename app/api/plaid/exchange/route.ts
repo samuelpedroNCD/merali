@@ -3,6 +3,7 @@ import { plaidClient } from "@/lib/plaid/client";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { syncItem } from "@/lib/plaid/sync";
+import { encryptField } from "@/lib/crypto/secrets";
 
 export async function POST(request: NextRequest) {
   const user = await requireUser();
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
       .from("bank_account")
       .insert({
         plaid_item_id: item_id,
-        access_token,
+        access_token: encryptField(access_token),
         institution,
         account_name: first?.name ?? null,
         account_mask: first?.mask ?? null,
@@ -42,7 +43,8 @@ export async function POST(request: NextRequest) {
     let synced = { added: 0, modified: 0, removed: 0 };
     if (bank) {
       try {
-        synced = await syncItem(supabase, bank);
+        // Use the in-memory plaintext token for the immediate sync (the stored one is encrypted).
+        synced = await syncItem(supabase, { ...bank, access_token });
       } catch {
         /* initial sync can lag in sandbox; webhook/manual sync will catch up */
       }

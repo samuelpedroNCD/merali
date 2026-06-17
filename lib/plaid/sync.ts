@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Transaction as PlaidTransaction } from "plaid";
 import { plaidClient } from "./client";
 import { autoReconcile } from "@/lib/finance/auto-reconcile";
+import { decryptField } from "@/lib/crypto/secrets";
 
 type BankAccount = {
   id: string;
@@ -105,7 +106,8 @@ export async function syncAll(supabase: SupabaseClient) {
     .select("id, access_token, institution, transactions_cursor");
   let total = { added: 0, modified: 0, removed: 0 };
   for (const b of banks ?? []) {
-    const r = await syncItem(supabase, b as BankAccount);
+    const bank = b as BankAccount;
+    const r = await syncItem(supabase, { ...bank, access_token: decryptField(bank.access_token) });
     total = {
       added: total.added + r.added,
       modified: total.modified + r.modified,
