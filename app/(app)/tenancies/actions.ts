@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/data/activity";
 import { syncRentSchedule } from "@/lib/finance/rentSchedule";
+import { tenancyStatus, statusToStored } from "@/lib/tenancy-status";
 
 const s = (v: unknown) => (v === "" || v === undefined ? null : v);
 
@@ -15,9 +16,14 @@ const Schema = z.object({
   tenant_ids: z.array(z.string().uuid()).default([]),
   lead_tenant_id: z.preprocess(s, z.string().uuid().nullable()),
   tenancy_code: z.preprocess(s, z.string().nullable()),
+  tenancy_type: z.preprocess(s, z.string().nullable()),
   tenancy_class: z.preprocess(s, z.string().nullable()),
+  term_type: z.preprocess(s, z.string().nullable()),
   start_date: z.preprocess(s, z.string().nullable()),
   end_date: z.preprocess(s, z.string().nullable()),
+  commencement_date: z.preprocess(s, z.string().nullable()),
+  rent_commencement_date: z.preprocess(s, z.string().nullable()),
+  deposit_received: z.preprocess((v) => v === true || v === "true", z.boolean()).default(false),
   move_in_date: z.preprocess(s, z.string().nullable()),
   renewal_date: z.preprocess(s, z.string().nullable()),
   rent_amount: z.preprocess(
@@ -48,7 +54,8 @@ function splitLease(parsed: z.infer<typeof Schema>) {
   const lead = lead_tenant_id && tenant_ids.includes(lead_tenant_id)
     ? lead_tenant_id
     : tenant_ids[0] ?? null;
-  return { leaseData: { ...rest, tenant_id: lead }, tenantIds: tenant_ids, lead, reviews };
+  // Status is derived from the tenancy dates (Current/Past/Future → Active/Pending/Ended).
+  return { leaseData: { ...rest, tenant_id: lead, status: statusToStored(tenancyStatus(rest)) }, tenantIds: tenant_ids, lead, reviews };
 }
 
 /** Replace a lease's rent reviews. */

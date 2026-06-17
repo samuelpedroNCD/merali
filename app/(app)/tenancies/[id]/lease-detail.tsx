@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge, type Tone } from "@/components/ui/badge";
 import { Select } from "@/components/ui/input";
-import { leaseStatusTone as leaseTone } from "@/lib/badge-tones";
+import { tenancyStatus, tenancyStatusTone } from "@/lib/tenancy-status";
 import { gbp, fmtDate } from "@/lib/utils";
 import type { LeaseRow, LeaseScheduleRow, LeaseTxnRow } from "@/lib/data/leases";
 
@@ -89,7 +89,7 @@ export function LeaseDetail({
                   <UserRound strokeWidth={1.6} className="h-[14px] w-[14px]" /> {t.name || "—"}{t.is_lead && l.tenants.length > 1 ? <span className="text-[11px] text-muted">(lead)</span> : null}
                 </Link>
               ))}
-              {l.status && <Badge tone={leaseTone(l.status)} dot>{l.status}</Badge>}
+              {(() => { const s = tenancyStatus(l); return <Badge tone={tenancyStatusTone(s)} dot>{s}</Badge>; })()}
             </div>
             <p className="mt-3 text-[15px] text-muted">
               {l.start_date ? fmtDate(l.start_date) : "—"} → {l.end_date ? fmtDate(l.end_date) : "—"}

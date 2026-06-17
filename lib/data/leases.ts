@@ -6,9 +6,14 @@ export type LeaseRow = {
   unit_id: string | null;
   tenant_id: string | null;
   tenancy_code: string | null;
+  tenancy_type: string | null;
   tenancy_class: string | null;
+  term_type: string | null;
   start_date: string | null;
   end_date: string | null;
+  commencement_date: string | null;
+  rent_commencement_date: string | null;
+  deposit_received: boolean | null;
   move_in_date: string | null;
   renewal_date: string | null;
   rent_amount: number | null;

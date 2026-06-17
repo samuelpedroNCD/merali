@@ -10,7 +10,7 @@ import { Topbar } from "@/components/shell/topbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { leaseStatusTone as statusTone } from "@/lib/badge-tones";
+import { tenancyStatus, tenancyStatusTone } from "@/lib/tenancy-status";
 import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
 import { gbp, fmtDate } from "@/lib/utils";
@@ -27,9 +27,14 @@ function toForm(l?: LeaseRow | null): Form {
     property_id: l?.property_id ?? "",
     unit_id: l?.unit_id ?? "",
     tenancy_code: l?.tenancy_code ?? "",
+    tenancy_type: l?.tenancy_type ?? "",
     tenancy_class: l?.tenancy_class ?? "",
+    term_type: l?.term_type ?? "",
     start_date: l?.start_date ?? "",
     end_date: l?.end_date ?? "",
+    commencement_date: l?.commencement_date ?? "",
+    rent_commencement_date: l?.rent_commencement_date ?? "",
+    deposit_received: l?.deposit_received ? "true" : "false",
     move_in_date: l?.move_in_date ?? "",
     renewal_date: l?.renewal_date ?? "",
     rent_amount: l?.rent_amount != null ? String(l.rent_amount) : "",
@@ -193,7 +198,7 @@ export function TenanciesClient({
               <span className="font-display text-[16px] font-semibold text-text">{l.rent_amount != null ? gbp(l.rent_amount) : "—"}</span>
               <span className="text-text-2">{l.start_date ? fmtDate(l.start_date) : "—"}</span>
               <span className="text-text-2">{l.end_date ? fmtDate(l.end_date) : "—"}</span>
-              <span>{l.status ? <Badge tone={statusTone(l.status)} dot>{l.status}</Badge> : <span className="text-muted">—</span>}</span>
+              <span>{(() => { const s = tenancyStatus(l); return <Badge tone={tenancyStatusTone(s)} dot>{s}</Badge>; })()}</span>
               <span className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                 {perms.edit && (
                   <button onClick={() => openEdit(l)} className="grid h-8 w-8 place-items-center rounded-md text-text-2 transition-colors hover:bg-surface-2/60" aria-label="Edit">
@@ -251,16 +256,21 @@ export function TenanciesClient({
               })}
             </div>
           </div>
-          <Field label="Lease start"><Input type="date" value={form.start_date} onChange={(e) => set("start_date", e.target.value)} /></Field>
-          <Field label="Lease end"><Input type="date" value={form.end_date} onChange={(e) => set("end_date", e.target.value)} /></Field>
+          <SelectFieldOpt label="Term type" value={form.term_type} onChange={(v) => set("term_type", v)} options={[{ value: "Fixed", label: "Fixed" }, { value: "Variable", label: "Variable" }]} className="col-span-2" />
+          <Field label="Tenancy start"><Input type="date" value={form.start_date} onChange={(e) => set("start_date", e.target.value)} /></Field>
+          {form.term_type !== "Variable" && (
+            <Field label="Tenancy end"><Input type="date" value={form.end_date} onChange={(e) => set("end_date", e.target.value)} /></Field>
+          )}
+          <Field label="Tenancy commencement"><Input type="date" value={form.commencement_date} onChange={(e) => set("commencement_date", e.target.value)} /></Field>
+          <Field label="Rent commencement"><Input type="date" value={form.rent_commencement_date} onChange={(e) => set("rent_commencement_date", e.target.value)} /></Field>
           <Field label="Agreed rent (£)"><Input type="number" step="0.01" min={0} value={form.rent_amount} onChange={(e) => set("rent_amount", e.target.value)} /></Field>
           <SelectFieldOpt label="Payment frequency" value={form.payment_frequency} onChange={(v) => set("payment_frequency", v)} options={options.payment_frequency} />
           <SelectFieldOpt label="Rent nominal" value={form.rent_nominal_id} onChange={(v) => set("rent_nominal_id", v)} options={nominals} />
-          <SelectFieldOpt label="Tenancy code" value={form.tenancy_code} onChange={(v) => set("tenancy_code", v)} options={options.tenancy_code} />
+          <SelectFieldOpt label="Tenancy type" value={form.tenancy_type} onChange={(v) => set("tenancy_type", v)} options={options.tenancy_code} />
+          <Field label="Tenancy code"><Input value={form.tenancy_code} onChange={(e) => set("tenancy_code", e.target.value)} placeholder="Internal code (optional)" /></Field>
           <SelectFieldOpt label="Tenancy class" value={form.tenancy_class} onChange={(v) => set("tenancy_class", v)} options={options.tenancy_class} />
           <Field label="Move-in date"><Input type="date" value={form.move_in_date} onChange={(e) => set("move_in_date", e.target.value)} /></Field>
           <Field label="Renewal date"><Input type="date" value={form.renewal_date} onChange={(e) => set("renewal_date", e.target.value)} /></Field>
-          <SelectFieldOpt label="Status" value={form.status} onChange={(v) => set("status", v)} options={options.lease_status} className="col-span-2" />
 
           {/* Rent reviews */}
           <div className="col-span-2 rounded-md border border-border p-3">
@@ -281,9 +291,10 @@ export function TenanciesClient({
             <p className="col-span-2 text-[12.5px] font-semibold text-text">Deposit</p>
             <Field label="Amount (£)"><Input type="number" step="0.01" min={0} value={form.deposit_amount} onChange={(e) => set("deposit_amount", e.target.value)} /></Field>
             <SelectFieldOpt label="Scheme" value={form.deposit_scheme} onChange={(v) => set("deposit_scheme", v)} options={options.deposit_scheme} />
-            <Field label="Reference"><Input value={form.deposit_reference} onChange={(e) => set("deposit_reference", e.target.value)} /></Field>
-            <Field label="Protected date"><Input type="date" value={form.deposit_protected_date} onChange={(e) => set("deposit_protected_date", e.target.value)} /></Field>
-            <Field label="Returned date"><Input type="date" value={form.deposit_returned_date} onChange={(e) => set("deposit_returned_date", e.target.value)} /></Field>
+            <label className="col-span-2 flex cursor-pointer items-center gap-3">
+              <input type="checkbox" checked={form.deposit_received === "true"} onChange={(e) => set("deposit_received", e.target.checked ? "true" : "false")} className="h-4 w-4 accent-[var(--gold)]" />
+              <span className="text-[15px] text-text">Deposit received</span>
+            </label>
           </div>
 
           <label className="col-span-2 flex cursor-pointer items-center gap-3 rounded-md border border-border px-4 py-3">
@@ -293,7 +304,7 @@ export function TenanciesClient({
           <Field label="Notes" className="col-span-2"><Textarea rows={3} value={form.notes} onChange={(e) => set("notes", e.target.value)} /></Field>
           <div className="col-span-2 flex items-center gap-2 rounded-md border border-border bg-surface-2/40 px-4 py-3 text-[15px] text-text-2">
             <CalendarClock strokeWidth={1.6} className="h-4 w-4 text-accent" />
-            On save, the rent schedule is generated from the start/end dates at the chosen frequency — paid instalments are preserved.
+            On save, the rent schedule is generated from the rent commencement date at the chosen frequency — paid instalments are preserved.
           </div>
         </div>
       </Drawer>

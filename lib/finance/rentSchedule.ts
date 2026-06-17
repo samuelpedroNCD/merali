@@ -67,6 +67,7 @@ type LeaseLike = {
   property_id: string | null;
   tenant_id: string | null;
   start_date: string | null;
+  rent_commencement_date?: string | null;
   end_date: string | null;
   rent_amount: number | null;
   payment_frequency: string | null;
@@ -102,7 +103,9 @@ export async function syncRentSchedule(
   lease: LeaseLike,
   reviews?: RentReview[],
 ): Promise<void> {
-  if (!lease.start_date || lease.rent_amount == null) return;
+  // Rent is charged from the rent-commencement date (falls back to the start date).
+  const scheduleStart = lease.rent_commencement_date || lease.start_date;
+  if (!scheduleStart || lease.rent_amount == null) return;
 
   // Reviews drive the rent from their effective date. Fetch them if not provided
   // (e.g. when called from the Plaid sync path) so amounts stay consistent.
@@ -118,7 +121,7 @@ export async function syncRentSchedule(
   const amountFor = (date: string) => effectiveRent(base, revs!, date);
 
   const dates = generateDueDates(
-    lease.start_date,
+    scheduleStart,
     lease.end_date,
     lease.payment_frequency,
   );
