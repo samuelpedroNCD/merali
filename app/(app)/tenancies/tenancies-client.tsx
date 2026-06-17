@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { tenancyStatus, tenancyStatusTone } from "@/lib/tenancy-status";
+import { computeDueDates } from "@/lib/finance/dueDates";
 import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
 import { gbp, fmtDate } from "@/lib/utils";
@@ -39,6 +40,10 @@ function toForm(l?: LeaseRow | null): Form {
     renewal_date: l?.renewal_date ?? "",
     rent_amount: l?.rent_amount != null ? String(l.rent_amount) : "",
     payment_frequency: l?.payment_frequency ?? "",
+    payment_timing: l?.payment_timing ?? "",
+    quarter_type: l?.quarter_type ?? "",
+    due_weekday: l?.due_weekday != null ? String(l.due_weekday) : "",
+    due_dom: l?.due_dom != null ? String(l.due_dom) : "",
     status: l?.status ?? "",
     rent_nominal_id: l?.rent_nominal_id ?? "",
     deposit_amount: l?.deposit_amount != null ? String(l.deposit_amount) : "",
@@ -81,11 +86,13 @@ export function TenanciesClient({
   const [tenantIds, setTenantIds] = useState<string[]>([]);
   const [lead, setLead] = useState<string>("");
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [customDates, setCustomDates] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
   const reviewsOf = (l?: LeaseRow | null): Review[] =>
     (l?.reviews ?? []).map((r) => ({ effective_date: r.effective_date, new_amount: String(r.new_amount) }));
+  const customDatesOf = (l?: LeaseRow | null): string[] => (l?.custom_due_dates ?? []).filter(Boolean);
 
   function leaseTenants(l?: LeaseRow | null) {
     const ts = l?.tenants ?? [];
@@ -100,12 +107,12 @@ export function TenanciesClient({
   }
 
   function openCreate() {
-    setEditing(null); setForm(toForm()); setTenantIds([]); setLead(""); setReviews([]); setError(null); setOpen(true);
+    setEditing(null); setForm(toForm()); setTenantIds([]); setLead(""); setReviews([]); setCustomDates([]); setError(null); setOpen(true);
   }
   function openEdit(l: LeaseRow) {
     setEditing(l); setForm(toForm(l));
     const { ids, lead } = leaseTenants(l); setTenantIds(ids); setLead(lead);
-    setReviews(reviewsOf(l));
+    setReviews(reviewsOf(l)); setCustomDates(customDatesOf(l));
     setError(null); setOpen(true);
   }
   function openRenew(l: LeaseRow) {
@@ -125,7 +132,7 @@ export function TenanciesClient({
       status: "Active",
     });
     const { ids, lead } = leaseTenants(l); setTenantIds(ids); setLead(lead);
-    setReviews(reviewsOf(l));
+    setReviews(reviewsOf(l)); setCustomDates(customDatesOf(l));
     setError(null);
     setOpen(true);
   }
@@ -144,7 +151,7 @@ export function TenanciesClient({
     const cleanReviews = reviews
       .filter((r) => r.effective_date && r.new_amount !== "")
       .map((r) => ({ effective_date: r.effective_date, new_amount: Number(r.new_amount) }));
-    const payload = { ...form, tenant_ids: tenantIds, lead_tenant_id: lead, reviews: cleanReviews };
+    const payload = { ...form, tenant_ids: tenantIds, lead_tenant_id: lead, reviews: cleanReviews, custom_due_dates: customDates.filter(Boolean) };
     startTransition(async () => {
       const res = editing ? await updateLease(editing.id, payload) : await createLease(payload);
       if (!res.ok) return setError(res.error);
@@ -265,6 +272,48 @@ export function TenanciesClient({
           <Field label="Rent commencement"><Input type="date" value={form.rent_commencement_date} onChange={(e) => set("rent_commencement_date", e.target.value)} /></Field>
           <Field label="Agreed rent (£)"><Input type="number" step="0.01" min={0} value={form.rent_amount} onChange={(e) => set("rent_amount", e.target.value)} /></Field>
           <SelectFieldOpt label="Payment frequency" value={form.payment_frequency} onChange={(v) => set("payment_frequency", v)} options={options.payment_frequency} />
+          <SelectFieldOpt label="Payment timing" value={form.payment_timing} onChange={(v) => set("payment_timing", v)} options={[{ value: "Advance", label: "In advance" }, { value: "Arrears", label: "In arrears" }]} />
+          {form.payment_frequency === "Quarterly" && (
+            <SelectFieldOpt label="Quarter type" value={form.quarter_type} onChange={(v) => set("quarter_type", v)} options={[{ value: "English", label: "English quarter days" }, { value: "Calendar", label: "Calendar quarters" }]} />
+          )}
+          {(form.payment_frequency === "Weekly" || form.payment_frequency === "Fortnightly") && (
+            <SelectFieldOpt label="Due weekday" value={form.due_weekday} onChange={(v) => set("due_weekday", v)} options={[{ value: "1", label: "Monday" }, { value: "2", label: "Tuesday" }, { value: "3", label: "Wednesday" }, { value: "4", label: "Thursday" }, { value: "5", label: "Friday" }, { value: "6", label: "Saturday" }, { value: "0", label: "Sunday" }]} />
+          )}
+          {(form.payment_frequency === "Monthly" || form.payment_frequency === "Quarterly" || form.payment_frequency === "Annually") && (
+            <Field label="Due day of month"><Input type="number" min={1} max={31} value={form.due_dom} onChange={(e) => set("due_dom", e.target.value)} /></Field>
+          )}
+          {form.payment_frequency === "Custom" && (
+            <div className="col-span-2 rounded-md border border-border p-3">
+              <p className="mb-2 text-[12.5px] font-semibold text-text">Custom due dates <span className="font-normal text-muted">— rent is due on exactly these dates</span></p>
+              {customDates.length === 0 && <p className="mb-2 text-[12.5px] text-muted">No dates yet.</p>}
+              {customDates.map((dt, i) => (
+                <div key={i} className="mb-2 grid grid-cols-[1fr_auto] items-center gap-2">
+                  <Input type="date" value={dt} onChange={(e) => setCustomDates((ds) => ds.map((x, idx) => (idx === i ? e.target.value : x)))} />
+                  <button type="button" onClick={() => setCustomDates((ds) => ds.filter((_, idx) => idx !== i))} aria-label="Remove" className="grid h-9 w-9 place-items-center rounded-md text-[var(--bad)] hover:bg-[color-mix(in_oklch,var(--bad)_12%,transparent)]"><Trash2 strokeWidth={1.6} className="h-[15px] w-[15px]" /></button>
+                </div>
+              ))}
+              <button type="button" onClick={() => setCustomDates((ds) => [...ds, ""])} className="text-[12.5px] font-semibold text-accent hover:underline">+ Add date</button>
+            </div>
+          )}
+          {(() => {
+            const preview = computeDueDates({
+              start: form.rent_commencement_date || form.start_date || null,
+              end: form.end_date || null,
+              frequency: form.payment_frequency,
+              timing: form.payment_timing,
+              quarterType: form.quarter_type,
+              dueWeekday: form.due_weekday === "" ? null : Number(form.due_weekday),
+              dueDom: form.due_dom === "" ? null : Number(form.due_dom),
+              customDates: customDates.filter(Boolean),
+              horizon: 4,
+            }).slice(0, 4);
+            return (
+              <div className="col-span-2 rounded-md border border-border bg-surface-2/40 px-4 py-3 text-[13px] text-text-2">
+                <p className="mb-1 font-semibold text-text">Example due dates</p>
+                {preview.length ? <p>{preview.map((x) => fmtDate(x)).join(" · ")}{preview.length >= 4 ? " · …" : ""}</p> : <p className="text-muted">Set a rent commencement date and frequency to preview.</p>}
+              </div>
+            );
+          })()}
           <SelectFieldOpt label="Rent nominal" value={form.rent_nominal_id} onChange={(v) => set("rent_nominal_id", v)} options={nominals} />
           <SelectFieldOpt label="Tenancy type" value={form.tenancy_type} onChange={(v) => set("tenancy_type", v)} options={options.tenancy_code} />
           <Field label="Tenancy code"><Input value={form.tenancy_code} onChange={(e) => set("tenancy_code", e.target.value)} placeholder="Internal code (optional)" /></Field>

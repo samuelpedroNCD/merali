@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { computeDueDates } from "./dueDates";
 
 export type Frequency =
   | "Weekly"
@@ -71,6 +72,11 @@ type LeaseLike = {
   end_date: string | null;
   rent_amount: number | null;
   payment_frequency: string | null;
+  payment_timing?: string | null;
+  quarter_type?: string | null;
+  due_weekday?: number | null;
+  due_dom?: number | null;
+  custom_due_dates?: string[] | null;
 };
 
 /**
@@ -120,11 +126,16 @@ export async function syncRentSchedule(
   const base = Number(lease.rent_amount);
   const amountFor = (date: string) => effectiveRent(base, revs!, date);
 
-  const dates = generateDueDates(
-    scheduleStart,
-    lease.end_date,
-    lease.payment_frequency,
-  );
+  const dates = computeDueDates({
+    start: scheduleStart,
+    end: lease.end_date,
+    frequency: lease.payment_frequency,
+    timing: lease.payment_timing,
+    quarterType: lease.quarter_type,
+    dueWeekday: lease.due_weekday,
+    dueDom: lease.due_dom,
+    customDates: lease.custom_due_dates,
+  });
   const target = new Set(dates);
 
   const { data: existing } = await supabase

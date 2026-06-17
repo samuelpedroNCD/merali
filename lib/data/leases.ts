@@ -18,6 +18,11 @@ export type LeaseRow = {
   renewal_date: string | null;
   rent_amount: number | null;
   payment_frequency: string | null;
+  payment_timing: string | null;
+  quarter_type: string | null;
+  due_weekday: number | null;
+  due_dom: number | null;
+  custom_due_dates: string[] | null;
   status: string | null;
   notes: string | null;
   rent_nominal_id: string | null;
