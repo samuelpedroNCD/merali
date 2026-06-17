@@ -12,7 +12,6 @@ import {
   Truck,
   IdCard,
   BadgeCheck,
-  Files,
   BellRing,
   History,
   FileBarChart,
@@ -58,7 +57,6 @@ export const NAV: NavSection[] = [
     label: "Compliance & Docs",
     items: [
       { label: "Certifications", href: "/certifications", icon: BadgeCheck, module: "certifications" },
-      { label: "Documents", href: "/documents", icon: Files, module: "documents" },
       { label: "Reminders", href: "/reminders", icon: BellRing, module: "reminders" },
       { label: "Reports", href: "/reports", icon: FileBarChart, module: "reports" },
       { label: "Logs", href: "/logs", icon: History, module: "logs" },

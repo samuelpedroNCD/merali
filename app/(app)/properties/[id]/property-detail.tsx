@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, UserRound, Plus, ExternalLink, Pencil, Building2, Boxes, ChevronRight, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, UserRound, Plus, Pencil, Building2, Boxes, ChevronRight, Trash2, Loader2 } from "lucide-react";
 import { Topbar } from "@/components/shell/topbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -24,7 +24,6 @@ import { PropertyAddDrawer, type PropertyAddData } from "./property-add-drawers"
 
 const TABS = [
   { key: "tenants", label: "Tenants" },
-  { key: "documents", label: "Documents" },
   { key: "maintenance", label: "Maintenance" },
   { key: "financial", label: "Financial" },
   { key: "keys", label: "Keys" },
@@ -33,7 +32,6 @@ const TABS = [
 
 const addLabel: Record<string, string> = {
   tenants: "Add tenancy",
-  documents: "Add document link",
   maintenance: "Book new job",
   financial: "Add transaction",
   keys: "Issue new key",
@@ -164,19 +162,6 @@ export function PropertyDetail({
               rows={related.tenants}
               render={(t) => (
                 <Row key={t.id} title={t.name || "—"} meta={`${t.start ? fmtDate(t.start) : "—"} → ${t.end ? fmtDate(t.end) : "—"}`} badge={t.status ? <Badge tone={statusTone(t.status)} dot>{t.status}</Badge> : null} />
-              )}
-            />
-          )}
-          {tab === "documents" && (
-            <RecordList
-              empty="No documents for this property yet."
-              rows={related.documents}
-              render={(d) => (
-                <Row
-                  key={d.id}
-                  title={<a href={d.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 hover:text-accent">{d.name}<ExternalLink strokeWidth={1.6} className="h-[13px] w-[13px] text-muted" /></a>}
-                  meta={d.expiry ? `Expires ${fmtDate(d.expiry)}` : ""}
-                />
               )}
             />
           )}

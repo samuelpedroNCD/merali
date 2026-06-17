@@ -23,23 +23,6 @@ export default function LoginPage() {
           priority
           className="relative h-[46px] w-auto self-start"
         />
-
-        <div className="relative flex max-w-[520px] flex-1 flex-col justify-center">
-          <p
-            className="mb-[26px] text-[12px] font-semibold uppercase tracking-[0.26em]"
-            style={{ color: "var(--gold-light)" }}
-          >
-            Property Operations Platform
-          </p>
-          <div className="mb-7 h-px w-[72px]" style={{ background: "var(--gold)" }} />
-          <p
-            className="max-w-[440px] text-[17px] leading-[1.6]"
-            style={{ color: "var(--cream-text-2)" }}
-          >
-            Tenancies, rent, maintenance and compliance — managed in one calm,
-            considered place.
-          </p>
-        </div>
       </div>
 
       {/* Right — cream form */}
@@ -54,12 +37,9 @@ export default function LoginPage() {
             priority
             className="mb-8 h-[40px] w-auto md:hidden"
           />
-          <h1 className="font-display text-[40px] font-semibold tracking-[-0.01em] text-[var(--ink)]">
+          <h1 className="mb-[34px] font-display text-[40px] font-semibold tracking-[-0.01em] text-[var(--ink)]">
             Welcome back
           </h1>
-          <p className="mb-[34px] mt-2 text-[15px] text-[var(--ink-2)]">
-            Sign in to your management dashboard.
-          </p>
           <Suspense fallback={<div className="h-[300px]" />}>
             <LoginForm />
           </Suspense>

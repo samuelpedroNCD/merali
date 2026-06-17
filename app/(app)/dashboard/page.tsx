@@ -8,6 +8,7 @@ import {
   UserPlus,
   ArrowUpRight,
   AlertCircle,
+  BellRing,
 } from "lucide-react";
 import { Topbar } from "@/components/shell/topbar";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -19,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { gbp, fmtDate } from "@/lib/utils";
 import { requireUser, can } from "@/lib/auth";
 import { getDashboardData } from "@/lib/data/dashboard";
+import { listReminders } from "@/lib/data/reminders";
 
 function greeting(now = new Date()) {
   const h = now.getHours();
@@ -40,6 +42,15 @@ export default async function DashboardPage() {
   const canProps = can(user, "properties", "view");
   const canCerts = can(user, "certifications", "view");
   const canLeases = can(user, "leases", "view");
+  const canReminders = can(user, "reminders", "view");
+
+  // Upcoming, not-yet-completed reminders (already ordered by date ascending).
+  const todayISO = now.toISOString().slice(0, 10);
+  const reminders = canReminders
+    ? (await listReminders())
+        .filter((r) => (r.status ?? "") !== "Completed" && (!r.alert_date || r.alert_date >= todayISO))
+        .slice(0, 6)
+    : [];
   const focus: "finance" | "ops" | "manager" =
     canFinance && !canMaint ? "finance" : canMaint && !canFinance ? "ops" : "manager";
   const focusLabel =
@@ -276,6 +287,46 @@ export default async function DashboardPage() {
             </Card>
           )}
         </div>
+
+        {canReminders && (
+          <Card>
+            <CardHeader
+              title="Upcoming reminders"
+              action={
+                <Link href="/reminders" className="text-[15px] font-semibold text-accent">
+                  View all
+                </Link>
+              }
+            />
+            {reminders.length === 0 ? (
+              <EmptyRow text="No upcoming reminders." />
+            ) : (
+              <ul>
+                {reminders.map((r) => (
+                  <li
+                    key={r.id}
+                    className="flex items-center gap-[13px] border-t border-border py-[13px] first:border-t-0"
+                  >
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-2">
+                      <BellRing strokeWidth={1.6} className="h-4 w-4 text-accent" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[14px] font-medium text-text">{r.content || "Reminder"}</p>
+                      <p className="truncate text-[12.5px] text-muted">
+                        {[r.property_name, r.assignees.map((a) => a.name).join(", ")].filter(Boolean).join(" · ")}
+                      </p>
+                    </div>
+                    {r.alert_date && (
+                      <span className="text-[12.5px] text-muted">
+                        {fmtDate(r.alert_date)}{r.alert_time ? ` · ${r.alert_time.slice(0, 5)}` : ""}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        )}
       </main>
     </>
   );

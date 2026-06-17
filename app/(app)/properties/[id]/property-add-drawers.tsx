@@ -11,7 +11,6 @@ import type { LeaseOption } from "@/lib/data/leases";
 import { createMaintenance } from "../../maintenance/actions";
 import { createTransaction } from "../../nominal/actions";
 import { createKey } from "../../keys/actions";
-import { createDocument } from "../../documents/actions";
 import { createLease } from "../../tenancies/actions";
 
 type Opt = { value: string; label: string };
@@ -55,8 +54,6 @@ export function PropertyAddDrawer({
       return <MaintenanceAdd key={k} propertyId={propertyId} open={open} onClose={onClose} onSaved={onSaved} data={data} />;
     case "financial":
       return <TransactionAdd key={k} propertyId={propertyId} open={open} onClose={onClose} onSaved={onSaved} data={data} />;
-    case "documents":
-      return <DocumentAdd key={k} propertyId={propertyId} open={open} onClose={onClose} onSaved={onSaved} />;
     case "keys":
       return <KeyAdd key={k} propertyId={propertyId} open={open} onClose={onClose} onSaved={onSaved} data={data} />;
     case "tenants":
@@ -171,31 +168,6 @@ function TransactionAdd({ propertyId, open, onClose, onSaved, data }: SubProps) 
         <Field label="Reference"><Input value={form.reference} onChange={(e) => set("reference", e.target.value)} placeholder="e.g. #J083" /></Field>
         <Field label="Receipt / proof link" className="col-span-2"><Input value={form.receipt_link} onChange={(e) => set("receipt_link", e.target.value)} placeholder="https://…" /></Field>
         <Field label="Notes" className="col-span-2"><Textarea rows={3} value={form.notes} onChange={(e) => set("notes", e.target.value)} /></Field>
-      </div>
-    </Drawer>
-  );
-}
-
-// ------------------------------------------------------------------- Document
-function DocumentAdd({ propertyId, open, onClose, onSaved }: Omit<SubProps, "data">) {
-  const blank = (): Form => ({ name: "", external_link: "", expiry_date: "" });
-  const [form, setForm] = useState<Form>(blank());
-  const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
-  const { error, pending, run } = useSave(onClose, onSaved, "Document saved.");
-
-  return (
-    <Drawer
-      open={open}
-      onClose={onClose}
-      title="Add document link"
-      subtitle="Add an external document link for this property"
-      size="md"
-      footer={<FooterButtons error={error} pending={pending} onClose={onClose} onSave={() => run(() => createDocument({ ...form, linked_to: "Property", entity_id: propertyId }))} label="Save document" />}
-    >
-      <div className="grid grid-cols-1 gap-5">
-        <Field label="Name"><Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Tenancy agreement" /></Field>
-        <Field label="Link"><Input value={form.external_link} onChange={(e) => set("external_link", e.target.value)} placeholder="https://…" /></Field>
-        <Field label="Expiration date"><Input type="date" value={form.expiry_date} onChange={(e) => set("expiry_date", e.target.value)} /></Field>
       </div>
     </Drawer>
   );
