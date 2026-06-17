@@ -31,6 +31,18 @@ export async function listTransactions(): Promise<TransactionRow[]> {
   return (data ?? []) as unknown as TransactionRow[];
 }
 
+/** Transactions awaiting manual review/approval (e.g. imported bank lines). */
+export async function listUnreconciledTransactions(): Promise<TransactionRow[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("transaction")
+    .select("*, property:property_id(id, address)")
+    .eq("needs_review", true)
+    .order("txn_date", { ascending: false })
+    .limit(500);
+  return (data ?? []) as unknown as TransactionRow[];
+}
+
 export type LedgerTotals = { credits: number; debits: number; net: number };
 
 export async function getLedgerTotals(): Promise<LedgerTotals> {

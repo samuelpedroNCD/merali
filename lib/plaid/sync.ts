@@ -3,6 +3,7 @@ import type { Transaction as PlaidTransaction } from "plaid";
 import { plaidClient } from "./client";
 import { autoReconcile } from "@/lib/finance/auto-reconcile";
 import { decryptField } from "@/lib/crypto/secrets";
+import { matchPropertyByCode, type CodedProperty } from "@/lib/finance/matchProperty";
 
 type BankAccount = {
   id: string;
@@ -47,6 +48,18 @@ export async function syncItem(
 ): Promise<{ added: number; modified: number; removed: number }> {
   if (!bank.access_token) return { added: 0, modified: 0, removed: 0 };
 
+  // Best-effort: pre-assign a property when its internal code is in the bank text.
+  const { data: propRows } = await supabase.from("property").select("id, internal_code");
+  const codedProps = (propRows ?? []) as CodedProperty[];
+  const withMatch = (row: ReturnType<typeof mapTxn>) => {
+    const r = row as typeof row & { property_id?: string | null; reference?: string | null; notes?: string | null };
+    if (!r.property_id) {
+      const pid = matchPropertyByCode(`${r.reference ?? ""} ${r.notes ?? ""}`, codedProps);
+      if (pid) r.property_id = pid;
+    }
+    return row;
+  };
+
   let cursor = bank.transactions_cursor ?? undefined;
   let added = 0,
     modified = 0,
@@ -63,7 +76,7 @@ export async function syncItem(
     if (data.added.length) {
       await supabase
         .from("transaction")
-        .upsert(data.added.map((t) => mapTxn(t, bank)), {
+        .upsert(data.added.map((t) => withMatch(mapTxn(t, bank))), {
           onConflict: "plaid_transaction_id",
         });
       added += data.added.length;
