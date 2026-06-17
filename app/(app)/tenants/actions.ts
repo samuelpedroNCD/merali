@@ -12,6 +12,7 @@ const s = (v: unknown) => (v === "" || v === undefined ? null : v);
 const Schema = z.object({
   is_company: z.preprocess((v) => v === true || v === "true", z.boolean()).default(false),
   company_name: z.preprocess(s, z.string().nullable()),
+  company_address: z.preprocess(s, z.string().nullable()),
   first_name: z.preprocess(s, z.string().nullable()),
   last_name: z.preprocess(s, z.string().nullable()),
   email: z.preprocess(s, z.string().nullable()),

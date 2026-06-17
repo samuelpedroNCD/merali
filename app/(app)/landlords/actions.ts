@@ -33,14 +33,35 @@ const Schema = z.object({
   bank_account_number: z.preprocess(s, z.string().nullable()),
   bank_name: z.preprocess(s, z.string().nullable()),
   bank_reference: z.preprocess(s, z.string().nullable()),
+  internal_code: z.preprocess(s, z.string().nullable()),
+  company_status: z.preprocess(s, z.string().nullable()),
   notes: z.preprocess(s, z.string().nullable()),
+  people: z.array(z.object({
+    role: z.preprocess(s, z.string().nullable()),
+    name: z.preprocess(s, z.string().nullable()),
+    email: z.preprocess(s, z.string().nullable()),
+    phone: z.preprocess(s, z.string().nullable()),
+  })).default([]),
 });
+
+/** Replace a landlord's people (directors/trustees/contacts). */
+async function setLandlordPeople(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  landlordId: string,
+  people: { role: string | null; name: string | null; email: string | null; phone: string | null }[],
+) {
+  await supabase.from("landlord_person").delete().eq("landlord_id", landlordId);
+  const rows = people.filter((p) => p.name || p.email || p.phone);
+  if (rows.length) {
+    await supabase.from("landlord_person").insert(rows.map((p) => ({ landlord_id: landlordId, ...p })));
+  }
+}
 
 export type ActionResult = { ok: true; id?: string } | { ok: false; error: string };
 
 const isIndividual = (t?: string | null) => !t || t.toLowerCase() === "individual";
 
-function withFullName(data: z.infer<typeof Schema>) {
+function withFullName<T extends { landlord_type?: string | null; first_name?: string | null; last_name?: string | null; entity_name?: string | null }>(data: T) {
   // Company/trust landlords have a single entity name; individuals use first+last.
   const full = isIndividual(data.landlord_type)
     ? [data.first_name, data.last_name].filter(Boolean).join(" ").trim()
@@ -59,13 +80,15 @@ export async function createLandlord(input: unknown): Promise<ActionResult> {
   if (!parsed.success) return { ok: false, error: "Invalid landlord data." };
 
   const supabase = await createClient();
+  const { people, ...rest } = parsed.data;
   const { data, error } = await supabase
     .from("landlord")
-    .insert(encryptFields(withFullName(parsed.data), LANDLORD_SECRET_FIELDS))
+    .insert(encryptFields(withFullName(rest), LANDLORD_SECRET_FIELDS))
     .select("id, full_name")
     .single();
   if (error) return { ok: false, error: error.message };
 
+  await setLandlordPeople(supabase, data.id, people);
   await logActivity({
     type: "Landlord Creation",
     objectLabel: data.full_name,
@@ -88,14 +111,16 @@ export async function updateLandlord(id: string, input: unknown): Promise<Action
   if (!parsed.success) return { ok: false, error: "Invalid landlord data." };
 
   const supabase = await createClient();
+  const { people, ...rest } = parsed.data;
   const { data, error } = await supabase
     .from("landlord")
-    .update(encryptFields(withFullName(parsed.data), LANDLORD_SECRET_FIELDS))
+    .update(encryptFields(withFullName(rest), LANDLORD_SECRET_FIELDS))
     .eq("id", id)
     .select("id, full_name")
     .single();
   if (error) return { ok: false, error: error.message };
 
+  await setLandlordPeople(supabase, id, people);
   await logActivity({
     type: "Landlord Update",
     objectLabel: data.full_name,

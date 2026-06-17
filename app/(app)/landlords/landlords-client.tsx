@@ -27,6 +27,7 @@ const TABS = [
 
 type Perms = { create: boolean; edit: boolean; remove: boolean };
 type Form = Record<string, string>;
+type Person = { role: string; name: string; email: string; phone: string };
 
 const isIndividualType = (t?: string) => !t || t.toLowerCase() === "individual";
 const isTrustType = (t?: string) => !!t && t.toLowerCase().includes("trust");
@@ -52,6 +53,8 @@ function toForm(l?: LandlordRow | null): Form {
     company_registration_date: l?.company_registration_date ?? "",
     director_name: l?.director_name ?? "",
     trustee_name: l?.trustee_name ?? "",
+    internal_code: l?.internal_code ?? "",
+    company_status: l?.company_status ?? "",
     bank_account_name: l?.bank_account_name ?? "",
     bank_sort_code: l?.bank_sort_code ?? "",
     bank_account_number: l?.bank_account_number ?? "",
@@ -80,13 +83,19 @@ export function LandlordsClient({
   const [editing, setEditing] = useState<LandlordRow | null>(null);
   const [tab, setTab] = useState("identity");
   const [form, setForm] = useState<Form>(toForm());
+  const [people, setPeople] = useState<Person[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const peopleOf = (l?: LandlordRow | null): Person[] =>
+    (l?.people ?? []).map((p) => ({ role: p.role ?? "", name: p.name ?? "", email: p.email ?? "", phone: p.phone ?? "" }));
+  const updatePerson = (i: number, k: keyof Person, v: string) =>
+    setPeople((ps) => ps.map((p, idx) => (idx === i ? { ...p, [k]: v } : p)));
 
   function openCreate() {
     setEditing(null);
     setForm(toForm());
+    setPeople([]);
     setTab("identity");
     setError(null);
     setOpen(true);
@@ -94,6 +103,7 @@ export function LandlordsClient({
   function openEdit(l: LandlordRow) {
     setEditing(l);
     setForm(toForm(l));
+    setPeople(peopleOf(l));
     setTab("identity");
     setError(null);
     setOpen(true);
@@ -106,10 +116,14 @@ export function LandlordsClient({
   }, [editId]);
   function save() {
     setError(null);
+    const payload = {
+      ...form,
+      people: people.filter((p) => p.name.trim() || p.email.trim() || p.phone.trim()),
+    };
     startTransition(async () => {
       const res = editing
-        ? await updateLandlord(editing.id, form)
-        : await createLandlord(form);
+        ? await updateLandlord(editing.id, payload)
+        : await createLandlord(payload);
       if (!res.ok) return setError(res.error);
       setOpen(false);
       toast.success("Landlord saved.");
@@ -231,6 +245,7 @@ export function LandlordsClient({
                 <Input value={form.entity_name} onChange={(e) => set("entity_name", e.target.value)} placeholder={trust ? "e.g. The Smith Family Trust" : "e.g. Acme Properties Ltd"} />
               </Field>
             )}
+            <Field label="Internal code"><Input value={form.internal_code} onChange={(e) => set("internal_code", e.target.value)} placeholder="Team's internal code" /></Field>
             <p className="col-span-2 text-[12.5px] text-muted">Contact for all landlords is the office, so contact details aren&apos;t needed here.</p>
           </div>
         )}
@@ -243,12 +258,36 @@ export function LandlordsClient({
             ) : (
               <>
                 <Field label="VAT number"><Input value={form.vat_number} onChange={(e) => set("vat_number", e.target.value)} /></Field>
-                <Field label="Registration date"><Input type="date" value={form.company_registration_date} onChange={(e) => set("company_registration_date", e.target.value)} /></Field>
-                {trust ? (
-                  <Field label="Trustee name" className="col-span-2"><Input value={form.trustee_name} onChange={(e) => set("trustee_name", e.target.value)} /></Field>
-                ) : (
-                  <Field label="Director name" className="col-span-2"><Input value={form.director_name} onChange={(e) => set("director_name", e.target.value)} /></Field>
-                )}
+                <Field label="Status">
+                  <Select value={form.company_status} onChange={(e) => set("company_status", e.target.value)}>
+                    <option value="">Choose…</option>
+                    <option>Active</option>
+                    <option>Dormant</option>
+                  </Select>
+                </Field>
+                <Field label="Registration date" className="col-span-2"><Input type="date" value={form.company_registration_date} onChange={(e) => set("company_registration_date", e.target.value)} /></Field>
+                <div className="col-span-2">
+                  <p className="mb-2 text-[12.5px] font-semibold text-text">
+                    {trust ? "Trustees & people" : "Directors & people"}
+                    <span className="font-normal text-muted"> — add as many as needed</span>
+                  </p>
+                  {people.length === 0 && <p className="mb-2 text-[12.5px] text-muted">No people added yet.</p>}
+                  {people.map((p, i) => (
+                    <div key={i} className="mb-2 grid grid-cols-[0.8fr_1.1fr_1.2fr_1fr_auto] items-center gap-2">
+                      <Select value={p.role} onChange={(e) => updatePerson(i, "role", e.target.value)}>
+                        <option value="">Role…</option>
+                        <option>Director</option>
+                        <option>Trustee</option>
+                        <option>Contact</option>
+                      </Select>
+                      <Input placeholder="Name" value={p.name} onChange={(e) => updatePerson(i, "name", e.target.value)} />
+                      <Input placeholder="Email" value={p.email} onChange={(e) => updatePerson(i, "email", e.target.value)} />
+                      <Input placeholder="Phone" value={p.phone} onChange={(e) => updatePerson(i, "phone", e.target.value)} />
+                      <button type="button" onClick={() => setPeople((ps) => ps.filter((_, idx) => idx !== i))} aria-label="Remove" className="grid h-9 w-9 place-items-center rounded-md text-[var(--bad)] hover:bg-[color-mix(in_oklch,var(--bad)_12%,transparent)]"><Trash2 strokeWidth={1.6} className="h-[15px] w-[15px]" /></button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => setPeople((ps) => [...ps, { role: trust ? "Trustee" : "Director", name: "", email: "", phone: "" }])} className="text-[12.5px] font-semibold text-accent hover:underline">+ Add person</button>
+                </div>
               </>
             )}
           </div>

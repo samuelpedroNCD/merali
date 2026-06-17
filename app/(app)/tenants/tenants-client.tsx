@@ -22,8 +22,7 @@ import { createTenant, updateTenant, deleteTenant } from "./actions";
 const TABS = [
   { key: "personal", label: "Personal" },
   { key: "forwarding", label: "Forwarding" },
-  { key: "nok", label: "Next of Kin" },
-  { key: "guarantor", label: "Guarantor" },
+  { key: "contacts", label: "Contacts" },
   { key: "notes", label: "Notes" },
 ];
 
@@ -34,6 +33,7 @@ function toForm(t?: TenantRow | null): Form {
   return {
     is_company: t?.is_company ? "true" : "false",
     company_name: t?.company_name ?? "",
+    company_address: t?.company_address ?? "",
     first_name: t?.first_name ?? "",
     last_name: t?.last_name ?? "",
     email: t?.email ?? "",
@@ -194,7 +194,12 @@ export function TenantsClient({
               <span className="text-[13.5px] font-medium text-text">This tenant is a company</span>
             </label>
             {form.is_company === "true" ? (
-              <Field label="Company name" className="col-span-2"><Input value={form.company_name} onChange={(e) => set("company_name", e.target.value)} placeholder="e.g. Acme Ltd" /></Field>
+              <>
+                <Field label="Company name" className="col-span-2"><Input value={form.company_name} onChange={(e) => set("company_name", e.target.value)} placeholder="e.g. Acme Ltd" /></Field>
+                <Field label="Company address" className="col-span-2">
+                  <AddressAutocomplete value={form.company_address} onChange={(v) => set("company_address", v)} onResolve={(a) => set("company_address", a.address)} />
+                </Field>
+              </>
             ) : (
               <>
                 <Field label="First name"><Input value={form.first_name} onChange={(e) => set("first_name", e.target.value)} /></Field>
@@ -216,20 +221,26 @@ export function TenantsClient({
             />
           </Field>
         )}
-        {tab === "nok" && (
-          <div className="grid grid-cols-2 gap-5">
-            <Field label="Next of kin name"><Input value={form.nok_name} onChange={(e) => set("nok_name", e.target.value)} /></Field>
-            <Field label="Next of kin phone"><Input value={form.nok_phone} onChange={(e) => set("nok_phone", e.target.value)} /></Field>
-            <Field label="Next of kin email"><Input type="email" value={form.nok_email} onChange={(e) => set("nok_email", e.target.value)} /></Field>
-            <SelectField label="Relationship" value={form.nok_relationship} onChange={(v) => set("nok_relationship", v)} options={options.nok_relationship} />
-            <Field label="Next of kin address" className="col-span-2"><Input value={form.nok_address} onChange={(e) => set("nok_address", e.target.value)} /></Field>
-          </div>
-        )}
-        {tab === "guarantor" && (
-          <div className="grid grid-cols-2 gap-5">
-            <Field label="Guarantor name" className="col-span-2"><Input value={form.guarantor_name} onChange={(e) => set("guarantor_name", e.target.value)} /></Field>
-            <Field label="Guarantor email"><Input type="email" value={form.guarantor_email} onChange={(e) => set("guarantor_email", e.target.value)} /></Field>
-            <Field label="Guarantor phone"><Input value={form.guarantor_phone} onChange={(e) => set("guarantor_phone", e.target.value)} /></Field>
+        {tab === "contacts" && (
+          <div className="flex flex-col gap-6">
+            <div>
+              <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Emergency contact</p>
+              <div className="grid grid-cols-2 gap-5">
+                <Field label="Name"><Input value={form.nok_name} onChange={(e) => set("nok_name", e.target.value)} /></Field>
+                <Field label="Phone"><Input value={form.nok_phone} onChange={(e) => set("nok_phone", e.target.value)} /></Field>
+                <Field label="Email"><Input type="email" value={form.nok_email} onChange={(e) => set("nok_email", e.target.value)} /></Field>
+                <SelectField label="Relationship" value={form.nok_relationship} onChange={(v) => set("nok_relationship", v)} options={options.nok_relationship} />
+                <Field label="Address" className="col-span-2"><Input value={form.nok_address} onChange={(e) => set("nok_address", e.target.value)} /></Field>
+              </div>
+            </div>
+            <div className="border-t border-border pt-5">
+              <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Guarantor</p>
+              <div className="grid grid-cols-2 gap-5">
+                <Field label="Name" className="col-span-2"><Input value={form.guarantor_name} onChange={(e) => set("guarantor_name", e.target.value)} /></Field>
+                <Field label="Email"><Input type="email" value={form.guarantor_email} onChange={(e) => set("guarantor_email", e.target.value)} /></Field>
+                <Field label="Phone"><Input value={form.guarantor_phone} onChange={(e) => set("guarantor_phone", e.target.value)} /></Field>
+              </div>
+            </div>
           </div>
         )}
         {tab === "notes" && (

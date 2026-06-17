@@ -27,24 +27,29 @@ export type LandlordRow = {
   bank_account_number: string | null;
   bank_name: string | null;
   bank_reference: string | null;
+  internal_code: string | null;
+  company_status: string | null;
   bio: string | null;
   notes: string | null;
   property_count?: number;
+  people: { id: string; role: string | null; name: string | null; email: string | null; phone: string | null }[];
 };
 
 export async function listLandlords(): Promise<LandlordRow[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("landlord")
-    .select("*, property(count)")
+    .select("*, property(count), landlord_person(id, role, name, email, phone)")
     .order("created_at", { ascending: false });
   return (data ?? []).map((l) => {
-    const { property, ...rest } = l as Record<string, unknown> & {
+    const { property, landlord_person, ...rest } = l as Record<string, unknown> & {
       property?: { count: number }[];
+      landlord_person?: LandlordRow["people"];
     };
     return {
       ...decryptFields(rest as unknown as LandlordRow, LANDLORD_SECRET_FIELDS),
       property_count: property?.[0]?.count ?? 0,
+      people: landlord_person ?? [],
     };
   });
 }
@@ -53,8 +58,13 @@ export async function getLandlord(id: string): Promise<LandlordRow | null> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("landlord")
-    .select("*")
+    .select("*, landlord_person(id, role, name, email, phone)")
     .eq("id", id)
     .maybeSingle();
-  return data ? decryptFields(data as unknown as LandlordRow, LANDLORD_SECRET_FIELDS) : null;
+  if (!data) return null;
+  const { landlord_person, ...rest } = data as Record<string, unknown> & { landlord_person?: LandlordRow["people"] };
+  return {
+    ...decryptFields(rest as unknown as LandlordRow, LANDLORD_SECRET_FIELDS),
+    people: landlord_person ?? [],
+  };
 }

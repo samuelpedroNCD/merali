@@ -88,12 +88,12 @@ export function TenantDetail({
         {/* Next of kin + Guarantor + Documents */}
         <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-2">
           <Card>
-            <h3 className="mb-3 text-[16px] font-semibold text-text">Next of kin & guarantor</h3>
+            <h3 className="mb-3 text-[16px] font-semibold text-text">Emergency contact & guarantor</h3>
             <dl className="grid grid-cols-2 gap-y-2 text-[13.5px]">
-              <Info label="NOK name" value={t.nok_name} />
-              <Info label="NOK phone" value={t.nok_phone} />
-              <Info label="NOK relationship" value={t.nok_relationship} />
-              <Info label="NOK email" value={t.nok_email} />
+              <Info label="Emergency name" value={t.nok_name} />
+              <Info label="Emergency phone" value={t.nok_phone} />
+              <Info label="Relationship" value={t.nok_relationship} />
+              <Info label="Emergency email" value={t.nok_email} />
               <Info label="Guarantor" value={t.guarantor_name} />
               <Info label="Guarantor email" value={t.guarantor_email} />
             </dl>

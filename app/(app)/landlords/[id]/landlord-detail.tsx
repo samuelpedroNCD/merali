@@ -82,10 +82,24 @@ export function LandlordDetail({
             <Card>
               <h3 className="mb-3 text-[16px] font-semibold text-text">{isTrust ? "Trust details" : "Company details"}</h3>
               <dl className="grid grid-cols-2 gap-y-2 text-[13.5px]">
-                {isTrust ? <Info label="Trustee" value={l.trustee_name} /> : <Info label="Director" value={l.director_name} />}
                 <Info label="VAT number" value={l.vat_number} />
                 <Info label="Registration date" value={l.company_registration_date ? fmtDate(l.company_registration_date) : null} />
+                <Info label="Status" value={l.company_status} />
+                <Info label="Internal code" value={l.internal_code} />
               </dl>
+              {l.people.length > 0 && (
+                <div className="mt-3 border-t border-border pt-3">
+                  <p className="mb-2 text-[12.5px] font-semibold uppercase tracking-[0.06em] text-muted">{isTrust ? "Trustees & people" : "Directors & people"}</p>
+                  <ul className="flex flex-col gap-1.5">
+                    {l.people.map((p) => (
+                      <li key={p.id} className="text-[13.5px] text-text-2">
+                        <span className="font-medium text-text">{p.name || "—"}</span>
+                        {[p.role, p.email, p.phone].filter(Boolean).join(" · ") ? ` · ${[p.role, p.email, p.phone].filter(Boolean).join(" · ")}` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </Card>
           )}
           <Card>
@@ -96,7 +110,6 @@ export function LandlordDetail({
                 <Info label="Bank" value={l.bank_name} />
                 <Info label="Sort code" value={l.bank_sort_code} />
                 <Info label="Account number" value={l.bank_account_number} />
-                <Info label="Reference" value={l.bank_reference} />
               </dl>
             ) : (
               <p className="text-[15px] text-muted">No bank details recorded.</p>
