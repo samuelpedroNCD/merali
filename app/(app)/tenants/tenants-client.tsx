@@ -203,10 +203,8 @@ export function TenantsClient({
             )}
             <Field label="Email"><Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} /></Field>
             <Field label="Phone"><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} /></Field>
-            <Field label="Tenant code"><Input value={form.tenant_code} onChange={(e) => set("tenant_code", e.target.value)} placeholder="Optional" /></Field>
-            <SelectField label="Tenant type" value={form.tenant_type} onChange={(v) => set("tenant_type", v)} options={options.tenant_type} />
             <SelectField label="Status" value={form.status} onChange={(v) => set("status", v)} options={options.tenant_status} />
-            <SelectField label="Preferred contact method" value={form.preferred_contact} onChange={(v) => set("preferred_contact", v)} options={options.preferred_contact} />
+            <SelectField label="Preferred contact method" value={form.preferred_contact} onChange={(v) => set("preferred_contact", v)} options={[{ value: "Email", label: "Email" }, { value: "Phone", label: "Phone" }]} />
           </div>
         )}
         {tab === "forwarding" && (

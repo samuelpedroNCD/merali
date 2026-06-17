@@ -117,12 +117,6 @@ export function PropertyDetail({
               </div>
             )}
           </div>
-          <div className="text-right">
-            <p className="text-[12px] uppercase tracking-[0.14em] text-muted">Target rent</p>
-            <p className="font-display text-[28px] font-semibold text-text">
-              {p.target_rent != null ? gbp(p.target_rent) : "—"}
-            </p>
-          </div>
         </div>
 
         {rollup && <RollupCard rollup={rollup} />}

@@ -260,7 +260,6 @@ export function LandlordsClient({
             <Field label="Sort code"><Input value={form.bank_sort_code} onChange={(e) => set("bank_sort_code", e.target.value)} placeholder="00-00-00" /></Field>
             <Field label="Account number"><Input value={form.bank_account_number} onChange={(e) => set("bank_account_number", e.target.value)} /></Field>
             <Field label="Bank name"><Input value={form.bank_name} onChange={(e) => set("bank_name", e.target.value)} /></Field>
-            <Field label="Payment reference"><Input value={form.bank_reference} onChange={(e) => set("bank_reference", e.target.value)} /></Field>
           </div>
         )}
         {tab === "notes" && (

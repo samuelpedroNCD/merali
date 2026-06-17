@@ -24,8 +24,7 @@ import { createProperty, updateProperty, deleteProperty } from "./actions";
 
 const TABS = [
   { key: "identification", label: "Identification" },
-  { key: "acquisition", label: "Acquisition & Registration" },
-  { key: "ownership", label: "Ownership" },
+  { key: "ownership", label: "Ownership & Registration" },
   { key: "notes", label: "Notes" },
 ];
 
@@ -341,17 +340,6 @@ export function PropertiesClient({
           </div>
         )}
 
-        {tab === "acquisition" && (
-          <div className="grid grid-cols-2 gap-5">
-            <Field label="Date acquired">
-              <Input type="date" value={form.date_acquired} onChange={(e) => set("date_acquired", e.target.value)} />
-            </Field>
-            <Field label="Leasehold register number">
-              <Input value={form.leasehold_register_number} onChange={(e) => set("leasehold_register_number", e.target.value)} />
-            </Field>
-          </div>
-        )}
-
         {tab === "ownership" && (
           <div className="grid grid-cols-2 gap-5">
             <SelectField label="Landlord" value={form.landlord_id} onChange={(v) => set("landlord_id", v)} options={landlords} placeholder="Choose a landlord…" />
@@ -362,11 +350,11 @@ export function PropertiesClient({
             <Field label="Bedrooms">
               <Input type="number" min={0} value={form.bedrooms} onChange={(e) => set("bedrooms", e.target.value)} />
             </Field>
-            <Field label="Target rent (£)">
-              <Input type="number" step="0.01" min={0} value={form.target_rent} onChange={(e) => set("target_rent", e.target.value)} />
+            <Field label="Date acquired">
+              <Input type="date" value={form.date_acquired} onChange={(e) => set("date_acquired", e.target.value)} />
             </Field>
-            <Field label="Target rent month">
-              <Input value={form.target_rent_month} onChange={(e) => set("target_rent_month", e.target.value)} placeholder="e.g. June" />
+            <Field label="Leasehold register number">
+              <Input value={form.leasehold_register_number} onChange={(e) => set("leasehold_register_number", e.target.value)} />
             </Field>
           </div>
         )}
