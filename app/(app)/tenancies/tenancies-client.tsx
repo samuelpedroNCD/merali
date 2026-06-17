@@ -27,6 +27,7 @@ function toForm(l?: LeaseRow | null): Form {
     property_id: l?.property_id ?? "",
     unit_id: l?.unit_id ?? "",
     tenancy_code: l?.tenancy_code ?? "",
+    tenancy_class: l?.tenancy_class ?? "",
     start_date: l?.start_date ?? "",
     end_date: l?.end_date ?? "",
     move_in_date: l?.move_in_date ?? "",
@@ -256,6 +257,7 @@ export function TenanciesClient({
           <SelectFieldOpt label="Payment frequency" value={form.payment_frequency} onChange={(v) => set("payment_frequency", v)} options={options.payment_frequency} />
           <SelectFieldOpt label="Rent nominal" value={form.rent_nominal_id} onChange={(v) => set("rent_nominal_id", v)} options={nominals} />
           <SelectFieldOpt label="Tenancy code" value={form.tenancy_code} onChange={(v) => set("tenancy_code", v)} options={options.tenancy_code} />
+          <SelectFieldOpt label="Tenancy class" value={form.tenancy_class} onChange={(v) => set("tenancy_class", v)} options={options.tenancy_class} />
           <Field label="Move-in date"><Input type="date" value={form.move_in_date} onChange={(e) => set("move_in_date", e.target.value)} /></Field>
           <Field label="Renewal date"><Input type="date" value={form.renewal_date} onChange={(e) => set("renewal_date", e.target.value)} /></Field>
           <SelectFieldOpt label="Status" value={form.status} onChange={(v) => set("status", v)} options={options.lease_status} className="col-span-2" />

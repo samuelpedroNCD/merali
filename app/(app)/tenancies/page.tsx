@@ -16,7 +16,7 @@ export default async function TenanciesPage({
     listLeases(),
     listPropertyOptions(),
     listTenantOptions(),
-    getOptions(["tenancy_code", "lease_status", "payment_frequency", "deposit_scheme"]),
+    getOptions(["tenancy_code", "tenancy_class", "lease_status", "payment_frequency", "deposit_scheme"]),
     nominalOptions(),
   ]);
 

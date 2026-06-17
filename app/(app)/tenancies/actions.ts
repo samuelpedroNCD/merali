@@ -15,6 +15,7 @@ const Schema = z.object({
   tenant_ids: z.array(z.string().uuid()).default([]),
   lead_tenant_id: z.preprocess(s, z.string().uuid().nullable()),
   tenancy_code: z.preprocess(s, z.string().nullable()),
+  tenancy_class: z.preprocess(s, z.string().nullable()),
   start_date: z.preprocess(s, z.string().nullable()),
   end_date: z.preprocess(s, z.string().nullable()),
   move_in_date: z.preprocess(s, z.string().nullable()),

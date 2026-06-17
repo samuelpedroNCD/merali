@@ -30,6 +30,7 @@ const TABS = [
 
 type Perms = { create: boolean; edit: boolean; remove: boolean };
 type Form = Record<string, string>;
+type TitleDoc = { doc_date: string; tenure: string; title_number: string };
 
 function toForm(p?: PropertyRow | null): Form {
   return {
@@ -85,6 +86,12 @@ export function PropertiesClient({
 
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
+  const [titles, setTitles] = useState<TitleDoc[]>([]);
+  const titlesOf = (p?: PropertyRow | null): TitleDoc[] =>
+    (p?.titles ?? []).map((t) => ({ doc_date: t.doc_date ?? "", tenure: t.tenure ?? "", title_number: t.title_number ?? "" }));
+  const updateTitle = (i: number, k: keyof TitleDoc, v: string) =>
+    setTitles((ts) => ts.map((t, idx) => (idx === i ? { ...t, [k]: v } : t)));
+
   // Parent options exclude the property being edited so it can't be its own parent.
   const parentOptions = containers.filter((c) => c.value !== editing?.id);
   const needsParent = isChildConfig(form.configuration);
@@ -92,6 +99,7 @@ export function PropertiesClient({
   function openCreate() {
     setEditing(null);
     setForm(toForm());
+    setTitles([]);
     setTab("identification");
     setError(null);
     setOpen(true);
@@ -99,6 +107,7 @@ export function PropertiesClient({
   function openEdit(p: PropertyRow) {
     setEditing(p);
     setForm(toForm(p));
+    setTitles(titlesOf(p));
     setTab("identification");
     setError(null);
     setOpen(true);
@@ -114,10 +123,11 @@ export function PropertiesClient({
 
   function save() {
     setError(null);
+    const payload = { ...form, titles };
     startTransition(async () => {
       const res = editing
-        ? await updateProperty(editing.id, form)
-        : await createProperty(form);
+        ? await updateProperty(editing.id, payload)
+        : await createProperty(payload);
       if (!res.ok) {
         setError(res.error);
         return;
@@ -344,7 +354,6 @@ export function PropertiesClient({
           <div className="grid grid-cols-2 gap-5">
             <SelectField label="Landlord" value={form.landlord_id} onChange={(v) => set("landlord_id", v)} options={landlords} placeholder="Choose a landlord…" />
             <SelectField label="Status" value={form.status} onChange={(v) => set("status", v)} options={options.property_status} />
-            <SelectField label="Tenancy class" value={form.tenancy_class} onChange={(v) => set("tenancy_class", v)} options={options.tenancy_class} />
             <InlineAddSelect label="Property type" value={form.property_type} onChange={(v) => set("property_type", v)} options={options.property_type} category="property_type" />
             <SelectField label="Property tax" value={form.property_tax} onChange={(v) => set("property_tax", v)} options={options.property_tax} />
             <Field label="Bedrooms">
@@ -353,9 +362,23 @@ export function PropertiesClient({
             <Field label="Date acquired">
               <Input type="date" value={form.date_acquired} onChange={(e) => set("date_acquired", e.target.value)} />
             </Field>
-            <Field label="Leasehold register number">
-              <Input value={form.leasehold_register_number} onChange={(e) => set("leasehold_register_number", e.target.value)} />
-            </Field>
+            <div className="col-span-2">
+              <p className="mb-2 text-[12.5px] font-semibold text-text">Title documents <span className="font-normal text-muted">— date · tenure · title number; add as many as the property has</span></p>
+              {titles.length === 0 && <p className="mb-2 text-[12.5px] text-muted">No title documents yet.</p>}
+              {titles.map((t, i) => (
+                <div key={i} className="mb-2 grid grid-cols-[1fr_1fr_1.2fr_auto] items-center gap-2">
+                  <Input type="date" value={t.doc_date} onChange={(e) => updateTitle(i, "doc_date", e.target.value)} />
+                  <Select value={t.tenure} onChange={(e) => updateTitle(i, "tenure", e.target.value)}>
+                    <option value="">Tenure…</option>
+                    <option>Freehold</option>
+                    <option>Leasehold</option>
+                  </Select>
+                  <Input placeholder="Title number" value={t.title_number} onChange={(e) => updateTitle(i, "title_number", e.target.value)} />
+                  <button type="button" onClick={() => setTitles((ts) => ts.filter((_, idx) => idx !== i))} aria-label="Remove" className="grid h-9 w-9 place-items-center rounded-md text-[var(--bad)] hover:bg-[color-mix(in_oklch,var(--bad)_12%,transparent)]"><Trash2 strokeWidth={1.6} className="h-[15px] w-[15px]" /></button>
+                </div>
+              ))}
+              <button type="button" onClick={() => setTitles((ts) => [...ts, { doc_date: "", tenure: "", title_number: "" }])} className="text-[12.5px] font-semibold text-accent hover:underline">+ Add title document</button>
+            </div>
           </div>
         )}
 

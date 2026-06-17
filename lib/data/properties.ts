@@ -26,6 +26,7 @@ export type PropertyRow = {
   target_rent_month: string | null;
   notes: string | null;
   landlord?: { id: string; full_name: string | null } | null;
+  titles: { id: string; doc_date: string | null; tenure: string | null; title_number: string | null }[];
 };
 
 /** List properties (newest first) with landlord name. */
@@ -34,7 +35,7 @@ export async function listProperties(search?: string): Promise<PropertyRow[]> {
   let query = supabase
     .from("property")
     .select(
-      "id, address, flat, town, post_code, country, area, internal_code, configuration, class, property_type, status, tenancy_class, property_tax, bedrooms, parent_property_id, landlord_id, assigned_manager_id, date_acquired, leasehold_register_number, target_rent, target_rent_month, notes, landlord:landlord_id(id, full_name)",
+      "id, address, flat, town, post_code, country, area, internal_code, configuration, class, property_type, status, tenancy_class, property_tax, bedrooms, parent_property_id, landlord_id, assigned_manager_id, date_acquired, leasehold_register_number, target_rent, target_rent_month, notes, landlord:landlord_id(id, full_name), property_title(id, doc_date, tenure, title_number)",
     )
     .order("created_at", { ascending: false });
 
@@ -44,17 +45,22 @@ export async function listProperties(search?: string): Promise<PropertyRow[]> {
   }
 
   const { data } = await query;
-  return (data ?? []) as unknown as PropertyRow[];
+  return (data ?? []).map((p) => {
+    const { property_title, ...rest } = p as Record<string, unknown> & { property_title?: PropertyRow["titles"] };
+    return { ...(rest as unknown as PropertyRow), titles: property_title ?? [] };
+  });
 }
 
 export async function getProperty(id: string): Promise<PropertyRow | null> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("property")
-    .select("*, landlord:landlord_id(id, full_name)")
+    .select("*, landlord:landlord_id(id, full_name), property_title(id, doc_date, tenure, title_number)")
     .eq("id", id)
     .maybeSingle();
-  return (data as unknown as PropertyRow) ?? null;
+  if (!data) return null;
+  const { property_title, ...rest } = data as Record<string, unknown> & { property_title?: PropertyRow["titles"] };
+  return { ...(rest as unknown as PropertyRow), titles: property_title ?? [] };
 }
 
 /**

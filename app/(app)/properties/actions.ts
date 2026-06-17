@@ -69,9 +69,27 @@ const PropertySchema = z.object({
   target_rent_month: z.preprocess(emptyToNull, z.string().nullable()),
   google_place_id: z.preprocess(emptyToNull, z.string().nullable()).optional(),
   notes: z.preprocess(emptyToNull, z.string().nullable()),
+  titles: z.array(z.object({
+    doc_date: z.preprocess(emptyToNull, z.string().nullable()),
+    tenure: z.preprocess(emptyToNull, z.string().nullable()),
+    title_number: z.preprocess(emptyToNull, z.string().nullable()),
+  })).default([]),
 });
 
 export type ActionResult = { ok: true; id?: string } | { ok: false; error: string };
+
+/** Replace a property's title documents (Date / Tenure / Title number). */
+async function setPropertyTitles(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  propertyId: string,
+  titles: { doc_date: string | null; tenure: string | null; title_number: string | null }[],
+) {
+  await supabase.from("property_title").delete().eq("property_id", propertyId);
+  const rows = titles.filter((t) => t.doc_date || t.tenure || t.title_number);
+  if (rows.length) {
+    await supabase.from("property_title").insert(rows.map((t) => ({ property_id: propertyId, ...t })));
+  }
+}
 
 export async function createProperty(input: unknown): Promise<ActionResult> {
   let user;
@@ -87,14 +105,16 @@ export async function createProperty(input: unknown): Promise<ActionResult> {
   const hErr = await hierarchyError(supabase, parsed.data.configuration, parsed.data.parent_property_id);
   if (hErr) return { ok: false, error: hErr };
 
+  const { titles, ...rest } = parsed.data;
   const { data, error } = await supabase
     .from("property")
-    .insert(parsed.data)
+    .insert(rest)
     .select("id, address, internal_code")
     .single();
 
   if (error) return { ok: false, error: error.message };
 
+  await setPropertyTitles(supabase, data.id, titles);
   await logActivity({
     type: "Property Creation",
     objectLabel: data.address || data.internal_code,
@@ -123,14 +143,17 @@ export async function updateProperty(
   const hErr = await hierarchyError(supabase, parsed.data.configuration, parsed.data.parent_property_id, id);
   if (hErr) return { ok: false, error: hErr };
 
+  const { titles, ...rest } = parsed.data;
   const { data, error } = await supabase
     .from("property")
-    .update(parsed.data)
+    .update(rest)
     .eq("id", id)
     .select("id, address, internal_code")
     .single();
 
   if (error) return { ok: false, error: error.message };
+
+  await setPropertyTitles(supabase, id, titles);
 
   await logActivity({
     type: "Property Update",
