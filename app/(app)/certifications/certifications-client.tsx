@@ -144,7 +144,7 @@ export function CertificationsClient({
           <p className="mt-[2px] text-[14px] text-muted">Compliance certificates and expiry tracking.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Input placeholder="Search type or property…" className="max-w-[360px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <Input placeholder="Search type or property…" className="h-[44px] max-w-[360px]" value={query} onChange={(e) => setQuery(e.target.value)} />
           <FilterSelect value={statusF} onChange={setStatusF} placeholder="All statuses" options={[{ value: "Valid", label: "Valid" }, { value: "Expiring", label: "Expiring soon" }, { value: "Expired", label: "Expired" }]} />
           <FilterSelect value={typeF} onChange={setTypeF} placeholder="All types" options={types} />
           <FilterSelect value={propertyF} onChange={setPropertyF} placeholder="All properties" options={properties} />

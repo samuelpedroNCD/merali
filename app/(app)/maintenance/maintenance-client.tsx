@@ -148,7 +148,7 @@ export function MaintenanceClient({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Input placeholder="Search jobs…" className="max-w-[360px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <Input placeholder="Search jobs…" className="h-[44px] max-w-[360px]" value={query} onChange={(e) => setQuery(e.target.value)} />
           <FilterSelect value={urgencyF} onChange={setUrgencyF} placeholder="All urgencies" options={options.maintenance_urgency ?? []} />
           <FilterSelect value={typeF} onChange={setTypeF} placeholder="All types" options={options.maintenance_type ?? []} />
           <FilterSelect value={propertyF} onChange={setPropertyF} placeholder="All properties" options={properties} />

@@ -105,7 +105,7 @@ export function StaffClient({
           <p className="mt-[2px] text-[14px] text-muted">Team members and their roles.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Input placeholder="Search name or email…" className="max-w-[360px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <Input placeholder="Search name or email…" className="h-[44px] max-w-[360px]" value={query} onChange={(e) => setQuery(e.target.value)} />
           <FilterSelect value={roleF} onChange={setRoleF} placeholder="All roles" options={roles} />
           <FilterSelect value={activeF} onChange={setActiveF} placeholder="Active & inactive" options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} />
         </div>

@@ -139,7 +139,7 @@ export function TenantsClient({
           <p className="mt-[2px] text-[14px] text-muted">Tenant records, tenancies and arrears.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Input placeholder="Search by name or email…" className="max-w-[460px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <Input placeholder="Search by name or email…" className="h-[44px] max-w-[460px]" value={query} onChange={(e) => setQuery(e.target.value)} />
           <FilterSelect value={statusF} onChange={setStatusF} placeholder="All statuses" options={options.tenant_status ?? []} />
           <FilterSelect value={companyF} onChange={setCompanyF} placeholder="Individuals & companies" options={[{ value: "individual", label: "Individuals" }, { value: "company", label: "Companies" }]} />
         </div>

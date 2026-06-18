@@ -89,7 +89,7 @@ export function PaymentsClient({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Input placeholder="Search property or tenant…" className="max-w-[360px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <Input placeholder="Search property or tenant…" className="h-[44px] max-w-[360px]" value={query} onChange={(e) => setQuery(e.target.value)} />
           <Select className="h-[44px] max-w-[200px]" value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">All statuses</option>
             <option>Pending</option><option>Paid</option><option>Overdue</option><option>Partial</option>

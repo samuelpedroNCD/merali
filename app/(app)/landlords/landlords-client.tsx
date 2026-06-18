@@ -170,7 +170,7 @@ export function LandlordsClient({
         <div className="flex flex-wrap items-center gap-3">
           <Input
             placeholder="Search by name or email…"
-            className="max-w-[460px]"
+            className="h-[44px] max-w-[460px]"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />

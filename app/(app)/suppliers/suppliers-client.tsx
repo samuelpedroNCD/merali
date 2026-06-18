@@ -118,7 +118,7 @@ export function SuppliersClient({
           <Card><p className="text-[15px] text-muted">Outstanding bills</p><p className="mt-2 font-display text-[28px] font-semibold text-text">{gbp(stats.outstanding)}</p></Card>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Input placeholder="Search suppliers…" className="max-w-[460px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <Input placeholder="Search suppliers…" className="h-[44px] max-w-[460px]" value={query} onChange={(e) => setQuery(e.target.value)} />
           <FilterSelect value={typeF} onChange={setTypeF} placeholder="All types" options={options.supplier_type ?? []} />
           <FilterSelect value={statusF} onChange={setStatusF} placeholder="All statuses" options={options.supplier_status ?? []} />
         </div>

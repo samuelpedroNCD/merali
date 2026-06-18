@@ -201,7 +201,7 @@ export function TenanciesClient({
           <p className="mt-[2px] text-[14px] text-muted">Active and past tenancies, with their rent schedules.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Input placeholder="Search tenant or property…" className="max-w-[360px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <Input placeholder="Search tenant or property…" className="h-[44px] max-w-[360px]" value={query} onChange={(e) => setQuery(e.target.value)} />
           <FilterSelect value={statusF} onChange={setStatusF} placeholder="All statuses" options={[{ value: "Current", label: "Current" }, { value: "Future", label: "Future" }, { value: "Past", label: "Past" }]} />
           <FilterSelect value={propertyF} onChange={setPropertyF} placeholder="All properties" options={properties} />
           <FilterSelect value={freqF} onChange={setFreqF} placeholder="All frequencies" options={options.payment_frequency ?? []} />

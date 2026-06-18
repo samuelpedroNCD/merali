@@ -115,7 +115,7 @@ export function KeysClient({
           <StatCard label="Lost keys" value={totals.lost} />
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Input placeholder="Search by key code…" className="max-w-[460px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <Input placeholder="Search by key code…" className="h-[44px] max-w-[460px]" value={query} onChange={(e) => setQuery(e.target.value)} />
           <FilterSelect value={statusF} onChange={setStatusF} placeholder="All statuses" options={options.key_status ?? []} />
           <FilterSelect value={heldF} onChange={setHeldF} placeholder="All holders" options={options.held_by_type ?? []} />
         </div>
