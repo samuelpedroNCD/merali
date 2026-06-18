@@ -5,11 +5,12 @@ import { Loader2, Check, X, Sparkles } from "lucide-react";
 import { Drawer } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Field, Select } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import { gbp, fmtDate } from "@/lib/utils";
 import {
-  fetchSuggestions, reconcileTransaction, dismissReview, type SuggestionsResult,
+  fetchSuggestions, reconcileTransaction, dismissReview,
+  type SuggestionsResult, type Instalment,
 } from "./reconcile-actions";
 
 export function ReconcileDrawer({
@@ -28,6 +29,7 @@ export function ReconcileDrawer({
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [manual, setManual] = useState(false);
+  const [search, setSearch] = useState("");
   const [pending, start] = useTransition();
 
   useEffect(() => {
@@ -35,6 +37,7 @@ export function ReconcileDrawer({
     setLoading(true);
     setSelected(null);
     setManual(false);
+    setSearch("");
     fetchSuggestions(txnId).then((d) => {
       setData(d);
       setSelected(d?.suggestions[0]?.id ?? null);
@@ -44,10 +47,27 @@ export function ReconcileDrawer({
     });
   }, [open, txnId]);
 
+  const isExpense = !!data && data.txn.type !== "Income";
+
   // Instalments not already shown as suggestions, for the manual picker.
   const otherInstalments = (data?.allInstalments ?? []).filter(
     (i) => !data?.suggestions.some((s) => s.id === i.id),
   );
+  const q = search.trim().toLowerCase();
+  const pickerList = (data?.allInstalments ?? []).filter(
+    (i) => !q || `${i.tenant ?? ""} ${i.property ?? ""} ${fmtDate(i.due_date)}`.toLowerCase().includes(q),
+  );
+
+  // Preview the effect of matching the selected instalment.
+  const selectedInst: Instalment | undefined = (data?.allInstalments ?? []).find((i) => i.id === selected);
+  const preview = selectedInst
+    ? (() => {
+        const left = +(selectedInst.outstanding - (data?.txn.amount ?? 0)).toFixed(2);
+        return left > 0.01
+          ? `Records ${gbp(data!.txn.amount)} of ${gbp(selectedInst.outstanding)} due → ${gbp(left)} still outstanding (Partial)`
+          : `Records ${gbp(data!.txn.amount)} against ${gbp(selectedInst.outstanding)} due → settled (Paid)`;
+      })()
+    : null;
 
   function confirm() {
     if (!txnId || !selected) return;
@@ -82,7 +102,7 @@ export function ReconcileDrawer({
           <Button variant="ghost" size="toolbar" onClick={dismiss} disabled={pending} className="gap-[6px]">
             <X strokeWidth={1.6} className="h-[16px] w-[16px]" /> Dismiss
           </Button>
-          <Button size="toolbar" onClick={confirm} disabled={pending || !selected} className="gap-[6px]">
+          <Button size="toolbar" onClick={confirm} disabled={pending || !selected || isExpense} className="gap-[6px]">
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check strokeWidth={1.8} className="h-[16px] w-[16px]" />}
             Confirm match
           </Button>
@@ -99,6 +119,12 @@ export function ReconcileDrawer({
             <p className="text-[15px] text-muted">{data.txn.date ? fmtDate(data.txn.date) : "—"}{data.txn.reference ? ` · ${data.txn.reference}` : ""}</p>
           </div>
 
+          {isExpense ? (
+            <p className="rounded-md border border-dashed border-border p-4 text-[15px] text-muted">
+              This is an <span className="font-medium text-text">expense</span> — reconciling to rent applies to income only.
+              Use <span className="font-medium text-text">Approve</span> on the Unreconciled list to assign it to a property/nominal.
+            </p>
+          ) : (
           <div>
             <p className="mb-2 flex items-center gap-2 text-[15px] font-semibold text-text">
               <Sparkles strokeWidth={1.6} className="h-4 w-4 text-accent" /> Suggested matches
@@ -136,33 +162,46 @@ export function ReconcileDrawer({
                   No unpaid rent instalments{data.suggestions.length === 0 ? "" : " to choose from"}. Dismiss this as reviewed, or assign it from the Unreconciled list with “Approve”.
                 </p>
               ) : (
-                <div className="mt-3">
-                  <Field label="Choose an instalment">
-                    <Select
-                      value={(manual && selected) || ""}
-                      onChange={(e) => { setSelected(e.target.value || null); setManual(true); }}
-                    >
-                      <option value="">Select a rent instalment…</option>
-                      {data.allInstalments.map((i) => (
-                        <option key={i.id} value={i.id}>
-                          {fmtDate(i.due_date)} · {i.tenant || i.property || "Instalment"} · {gbp(i.outstanding)} outstanding
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
+                <div className="mt-3 flex flex-col gap-2">
+                  <p className="text-[12.5px] font-semibold uppercase tracking-[0.06em] text-muted">Choose an instalment</p>
+                  <Input placeholder="Search tenant, property or date…" value={search} onChange={(e) => setSearch(e.target.value)} />
+                  <ul className="flex max-h-[260px] flex-col gap-2 overflow-y-auto thin-scroll">
+                    {pickerList.length === 0 && <li className="px-1 py-2 text-[13.5px] text-muted">No instalments match “{search}”.</li>}
+                    {pickerList.map((i) => (
+                      <li key={i.id}>
+                        <button
+                          onClick={() => { setSelected(i.id); setManual(true); }}
+                          className={`flex w-full items-center gap-3 rounded-md border px-4 py-3 text-left transition-colors ${manual && selected === i.id ? "border-accent bg-[color-mix(in_oklch,var(--c-accent)_8%,transparent)]" : "border-border hover:bg-surface-2/50"}`}
+                        >
+                          <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border ${manual && selected === i.id ? "border-accent bg-accent" : "border-border"}`}>
+                            {manual && selected === i.id && <span className="h-[6px] w-[6px] rounded-full bg-surface" />}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[14px] font-medium text-text">{i.tenant || i.property || "Rent instalment"}</p>
+                            <p className="truncate text-[12.5px] text-muted">Due {fmtDate(i.due_date)} · {gbp(i.outstanding)} outstanding</p>
+                          </div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )
             ) : (
               otherInstalments.length > 0 && (
                 <button
-                  onClick={() => { setManual(true); setSelected(null); }}
+                  onClick={() => { setManual(true); setSelected(null); setSearch(""); }}
                   className="mt-3 text-[13px] font-semibold text-accent hover:underline"
                 >
                   None of these? Choose another instalment
                 </button>
               )
             )}
+
+            {preview && (
+              <p className="mt-4 rounded-md border border-border bg-surface-2/40 px-4 py-3 text-[13px] text-text-2">{preview}</p>
+            )}
           </div>
+          )}
         </div>
       )}
     </Drawer>

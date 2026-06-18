@@ -52,7 +52,15 @@ export async function markUnpaid(id: string): Promise<ActionResult> {
     .eq("id", id);
   if (error) return { ok: false, error: error.message };
 
+  // Release any transactions reconciled to this instalment back to the review
+  // queue, so nothing is left pointing at a now-unpaid line.
+  await supabase
+    .from("transaction")
+    .update({ reconciled_with: null, linked_invoice_id: null, needs_review: true })
+    .eq("reconciled_with", id);
+
   revalidatePath("/payments");
   revalidatePath("/finances");
+  revalidatePath("/unreconciled");
   return { ok: true };
 }

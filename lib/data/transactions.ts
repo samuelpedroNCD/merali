@@ -17,6 +17,7 @@ export type TransactionRow = {
   notes: string | null;
   receipt_link: string | null;
   needs_review: boolean | null;
+  reconciled_with: string | null;
   plaid_institution: string | null;
   property?: { id: string; address: string | null } | null;
 };

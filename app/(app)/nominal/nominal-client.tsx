@@ -4,7 +4,7 @@ import { useState, useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
 import { useConfirm } from "@/components/ui/confirm-dialog";
-import { Plus, Pencil, Trash2, Loader2, Download, Link2, AlertCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Download, Link2, Unlink, AlertCircle } from "lucide-react";
 import { Topbar } from "@/components/shell/topbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import type { TransactionRow, LedgerTotals } from "@/lib/data/transactions";
 import type { LeaseOption } from "@/lib/data/leases";
 import { createTransaction, updateTransaction, deleteTransaction } from "./actions";
 import { ReconcileDrawer } from "./reconcile-drawer";
+import { unreconcileTransaction } from "./reconcile-actions";
 
 type Perms = { create: boolean; edit: boolean; remove: boolean };
 type Opt = { value: string; label: string };
@@ -116,6 +117,15 @@ export function NominalClient({
     startTransition(async () => {
       const res = await deleteTransaction(t.id);
       if (!res.ok) return toast.error(res.error);
+      router.refresh();
+    });
+  }
+  async function unmatch(t: TransactionRow) {
+    if (!(await confirm({ message: "Unmatch this transaction from its rent instalment? It returns to the review queue and the instalment is recalculated.", confirmLabel: "Unmatch" }))) return;
+    startTransition(async () => {
+      const res = await unreconcileTransaction(t.id);
+      if (!res.ok) return toast.error(res.error);
+      toast.success("Unmatched.");
       router.refresh();
     });
   }
@@ -220,6 +230,11 @@ export function NominalClient({
                 {perms.edit && t.needs_review && (
                   <button onClick={() => setReconcileId(t.id)} className="grid h-8 w-8 place-items-center rounded-md text-accent transition-colors hover:bg-surface-2/60" aria-label="Reconcile" title="Reconcile">
                     <Link2 strokeWidth={1.7} className="h-[16px] w-[16px]" />
+                  </button>
+                )}
+                {perms.edit && t.reconciled_with && (
+                  <button onClick={() => unmatch(t)} className="grid h-8 w-8 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2/60 hover:text-[var(--bad)]" aria-label="Unmatch" title="Unmatch from rent instalment">
+                    <Unlink strokeWidth={1.6} className="h-[16px] w-[16px]" />
                   </button>
                 )}
                 {perms.edit && (

@@ -86,6 +86,7 @@ export type LeaseTxnRow = {
   amount_gross: number | null;
   status: string | null;
   nominal: string | null;
+  reconciled_with: string | null;
 };
 
 /** Transactions linked to a tenancy (its ledger). */
@@ -93,7 +94,7 @@ export async function getLeaseTransactions(id: string): Promise<LeaseTxnRow[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("transaction")
-    .select("id, txn_date, type, category, amount_gross, status, nominal:nominal_code_id(code, name)")
+    .select("id, txn_date, type, category, amount_gross, status, reconciled_with, nominal:nominal_code_id(code, name)")
     .eq("lease_id", id)
     .order("txn_date", { ascending: false })
     .limit(500);
@@ -107,6 +108,7 @@ export async function getLeaseTransactions(id: string): Promise<LeaseTxnRow[]> {
       amount_gross: t.amount_gross != null ? Number(t.amount_gross) : null,
       status: (t.status as string) ?? null,
       nominal: n ? `${n.code} ${n.name}` : null,
+      reconciled_with: (t.reconciled_with as string) ?? null,
     };
   });
 }

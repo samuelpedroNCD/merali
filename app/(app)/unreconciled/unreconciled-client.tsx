@@ -110,9 +110,11 @@ export function UnreconciledClient({
               <span className="flex justify-end gap-1">
                 {canEdit && (
                   <>
-                    <button onClick={() => setReconcileId(t.id)} className="grid h-8 w-8 place-items-center rounded-md text-accent transition-colors hover:bg-surface-2/60" aria-label="Match to rent" title="Match to a rent instalment">
-                      <Link2 strokeWidth={1.7} className="h-[16px] w-[16px]" />
-                    </button>
+                    {t.type === "Income" && (
+                      <button onClick={() => setReconcileId(t.id)} className="grid h-8 w-8 place-items-center rounded-md text-accent transition-colors hover:bg-surface-2/60" aria-label="Match to rent" title="Match to a rent instalment">
+                        <Link2 strokeWidth={1.7} className="h-[16px] w-[16px]" />
+                      </button>
+                    )}
                     <button onClick={() => openApprove(t)} className="grid h-8 w-8 place-items-center rounded-md text-[var(--good)] transition-colors hover:bg-surface-2/60" aria-label="Approve" title="Assign & approve">
                       <Check strokeWidth={1.8} className="h-[16px] w-[16px]" />
                     </button>

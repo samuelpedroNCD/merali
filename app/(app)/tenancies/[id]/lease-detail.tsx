@@ -1,16 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Pencil, RefreshCw, UserRound, Building2 } from "lucide-react";
+import { ArrowLeft, Pencil, RefreshCw, UserRound, Building2, Unlink, Loader2 } from "lucide-react";
 import { Topbar } from "@/components/shell/topbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge, type Tone } from "@/components/ui/badge";
 import { Select } from "@/components/ui/input";
+import { useToast } from "@/components/ui/toast";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { tenancyStatus, tenancyStatusTone } from "@/lib/tenancy-status";
 import { gbp, fmtDate } from "@/lib/utils";
 import type { LeaseRow, LeaseScheduleRow, LeaseTxnRow } from "@/lib/data/leases";
+import { unreconcileTransaction } from "../../nominal/reconcile-actions";
 
 const schedTone = (r: LeaseScheduleRow): Tone => {
   if (r.invoice_status === "Paid") return "good";
@@ -30,13 +34,32 @@ export function LeaseDetail({
   schedule,
   ledger,
   canCreate,
+  canReconcile,
 }: {
   lease: LeaseRow;
   schedule: LeaseScheduleRow[];
   ledger: LeaseTxnRow[];
   canCreate: boolean;
+  canReconcile: boolean;
 }) {
+  const router = useRouter();
+  const toast = useToast();
+  const confirm = useConfirm();
+  const [unmatching, setUnmatching] = useState<string | null>(null);
+  const [, startUnmatch] = useTransition();
   const [yearFilter, setYearFilter] = useState("");
+
+  async function unmatch(txnId: string) {
+    if (!(await confirm({ message: "Unmatch this transaction from its rent instalment? It returns to the review queue and the instalment is recalculated.", confirmLabel: "Unmatch" }))) return;
+    setUnmatching(txnId);
+    startUnmatch(async () => {
+      const res = await unreconcileTransaction(txnId);
+      setUnmatching(null);
+      if (!res.ok) return toast.error(res.error);
+      toast.success("Unmatched.");
+      router.refresh();
+    });
+  }
 
   const years = useMemo(
     () => Array.from(new Set(schedule.map((s) => s.due_date.slice(0, 4)))).sort(),
@@ -164,20 +187,27 @@ export function LeaseDetail({
         {/* Ledger — transactions linked to this tenancy */}
         <Card className="p-0">
           <div className="px-6 py-4 text-[16px] font-semibold text-text">Ledger ({ledger.length})</div>
-          <div className="grid grid-cols-[0.9fr_0.7fr_1.3fr_1fr_0.8fr_0.8fr] gap-3 border-y border-border px-6 py-3 text-[11.5px] font-semibold uppercase tracking-[0.05em] text-muted">
-            <span>Date</span><span>Type</span><span>Nominal</span><span>Category</span><span className="text-right">Amount</span><span>Status</span>
+          <div className="grid grid-cols-[0.9fr_0.7fr_1.3fr_1fr_0.8fr_0.8fr_auto] gap-3 border-y border-border px-6 py-3 text-[11.5px] font-semibold uppercase tracking-[0.05em] text-muted">
+            <span>Date</span><span>Type</span><span>Nominal</span><span>Category</span><span className="text-right">Amount</span><span>Status</span><span className="text-right">Action</span>
           </div>
           {ledger.length === 0 ? (
             <p className="px-6 py-8 text-center text-[15px] text-muted">No transactions linked to this tenancy yet.</p>
           ) : (
             ledger.map((t) => (
-              <div key={t.id} className="grid grid-cols-[0.9fr_0.7fr_1.3fr_1fr_0.8fr_0.8fr] items-center gap-3 border-b border-border px-6 py-[10px] text-[13.5px] last:border-b-0">
+              <div key={t.id} className="grid grid-cols-[0.9fr_0.7fr_1.3fr_1fr_0.8fr_0.8fr_auto] items-center gap-3 border-b border-border px-6 py-[10px] text-[13.5px] last:border-b-0">
                 <span className="text-text-2">{t.txn_date ? fmtDate(t.txn_date) : "—"}</span>
                 <span className={t.type === "Income" ? "text-[var(--good)]" : "text-[var(--bad)]"}>{t.type || "—"}</span>
                 <span className="truncate text-text-2">{t.nominal || "—"}</span>
                 <span className="truncate text-text-2">{t.category || "—"}</span>
                 <span className="text-right font-semibold text-text">{t.amount_gross != null ? gbp(t.amount_gross) : "—"}</span>
                 <span className="text-text-2">{t.status || "—"}</span>
+                <span className="flex justify-end">
+                  {canReconcile && t.reconciled_with ? (
+                    <button onClick={() => unmatch(t.id)} disabled={unmatching === t.id} className="grid h-8 w-8 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2/60 hover:text-[var(--bad)]" aria-label="Unmatch" title="Unmatch from rent instalment">
+                      {unmatching === t.id ? <Loader2 className="h-[15px] w-[15px] animate-spin" /> : <Unlink strokeWidth={1.6} className="h-[15px] w-[15px]" />}
+                    </button>
+                  ) : null}
+                </span>
               </div>
             ))
           )}

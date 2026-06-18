@@ -16,5 +16,5 @@ export default async function LeaseDetailPage({
     getLeaseTransactions(id),
   ]);
   if (!lease) notFound();
-  return <LeaseDetail lease={lease} schedule={schedule} ledger={ledger} canCreate={can(user, "leases", "create")} />;
+  return <LeaseDetail lease={lease} schedule={schedule} ledger={ledger} canCreate={can(user, "leases", "create")} canReconcile={can(user, "finance", "edit")} />;
 }
