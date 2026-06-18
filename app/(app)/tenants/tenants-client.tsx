@@ -17,8 +17,10 @@ import { Tabs } from "@/components/ui/tabs";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { FilterSelect } from "@/components/ui/filter-select";
 import type { Option } from "@/lib/data/options";
-import type { TenantRow } from "@/lib/data/tenants";
+import type { TenantRow, TenantContact } from "@/lib/data/tenants";
 import { createTenant, updateTenant, deleteTenant } from "./actions";
+
+type Contact = { type: string; name: string; email: string; phone: string; relationship: string; address: string };
 
 const TABS = [
   { key: "personal", label: "Personal" },
@@ -46,16 +48,19 @@ function toForm(t?: TenantRow | null): Form {
     tenant_type: t?.tenant_type ?? "",
     status: t?.status ?? "",
     acquired_date: t?.acquired_date ?? "",
-    nok_name: t?.nok_name ?? "",
-    nok_phone: t?.nok_phone ?? "",
-    nok_email: t?.nok_email ?? "",
-    nok_address: t?.nok_address ?? "",
-    nok_relationship: t?.nok_relationship ?? "",
-    guarantor_name: t?.guarantor_name ?? "",
-    guarantor_email: t?.guarantor_email ?? "",
-    guarantor_phone: t?.guarantor_phone ?? "",
     notes: t?.notes ?? "",
   };
+}
+
+function contactsOf(t?: TenantRow | null): Contact[] {
+  return (t?.contacts ?? []).map((c: TenantContact) => ({
+    type: c.type ?? "Emergency",
+    name: c.name ?? "",
+    email: c.email ?? "",
+    phone: c.phone ?? "",
+    relationship: c.relationship ?? "",
+    address: c.address ?? "",
+  }));
 }
 
 export function TenantsClient({
@@ -79,15 +84,18 @@ export function TenantsClient({
   const [editing, setEditing] = useState<TenantRow | null>(null);
   const [tab, setTab] = useState("personal");
   const [form, setForm] = useState<Form>(toForm());
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const updateContact = (i: number, k: keyof Contact, v: string) =>
+    setContacts((cs) => cs.map((c, idx) => (idx === i ? { ...c, [k]: v } : c)));
 
   function openCreate() {
-    setEditing(null); setForm(toForm()); setTab("personal"); setError(null); setOpen(true);
+    setEditing(null); setForm(toForm()); setContacts([]); setTab("personal"); setError(null); setOpen(true);
   }
   function openEdit(t: TenantRow) {
-    setEditing(t); setForm(toForm(t)); setTab("personal"); setError(null); setOpen(true);
+    setEditing(t); setForm(toForm(t)); setContacts(contactsOf(t)); setTab("personal"); setError(null); setOpen(true);
   }
   useEffect(() => {
     if (!editId) return;
@@ -98,7 +106,8 @@ export function TenantsClient({
   function save() {
     setError(null);
     startTransition(async () => {
-      const res = editing ? await updateTenant(editing.id, form) : await createTenant(form);
+      const payload = { ...form, contacts };
+      const res = editing ? await updateTenant(editing.id, payload) : await createTenant(payload);
       if (!res.ok) return setError(res.error);
       setOpen(false); router.refresh(); toast.success("Tenant saved.");
     });
@@ -228,24 +237,32 @@ export function TenantsClient({
           </Field>
         )}
         {tab === "contacts" && (
-          <div className="flex flex-col gap-6">
-            <div>
-              <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Emergency contact</p>
-              <div className="grid grid-cols-2 gap-5">
-                <Field label="Name"><Input value={form.nok_name} onChange={(e) => set("nok_name", e.target.value)} /></Field>
-                <Field label="Phone"><Input value={form.nok_phone} onChange={(e) => set("nok_phone", e.target.value)} /></Field>
-                <Field label="Email"><Input type="email" value={form.nok_email} onChange={(e) => set("nok_email", e.target.value)} /></Field>
-                <SelectField label="Relationship" value={form.nok_relationship} onChange={(v) => set("nok_relationship", v)} options={options.nok_relationship} />
-                <Field label="Address" className="col-span-2"><Input value={form.nok_address} onChange={(e) => set("nok_address", e.target.value)} /></Field>
+          <div className="flex flex-col gap-4">
+            <p className="text-[12.5px] text-muted">Emergency contacts and guarantors — add as many as needed.</p>
+            {contacts.length === 0 && <p className="text-[13px] text-muted">No contacts added yet.</p>}
+            {contacts.map((c, i) => (
+              <div key={i} className="rounded-lg border border-border p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <Select value={c.type} onChange={(e) => updateContact(i, "type", e.target.value)} className="w-auto min-w-[160px]">
+                    <option value="Emergency">Emergency</option>
+                    <option value="Guarantor">Guarantor</option>
+                  </Select>
+                  <button type="button" onClick={() => setContacts((cs) => cs.filter((_, idx) => idx !== i))} aria-label="Remove contact" className="grid h-9 w-9 place-items-center rounded-md text-[var(--bad)] hover:bg-[color-mix(in_oklch,var(--bad)_12%,transparent)]"><Trash2 strokeWidth={1.6} className="h-[15px] w-[15px]" /></button>
+                </div>
+                <div className="grid grid-cols-2 gap-5">
+                  <Field label="Name"><Input value={c.name} onChange={(e) => updateContact(i, "name", e.target.value)} /></Field>
+                  <Field label="Phone"><Input value={c.phone} onChange={(e) => updateContact(i, "phone", e.target.value)} /></Field>
+                  <Field label="Email"><Input type="email" value={c.email} onChange={(e) => updateContact(i, "email", e.target.value)} /></Field>
+                  {c.type === "Emergency" && (
+                    <SelectField label="Relationship" value={c.relationship} onChange={(v) => updateContact(i, "relationship", v)} options={options.nok_relationship} />
+                  )}
+                  <Field label="Address" className="col-span-2"><Input value={c.address} onChange={(e) => updateContact(i, "address", e.target.value)} /></Field>
+                </div>
               </div>
-            </div>
-            <div className="border-t border-border pt-5">
-              <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Guarantor</p>
-              <div className="grid grid-cols-2 gap-5">
-                <Field label="Name" className="col-span-2"><Input value={form.guarantor_name} onChange={(e) => set("guarantor_name", e.target.value)} /></Field>
-                <Field label="Email"><Input type="email" value={form.guarantor_email} onChange={(e) => set("guarantor_email", e.target.value)} /></Field>
-                <Field label="Phone"><Input value={form.guarantor_phone} onChange={(e) => set("guarantor_phone", e.target.value)} /></Field>
-              </div>
+            ))}
+            <div className="flex gap-4">
+              <button type="button" onClick={() => setContacts((cs) => [...cs, { type: "Emergency", name: "", email: "", phone: "", relationship: "", address: "" }])} className="text-[12.5px] font-semibold text-accent hover:underline">+ Add emergency contact</button>
+              <button type="button" onClick={() => setContacts((cs) => [...cs, { type: "Guarantor", name: "", email: "", phone: "", relationship: "", address: "" }])} className="text-[12.5px] font-semibold text-accent hover:underline">+ Add guarantor</button>
             </div>
           </div>
         )}

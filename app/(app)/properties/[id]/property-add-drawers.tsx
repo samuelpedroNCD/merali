@@ -223,7 +223,7 @@ function LeaseAdd({ propertyId, open, onClose, onSaved, data }: SubProps) {
   const [lead, setLead] = useState<string>("");
   const [reviews, setReviews] = useState<Review[]>([]);
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
-  const { error, pending, run } = useSave(onClose, onSaved, "Lease saved.");
+  const { error, pending, run } = useSave(onClose, onSaved, "Tenancy saved.");
 
   function toggleTenant(id: string) {
     setTenantIds((cur) => {
@@ -251,9 +251,9 @@ function LeaseAdd({ propertyId, open, onClose, onSaved, data }: SubProps) {
       open={open}
       onClose={onClose}
       title="New tenancy"
-      subtitle="Lease terms — the rent schedule regenerates on save"
+      subtitle="Tenancy terms — the rent schedule regenerates on save"
       size="lg"
-      footer={<FooterButtons error={error} pending={pending} onClose={onClose} onSave={() => run(submit)} label="Create lease" />}
+      footer={<FooterButtons error={error} pending={pending} onClose={onClose} onSave={() => run(submit)} label="Create tenancy" />}
     >
       <div className="grid grid-cols-2 gap-5">
         <div className="col-span-2">
@@ -278,8 +278,8 @@ function LeaseAdd({ propertyId, open, onClose, onSaved, data }: SubProps) {
             })}
           </div>
         </div>
-        <Field label="Lease start"><Input type="date" value={form.start_date} onChange={(e) => set("start_date", e.target.value)} /></Field>
-        <Field label="Lease end"><Input type="date" value={form.end_date} onChange={(e) => set("end_date", e.target.value)} /></Field>
+        <Field label="Tenancy start"><Input type="date" value={form.start_date} onChange={(e) => set("start_date", e.target.value)} /></Field>
+        <Field label="Tenancy end"><Input type="date" value={form.end_date} onChange={(e) => set("end_date", e.target.value)} /></Field>
         <Field label="Agreed rent (£)"><Input type="number" step="0.01" min={0} value={form.rent_amount} onChange={(e) => set("rent_amount", e.target.value)} /></Field>
         <SelectField label="Payment frequency" value={form.payment_frequency} onChange={(v) => set("payment_frequency", v)} options={options.payment_frequency} />
         <SelectFieldOpt label="Rent nominal" value={form.rent_nominal_id} onChange={(v) => set("rent_nominal_id", v)} options={nominals} />

@@ -263,7 +263,7 @@ export default async function DashboardPage() {
               )}
               {canLeases && (
                 <div className={canCerts ? "mt-[18px]" : ""}>
-                  <CardHeader title="Lease renewals this month" />
+                  <CardHeader title="Tenancy renewals this month" />
                   {d.renewals.length === 0 ? (
                     <EmptyRow text="No renewals due this month." />
                   ) : (

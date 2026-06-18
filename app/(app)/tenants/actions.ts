@@ -5,7 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/data/activity";
-import { encryptFields, TENANT_SECRET_FIELDS } from "@/lib/crypto/secrets";
+import { encryptFields, TENANT_CONTACT_SECRET_FIELDS } from "@/lib/crypto/secrets";
 
 const s = (v: unknown) => (v === "" || v === undefined ? null : v);
 
@@ -24,16 +24,33 @@ const Schema = z.object({
   tenant_type: z.preprocess(s, z.string().nullable()),
   status: z.preprocess(s, z.string().nullable()),
   acquired_date: z.preprocess(s, z.string().nullable()),
-  nok_name: z.preprocess(s, z.string().nullable()),
-  nok_phone: z.preprocess(s, z.string().nullable()),
-  nok_email: z.preprocess(s, z.string().nullable()),
-  nok_address: z.preprocess(s, z.string().nullable()),
-  nok_relationship: z.preprocess(s, z.string().nullable()),
-  guarantor_name: z.preprocess(s, z.string().nullable()),
-  guarantor_email: z.preprocess(s, z.string().nullable()),
-  guarantor_phone: z.preprocess(s, z.string().nullable()),
   notes: z.preprocess(s, z.string().nullable()),
+  contacts: z.array(z.object({
+    type: z.preprocess(s, z.string().nullable()),
+    name: z.preprocess(s, z.string().nullable()),
+    email: z.preprocess(s, z.string().nullable()),
+    phone: z.preprocess(s, z.string().nullable()),
+    relationship: z.preprocess(s, z.string().nullable()),
+    address: z.preprocess(s, z.string().nullable()),
+  })).default([]),
 });
+
+type Contact = z.infer<typeof Schema>["contacts"][number];
+
+/** Replace a tenant's contacts (Emergency / Guarantor), encrypting their PII. */
+async function setTenantContacts(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  contacts: Contact[],
+) {
+  await supabase.from("tenant_contact").delete().eq("tenant_id", tenantId);
+  const rows = contacts.filter((c) => c.name || c.email || c.phone || c.address);
+  if (rows.length) {
+    await supabase.from("tenant_contact").insert(
+      rows.map((c) => ({ tenant_id: tenantId, ...encryptFields(c, TENANT_CONTACT_SECRET_FIELDS) })),
+    );
+  }
+}
 
 export type ActionResult = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -55,12 +72,14 @@ export async function createTenant(input: unknown): Promise<ActionResult> {
   if (!parsed.success) return { ok: false, error: "Invalid tenant data." };
 
   const supabase = await createClient();
+  const { contacts, ...rest } = parsed.data;
   const { data, error } = await supabase
     .from("tenant")
-    .insert(encryptFields({ ...parsed.data, full_name: fullName(parsed.data) }, TENANT_SECRET_FIELDS))
+    .insert({ ...rest, full_name: fullName(parsed.data) })
     .select("id, full_name")
     .single();
   if (error) return { ok: false, error: error.message };
+  await setTenantContacts(supabase, data.id, contacts);
 
   await logActivity({
     type: "Tenant Creation",
@@ -84,13 +103,15 @@ export async function updateTenant(id: string, input: unknown): Promise<ActionRe
   if (!parsed.success) return { ok: false, error: "Invalid tenant data." };
 
   const supabase = await createClient();
+  const { contacts, ...rest } = parsed.data;
   const { data, error } = await supabase
     .from("tenant")
-    .update(encryptFields({ ...parsed.data, full_name: fullName(parsed.data) }, TENANT_SECRET_FIELDS))
+    .update({ ...rest, full_name: fullName(parsed.data) })
     .eq("id", id)
     .select("id, full_name")
     .single();
   if (error) return { ok: false, error: error.message };
+  await setTenantContacts(supabase, id, contacts);
 
   await logActivity({
     type: "Tenant Update",

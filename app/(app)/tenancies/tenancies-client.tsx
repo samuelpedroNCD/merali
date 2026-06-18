@@ -160,11 +160,11 @@ export function TenanciesClient({
     startTransition(async () => {
       const res = editing ? await updateLease(editing.id, payload) : await createLease(payload);
       if (!res.ok) return setError(res.error);
-      setOpen(false); router.refresh(); toast.success("Lease saved.");
+      setOpen(false); router.refresh(); toast.success("Tenancy saved.");
     });
   }
   async function remove(l: LeaseRow) {
-    if (!(await confirm({ message: "Delete this lease? This cannot be undone.", danger: true, confirmLabel: "Delete" }))) return;
+    if (!(await confirm({ message: "Delete this tenancy? This cannot be undone.", danger: true, confirmLabel: "Delete" }))) return;
     startTransition(async () => {
       const res = await deleteLease(l.id);
       if (!res.ok) return toast.error(res.error);
@@ -185,12 +185,12 @@ export function TenanciesClient({
   return (
     <>
       <Topbar
-        search="Search leases…"
+        search="Search tenancies…"
         action={
           perms.create ? (
             <Button size="toolbar" className="gap-[6px]" onClick={openCreate}>
               <Plus strokeWidth={1.8} className="h-[16px] w-[16px]" />
-              New lease
+              New tenancy
             </Button>
           ) : undefined
         }
@@ -213,7 +213,7 @@ export function TenanciesClient({
           {filtered.length === 0 && (
             <div className="grid place-items-center py-16 text-center">
               <p className="text-[15px] font-medium text-text-2">No tenancies match</p>
-              <p className="mt-1 text-[15px] text-muted">{perms.create ? "Create a lease — the rent schedule generates automatically." : "No records available."}</p>
+              <p className="mt-1 text-[15px] text-muted">{perms.create ? "Create a tenancy — the rent schedule generates automatically." : "No records available."}</p>
             </div>
           )}
           {filtered.map((l) => (
@@ -247,15 +247,15 @@ export function TenanciesClient({
       <Drawer
         open={open}
         onClose={() => setOpen(false)}
-        title={editing ? "Edit lease" : "New lease"}
-        subtitle="Lease terms — the rent schedule regenerates on save"
+        title={editing ? "Edit tenancy" : "New tenancy"}
+        subtitle="Tenancy terms — the rent schedule regenerates on save"
         footer={
           <>
             {error && <span className="mr-auto text-[15px] font-medium text-[var(--bad)]">{error}</span>}
             <Button variant="ghost" size="toolbar" onClick={() => setOpen(false)}>Cancel</Button>
             <Button size="toolbar" onClick={save} disabled={pending}>
               {pending && <Loader2 className="h-4 w-4 animate-spin" />}
-              {editing ? "Save changes" : "Create lease"}
+              {editing ? "Save changes" : "Create tenancy"}
             </Button>
           </>
         }

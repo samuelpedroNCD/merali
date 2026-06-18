@@ -85,18 +85,28 @@ export function TenantDetail({
           )}
         </Card>
 
-        {/* Next of kin + Guarantor + Documents */}
+        {/* Contacts (emergency / guarantor) + Documents */}
         <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-2">
           <Card>
-            <h3 className="mb-3 text-[16px] font-semibold text-text">Emergency contact & guarantor</h3>
-            <dl className="grid grid-cols-2 gap-y-2 text-[13.5px]">
-              <Info label="Emergency name" value={t.nok_name} />
-              <Info label="Emergency phone" value={t.nok_phone} />
-              <Info label="Relationship" value={t.nok_relationship} />
-              <Info label="Emergency email" value={t.nok_email} />
-              <Info label="Guarantor" value={t.guarantor_name} />
-              <Info label="Guarantor email" value={t.guarantor_email} />
-            </dl>
+            <h3 className="mb-3 text-[16px] font-semibold text-text">Contacts</h3>
+            {t.contacts.length === 0 ? (
+              <p className="text-[15px] text-muted">No contacts recorded.</p>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {t.contacts.map((c) => (
+                  <div key={c.id} className="border-b border-border pb-3 last:border-b-0 last:pb-0">
+                    <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">{c.type || "Contact"}</p>
+                    <dl className="grid grid-cols-2 gap-y-2 text-[13.5px]">
+                      <Info label="Name" value={c.name} />
+                      <Info label="Phone" value={c.phone} />
+                      <Info label="Email" value={c.email} />
+                      {c.type === "Emergency" && <Info label="Relationship" value={c.relationship} />}
+                      {c.address && <Info label="Address" value={c.address} />}
+                    </dl>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
           <Card className="p-0">
             <div className="px-5 py-4 text-[16px] font-semibold text-text">Documents ({related.documents.length})</div>

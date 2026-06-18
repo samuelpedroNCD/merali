@@ -1,5 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
-import { decryptFields, TENANT_SECRET_FIELDS } from "@/lib/crypto/secrets";
+import { decryptFields, TENANT_SECRET_FIELDS, TENANT_CONTACT_SECRET_FIELDS } from "@/lib/crypto/secrets";
+
+export type TenantContact = {
+  id: string;
+  type: string | null;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  relationship: string | null;
+  address: string | null;
+};
 
 export type TenantRow = {
   id: string;
@@ -28,25 +38,36 @@ export type TenantRow = {
   guarantor_phone: string | null;
   bio: string | null;
   notes: string | null;
+  contacts: TenantContact[];
 };
+
+const CONTACT_SELECT = "tenant_contact(id, type, name, email, phone, relationship, address)";
+
+// Map the joined tenant_contact rows onto `contacts`, decrypting each row's PII.
+function mapTenant(t: Record<string, unknown>): TenantRow {
+  const { tenant_contact, ...rest } = t as Record<string, unknown> & { tenant_contact?: TenantContact[] };
+  const row = decryptFields(rest as unknown as TenantRow, TENANT_SECRET_FIELDS);
+  row.contacts = (tenant_contact ?? []).map((c) => decryptFields(c, TENANT_CONTACT_SECRET_FIELDS));
+  return row;
+}
 
 export async function listTenants(): Promise<TenantRow[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("tenant")
-    .select("*")
+    .select(`*, ${CONTACT_SELECT}`)
     .order("created_at", { ascending: false });
-  return (data ?? []).map((t) => decryptFields(t as unknown as TenantRow, TENANT_SECRET_FIELDS));
+  return (data ?? []).map((t) => mapTenant(t as Record<string, unknown>));
 }
 
 export async function getTenant(id: string): Promise<TenantRow | null> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("tenant")
-    .select("*")
+    .select(`*, ${CONTACT_SELECT}`)
     .eq("id", id)
     .maybeSingle();
-  return data ? decryptFields(data as unknown as TenantRow, TENANT_SECRET_FIELDS) : null;
+  return data ? mapTenant(data as Record<string, unknown>) : null;
 }
 
 /** Tenants for lease/relationship dropdowns. */

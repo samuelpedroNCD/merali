@@ -140,9 +140,9 @@ function PersonalInfo({
 
 const PREF_TYPES: { key: keyof NotifyPrefs; label: string; desc: string }[] = [
   { key: "notify_certifications", label: "Certification expiry", desc: "Alerts when a certificate is approaching its expiry date." },
-  { key: "notify_renewals", label: "Lease renewals", desc: "Tenancies due for renewal this month." },
+  { key: "notify_renewals", label: "Tenancy renewals", desc: "Tenancies due for renewal this month." },
   { key: "notify_overdue", label: "Rent overdue", desc: "When a tenancy falls into rent arrears." },
-  { key: "notify_ending", label: "Lease ending soon", desc: "Tenancies ending within the next 60 days." },
+  { key: "notify_ending", label: "Tenancy ending soon", desc: "Tenancies ending within the next 60 days." },
 ];
 
 function NotificationPrefs({ prefs, onSaved }: { prefs: NotifyPrefs; onSaved: () => void }) {

@@ -114,3 +114,11 @@ export const TENANT_SECRET_FIELDS = [
   "nok_email",
   "nok_address",
 ] as const;
+
+// PII on each unified tenant_contact row (Emergency / Guarantor).
+export const TENANT_CONTACT_SECRET_FIELDS = [
+  "name",
+  "email",
+  "phone",
+  "address",
+] as const;
