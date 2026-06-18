@@ -46,8 +46,25 @@ export function LeaseDetail({
   const totals = useMemo(() => {
     const due = schedule.reduce((a, s) => a + Number(s.amount_due), 0);
     const collected = schedule.reduce((a, s) => a + Number(s.amount_collected), 0);
-    return { due, collected, outstanding: due - collected };
-  }, [schedule]);
+    const rentOutstanding = due - collected;
+    // Linked nominals/finances: expenses (charges/deductions) add to what's owed,
+    // income (extra payments) reduces it. Rent itself lives in the schedule above.
+    const charges = ledger
+      .filter((t) => t.type === "Expense")
+      .reduce((a, t) => a + Number(t.amount_gross ?? 0), 0);
+    const payments = ledger
+      .filter((t) => t.type === "Income")
+      .reduce((a, t) => a + Number(t.amount_gross ?? 0), 0);
+    return {
+      due,
+      collected,
+      outstanding: rentOutstanding,
+      charges,
+      payments,
+      // Positive = tenant owes; negative = in credit.
+      balance: rentOutstanding + charges - payments,
+    };
+  }, [schedule, ledger]);
 
   return (
     <>
@@ -102,10 +119,19 @@ export function LeaseDetail({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-[18px]">
+        <div className="grid grid-cols-2 gap-[18px] lg:grid-cols-4">
+          <Card className="border-accent/40 bg-accent/[0.04]">
+            <p className="text-[15px] text-muted">Balance</p>
+            <p className={`mt-2 font-display text-[26px] font-semibold ${totals.balance > 0 ? "text-[var(--bad)]" : totals.balance < 0 ? "text-[var(--good)]" : "text-text"}`}>
+              {gbp(Math.abs(totals.balance))}
+            </p>
+            <p className="mt-1 text-[12px] text-muted">
+              {totals.balance > 0 ? "Owed by tenant" : totals.balance < 0 ? "In credit" : "Settled"} · rent outstanding + charges − payments
+            </p>
+          </Card>
           <Card><p className="text-[15px] text-muted">Total scheduled</p><p className="mt-2 font-display text-[24px] font-semibold text-text">{gbp(totals.due)}</p></Card>
           <Card><p className="text-[15px] text-muted">Collected</p><p className="mt-2 font-display text-[24px] font-semibold text-[var(--good)]">{gbp(totals.collected)}</p></Card>
-          <Card><p className="text-[15px] text-muted">Outstanding</p><p className="mt-2 font-display text-[24px] font-semibold text-[var(--bad)]">{gbp(totals.outstanding)}</p></Card>
+          <Card><p className="text-[15px] text-muted">Rent outstanding</p><p className="mt-2 font-display text-[24px] font-semibold text-[var(--bad)]">{gbp(totals.outstanding)}</p></Card>
         </div>
 
         <Card className="p-0">
