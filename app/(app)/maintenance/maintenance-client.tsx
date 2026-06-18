@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { urgencyTone } from "@/lib/badge-tones";
 import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
+import { FilterSelect } from "@/components/ui/filter-select";
 import { gbp, fmtDate, cn } from "@/lib/utils";
 import type { Option } from "@/lib/data/options";
 import type { MaintenanceRow, CommentRow } from "@/lib/data/maintenance";
@@ -71,14 +72,25 @@ export function MaintenanceClient({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [query, setQuery] = useState("");
+  const [urgencyF, setUrgencyF] = useState("");
+  const [typeF, setTypeF] = useState("");
+  const [propertyF, setPropertyF] = useState("");
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const grouped = useMemo(() => {
+    const q = query.trim().toLowerCase();
     const g: Record<string, MaintenanceRow[]> = {};
     for (const st of MAINTENANCE_STATUSES) g[st] = [];
-    for (const j of jobs) (g[j.status ?? "Needs Booking"] ??= []).push(j);
+    for (const j of jobs) {
+      if (q && !(j.description ?? "").toLowerCase().includes(q)) continue;
+      if (urgencyF && j.urgency !== urgencyF) continue;
+      if (typeF && j.type !== typeF) continue;
+      if (propertyF && j.property_id !== propertyF) continue;
+      (g[j.status ?? "Needs Booking"] ??= []).push(j);
+    }
     return g;
-  }, [jobs]);
+  }, [jobs, query, urgencyF, typeF, propertyF]);
 
   function openCreate() {
     setEditing(null); setForm(toForm()); setError(null); setOpen(true);
@@ -133,6 +145,13 @@ export function MaintenanceClient({
         <div className="mb-2">
           <h1 className="text-[26px] font-semibold tracking-[-0.01em] text-text">Maintenance</h1>
           <p className="mt-[2px] text-[14px] text-muted">Track jobs across their lifecycle.</p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Input placeholder="Search jobs…" className="max-w-[360px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <FilterSelect value={urgencyF} onChange={setUrgencyF} placeholder="All urgencies" options={options.maintenance_urgency ?? []} />
+          <FilterSelect value={typeF} onChange={setTypeF} placeholder="All types" options={options.maintenance_type ?? []} />
+          <FilterSelect value={propertyF} onChange={setPropertyF} placeholder="All properties" options={properties} />
         </div>
 
         {MAINTENANCE_STATUSES.map((st) => {

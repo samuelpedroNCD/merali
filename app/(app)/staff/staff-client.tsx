@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
+import { FilterSelect } from "@/components/ui/filter-select";
 import { initials } from "@/lib/utils";
 import type { StaffRow } from "@/lib/data/staff";
 import { inviteStaff, updateStaff, setStaffActive } from "./actions";
@@ -45,7 +46,18 @@ export function StaffClient({
   const [tempPw, setTempPw] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [query, setQuery] = useState("");
+  const [roleF, setRoleF] = useState("");
+  const [activeF, setActiveF] = useState("");
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  const filteredStaff = staff.filter((s) => {
+    const q = query.trim().toLowerCase();
+    const matchQ = !q || (s.full_name ?? "").toLowerCase().includes(q) || (s.email ?? "").toLowerCase().includes(q);
+    return matchQ
+      && (!roleF || s.role_id === roleF)
+      && (!activeF || (activeF === "active" ? s.is_active : !s.is_active));
+  });
 
   function openCreate() {
     setEditing(null); setForm(toForm()); setError(null); setTempPw(null); setOpen(true);
@@ -92,11 +104,16 @@ export function StaffClient({
           <h1 className="text-[26px] font-semibold tracking-[-0.01em] text-text">Staff</h1>
           <p className="mt-[2px] text-[14px] text-muted">Team members and their roles.</p>
         </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Input placeholder="Search name or email…" className="max-w-[360px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <FilterSelect value={roleF} onChange={setRoleF} placeholder="All roles" options={roles} />
+          <FilterSelect value={activeF} onChange={setActiveF} placeholder="Active & inactive" options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} />
+        </div>
         <Card className="overflow-x-auto p-0">
           <div className="grid min-w-[680px] grid-cols-[1.6fr_1.8fr_1fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">
             <span>Name</span><span>Email</span><span>Role</span><span>Status</span><span className="text-right">Action</span>
           </div>
-          {staff.map((s) => (
+          {filteredStaff.map((s) => (
             <div key={s.id} onClick={() => perms.edit && openEdit(s)} className="grid min-w-[680px] cursor-pointer grid-cols-[1.6fr_1.8fr_1fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] transition-colors last:border-b-0 hover:bg-surface-2/40">
               <span className="flex items-center gap-3">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-gold-gradient text-[12px] font-bold text-on-gold">{initials(s.full_name || s.email)}</span>

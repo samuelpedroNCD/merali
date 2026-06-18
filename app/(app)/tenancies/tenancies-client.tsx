@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { tenancyStatus, tenancyStatusTone } from "@/lib/tenancy-status";
 import { computeDueDates } from "@/lib/finance/dueDates";
+import { FilterSelect } from "@/components/ui/filter-select";
 import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
 import { gbp, fmtDate } from "@/lib/utils";
@@ -87,6 +88,10 @@ export function TenanciesClient({
   const [lead, setLead] = useState<string>("");
   const [reviews, setReviews] = useState<Review[]>([]);
   const [customDates, setCustomDates] = useState<string[]>([]);
+  const [query, setQuery] = useState("");
+  const [statusF, setStatusF] = useState("");
+  const [propertyF, setPropertyF] = useState("");
+  const [freqF, setFreqF] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
@@ -167,6 +172,16 @@ export function TenanciesClient({
     });
   }
 
+  const filtered = leases.filter((l) => {
+    const q = query.trim().toLowerCase();
+    const names = `${l.tenants.map((t) => t.name ?? "").join(" ")} ${l.tenant?.full_name ?? ""}`.toLowerCase();
+    const matchQ = !q || names.includes(q) || (l.property?.address ?? "").toLowerCase().includes(q);
+    return matchQ
+      && (!statusF || tenancyStatus(l) === statusF)
+      && (!propertyF || l.property_id === propertyF)
+      && (!freqF || l.payment_frequency === freqF);
+  });
+
   return (
     <>
       <Topbar
@@ -185,17 +200,23 @@ export function TenanciesClient({
           <h1 className="text-[26px] font-semibold tracking-[-0.01em] text-text">Tenancies</h1>
           <p className="mt-[2px] text-[14px] text-muted">Active and past tenancies, with their rent schedules.</p>
         </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Input placeholder="Search tenant or property…" className="max-w-[360px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <FilterSelect value={statusF} onChange={setStatusF} placeholder="All statuses" options={[{ value: "Current", label: "Current" }, { value: "Future", label: "Future" }, { value: "Past", label: "Past" }]} />
+          <FilterSelect value={propertyF} onChange={setPropertyF} placeholder="All properties" options={properties} />
+          <FilterSelect value={freqF} onChange={setFreqF} placeholder="All frequencies" options={options.payment_frequency ?? []} />
+        </div>
         <Card className="overflow-x-auto p-0">
           <div className="grid min-w-[840px] grid-cols-[1.3fr_1.6fr_0.9fr_1fr_1fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">
             <span>Tenant</span><span>Property</span><span>Rent</span><span>Start</span><span>End</span><span>Status</span><span className="text-right">Action</span>
           </div>
-          {leases.length === 0 && (
+          {filtered.length === 0 && (
             <div className="grid place-items-center py-16 text-center">
-              <p className="text-[15px] font-medium text-text-2">No leases yet</p>
+              <p className="text-[15px] font-medium text-text-2">No tenancies match</p>
               <p className="mt-1 text-[15px] text-muted">{perms.create ? "Create a lease — the rent schedule generates automatically." : "No records available."}</p>
             </div>
           )}
-          {leases.map((l) => (
+          {filtered.map((l) => (
             <div key={l.id} onClick={() => router.push(`/tenancies/${l.id}`)} className="grid min-w-[840px] cursor-pointer grid-cols-[1.3fr_1.6fr_0.9fr_1fr_1fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] transition-colors last:border-b-0 hover:bg-surface-2/40">
               <Link href={`/tenancies/${l.id}`} className="truncate font-medium text-text hover:text-accent">
                 {l.tenants.length ? l.tenants.find((t) => t.is_lead)?.name ?? l.tenants[0].name : l.tenant?.full_name || "—"}

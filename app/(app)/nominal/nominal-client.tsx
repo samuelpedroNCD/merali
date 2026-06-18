@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { invoiceStatusTone as statusTone } from "@/lib/badge-tones";
 import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
+import { FilterSelect } from "@/components/ui/filter-select";
 import { gbp, fmtDate } from "@/lib/utils";
 import type { Option } from "@/lib/data/options";
 import type { TransactionRow, LedgerTotals } from "@/lib/data/transactions";
@@ -61,6 +62,8 @@ export function NominalClient({
   const toast = useToast();
   const confirm = useConfirm();
   const [typeFilter, setTypeFilter] = useState("");
+  const [statusF, setStatusF] = useState("");
+  const [propertyF, setPropertyF] = useState("");
   const [reviewOnly, setReviewOnly] = useState(false);
   const [reconcileId, setReconcileId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -83,9 +86,11 @@ export function NominalClient({
       transactions.filter(
         (t) =>
           (!typeFilter || t.type === typeFilter) &&
+          (!statusF || t.status === statusF) &&
+          (!propertyF || t.property_id === propertyF) &&
           (!reviewOnly || t.needs_review),
       ),
-    [transactions, typeFilter, reviewOnly],
+    [transactions, typeFilter, statusF, propertyF, reviewOnly],
   );
   const needsReviewCount = useMemo(
     () => transactions.filter((t) => t.needs_review).length,
@@ -182,11 +187,13 @@ export function NominalClient({
           </button>
         )}
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Select className="h-[44px] max-w-[200px]" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
             <option value="">All types</option>
             {(options.transaction_type ?? []).map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
           </Select>
+          <FilterSelect value={statusF} onChange={setStatusF} placeholder="All statuses" options={options.invoice_status ?? []} />
+          <FilterSelect value={propertyF} onChange={setPropertyF} placeholder="All properties" options={properties} />
         </div>
 
         <Card className="overflow-x-auto p-0">

@@ -14,6 +14,7 @@ import { propertyStatusTone as statusTone } from "@/lib/badge-tones";
 import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
 import { InlineAddSelect } from "@/components/ui/inline-add-select";
+import { FilterSelect } from "@/components/ui/filter-select";
 import { Tabs } from "@/components/ui/tabs";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { gbp } from "@/lib/utils";
@@ -77,6 +78,9 @@ export function PropertiesClient({
   const toast = useToast();
   const confirm = useConfirm();
   const [query, setQuery] = useState("");
+  const [configF, setConfigF] = useState("");
+  const [statusF, setStatusF] = useState("");
+  const [classF, setClassF] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<PropertyRow | null>(null);
   const [tab, setTab] = useState("identification");
@@ -152,14 +156,19 @@ export function PropertiesClient({
 
   // Default to top-level properties (buildings + standalones); a search spans all
   // levels so units/sub-buildings remain findable.
+  const anyFilter = !!(query.trim() || configF || statusF || classF);
   const filtered = properties.filter((p) => {
+    // Default to top-level only; any active filter/search spans all levels.
+    if (!anyFilter) return p.parent_property_id == null;
     const s = query.trim().toLowerCase();
-    if (!s) return p.parent_property_id == null;
-    return (
+    const matchQ = !s ||
       (p.address ?? "").toLowerCase().includes(s) ||
       (p.internal_code ?? "").toLowerCase().includes(s) ||
-      (p.town ?? "").toLowerCase().includes(s)
-    );
+      (p.town ?? "").toLowerCase().includes(s);
+    return matchQ
+      && (!configF || p.configuration === configF)
+      && (!statusF || p.status === statusF)
+      && (!classF || p.class === classF);
   });
 
   return (
@@ -186,12 +195,17 @@ export function PropertiesClient({
           </p>
         </div>
 
-        <Input
-          placeholder="Search by address, code or town…"
-          className="max-w-[460px]"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          <Input
+            placeholder="Search by address, code or town…"
+            className="max-w-[460px]"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <FilterSelect value={configF} onChange={setConfigF} placeholder="All types" options={options.property_configuration ?? []} />
+          <FilterSelect value={statusF} onChange={setStatusF} placeholder="All statuses" options={options.property_status ?? []} />
+          <FilterSelect value={classF} onChange={setClassF} placeholder="All classes" options={options.property_class ?? []} />
+        </div>
 
         <Card className="overflow-x-auto p-0">
           <div className="grid min-w-[760px] grid-cols-[1.8fr_0.7fr_1fr_0.9fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">

@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
+import { FilterSelect } from "@/components/ui/filter-select";
 import type { Option } from "@/lib/data/options";
 import type { KeyRow, KeyTotals } from "@/lib/data/keys";
 import { createKey, updateKey, deleteKey } from "./actions";
@@ -50,6 +51,8 @@ export function KeysClient({
   const toast = useToast();
   const confirm = useConfirm();
   const [query, setQuery] = useState("");
+  const [statusF, setStatusF] = useState("");
+  const [heldF, setHeldF] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<KeyRow | null>(null);
   const [form, setForm] = useState<Form>(toForm());
@@ -81,9 +84,12 @@ export function KeysClient({
     });
   }
 
-  const filtered = keys.filter(
-    (k) => !query.trim() || (k.key_code ?? "").toLowerCase().includes(query.toLowerCase()),
-  );
+  const filtered = keys.filter((k) => {
+    const q = query.trim().toLowerCase();
+    return (!q || (k.key_code ?? "").toLowerCase().includes(q))
+      && (!statusF || k.status === statusF)
+      && (!heldF || k.held_by_type === heldF);
+  });
 
   return (
     <>
@@ -108,7 +114,11 @@ export function KeysClient({
           <StatCard label="Spare copies" value={totals.spare} />
           <StatCard label="Lost keys" value={totals.lost} />
         </div>
-        <Input placeholder="Search by key code…" className="max-w-[460px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <div className="flex flex-wrap items-center gap-3">
+          <Input placeholder="Search by key code…" className="max-w-[460px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <FilterSelect value={statusF} onChange={setStatusF} placeholder="All statuses" options={options.key_status ?? []} />
+          <FilterSelect value={heldF} onChange={setHeldF} placeholder="All holders" options={options.held_by_type ?? []} />
+        </div>
         <Card className="overflow-x-auto p-0">
           <div className="grid min-w-[760px] grid-cols-[1fr_1.8fr_0.7fr_1.1fr_auto] items-center gap-3 border-b border-border px-6 py-4 text-[11.5px] font-semibold uppercase tracking-[0.05em] text-muted">
             <span>Key code</span><span>Property</span><span className="text-center">Copies</span><span>Movement</span><span className="text-right">Action</span>

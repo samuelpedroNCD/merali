@@ -15,6 +15,7 @@ import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
 import { Tabs } from "@/components/ui/tabs";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+import { FilterSelect } from "@/components/ui/filter-select";
 import type { Option } from "@/lib/data/options";
 import type { TenantRow } from "@/lib/data/tenants";
 import { createTenant, updateTenant, deleteTenant } from "./actions";
@@ -72,6 +73,8 @@ export function TenantsClient({
   const toast = useToast();
   const confirm = useConfirm();
   const [query, setQuery] = useState("");
+  const [statusF, setStatusF] = useState("");
+  const [companyF, setCompanyF] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<TenantRow | null>(null);
   const [tab, setTab] = useState("personal");
@@ -110,12 +113,11 @@ export function TenantsClient({
   }
 
   const filtered = tenants.filter((t) => {
-    if (!query.trim()) return true;
-    const s = query.toLowerCase();
-    return (
-      (t.full_name ?? "").toLowerCase().includes(s) ||
-      (t.email ?? "").toLowerCase().includes(s)
-    );
+    const s = query.trim().toLowerCase();
+    const matchQ = !s || (t.full_name ?? "").toLowerCase().includes(s) || (t.email ?? "").toLowerCase().includes(s);
+    const matchStatus = !statusF || t.status === statusF;
+    const matchCompany = !companyF || (companyF === "company" ? !!t.is_company : !t.is_company);
+    return matchQ && matchStatus && matchCompany;
   });
 
   return (
@@ -136,7 +138,11 @@ export function TenantsClient({
           <h1 className="text-[26px] font-semibold tracking-[-0.01em] text-text">Tenants</h1>
           <p className="mt-[2px] text-[14px] text-muted">Tenant records, tenancies and arrears.</p>
         </div>
-        <Input placeholder="Search by name or email…" className="max-w-[460px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <div className="flex flex-wrap items-center gap-3">
+          <Input placeholder="Search by name or email…" className="max-w-[460px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <FilterSelect value={statusF} onChange={setStatusF} placeholder="All statuses" options={options.tenant_status ?? []} />
+          <FilterSelect value={companyF} onChange={setCompanyF} placeholder="Individuals & companies" options={[{ value: "individual", label: "Individuals" }, { value: "company", label: "Companies" }]} />
+        </div>
         <Card className="overflow-x-auto p-0">
           <div className="grid min-w-[680px] grid-cols-[1.4fr_1.6fr_1fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">
             <span>Name</span><span>Email</span><span>Phone</span><span>Status</span><span className="text-right">Action</span>

@@ -14,6 +14,7 @@ import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
 import { Tabs } from "@/components/ui/tabs";
 import { InlineAddSelect } from "@/components/ui/inline-add-select";
+import { FilterSelect } from "@/components/ui/filter-select";
 import type { Option } from "@/lib/data/options";
 import type { LandlordRow } from "@/lib/data/landlords";
 import { createLandlord, updateLandlord, deleteLandlord } from "./actions";
@@ -79,6 +80,7 @@ export function LandlordsClient({
   const toast = useToast();
   const confirm = useConfirm();
   const [query, setQuery] = useState("");
+  const [typeF, setTypeF] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<LandlordRow | null>(null);
   const [tab, setTab] = useState("identity");
@@ -140,12 +142,9 @@ export function LandlordsClient({
   }
 
   const filtered = landlords.filter((l) => {
-    if (!query.trim()) return true;
-    const s = query.toLowerCase();
-    return (
-      (l.full_name ?? "").toLowerCase().includes(s) ||
-      (l.email ?? "").toLowerCase().includes(s)
-    );
+    const s = query.trim().toLowerCase();
+    const matchQ = !s || (l.full_name ?? "").toLowerCase().includes(s) || (l.email ?? "").toLowerCase().includes(s);
+    return matchQ && (!typeF || l.landlord_type === typeF);
   });
   const individual = isIndividualType(form.landlord_type);
   const trust = isTrustType(form.landlord_type);
@@ -168,12 +167,15 @@ export function LandlordsClient({
           <h1 className="text-[26px] font-semibold tracking-[-0.01em] text-text">Landlords</h1>
           <p className="mt-[2px] text-[14px] text-muted">Landlord portfolios, statements and contacts.</p>
         </div>
-        <Input
-          placeholder="Search by name or email…"
-          className="max-w-[460px]"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          <Input
+            placeholder="Search by name or email…"
+            className="max-w-[460px]"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <FilterSelect value={typeF} onChange={setTypeF} placeholder="All types" options={options.landlord_type ?? []} />
+        </div>
         <Card className="overflow-x-auto p-0">
           <div className="grid min-w-[680px] grid-cols-[2fr_1.2fr_0.7fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">
             <span>Name</span>

@@ -8,7 +8,8 @@ import { Check, Undo2, Loader2 } from "lucide-react";
 import { Topbar } from "@/components/shell/topbar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select } from "@/components/ui/input";
+import { Input, Select } from "@/components/ui/input";
+import { FilterSelect } from "@/components/ui/filter-select";
 import { gbp, fmtDate } from "@/lib/utils";
 import { invoiceStatusTone as tone } from "@/lib/badge-tones";
 import { markPaid, markUnpaid } from "./actions";
@@ -34,12 +35,22 @@ export function PaymentsClient({
   const toast = useToast();
   const confirm = useConfirm();
   const [status, setStatus] = useState("");
+  const [query, setQuery] = useState("");
+  const [propertyF, setPropertyF] = useState("");
   const [pending, startTransition] = useTransition();
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  const propertyOpts = useMemo(
+    () => [...new Set(rows.map((r) => r.property).filter(Boolean) as string[])].sort().map((p) => ({ value: p, label: p })),
+    [rows],
+  );
   const filtered = useMemo(
-    () => rows.filter((r) => !status || r.status === status),
-    [rows, status],
+    () => rows.filter((r) => {
+      const q = query.trim().toLowerCase();
+      const matchQ = !q || (r.property ?? "").toLowerCase().includes(q) || (r.tenant ?? "").toLowerCase().includes(q);
+      return matchQ && (!status || r.status === status) && (!propertyF || r.property === propertyF);
+    }),
+    [rows, status, query, propertyF],
   );
 
   const summary = useMemo(() => {
@@ -77,11 +88,13 @@ export function PaymentsClient({
           <Card><p className="text-[15px] text-muted">Overdue</p><p className="mt-2 font-display text-[28px] font-semibold text-[var(--bad)]">{gbp(summary.overdue)}</p></Card>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Input placeholder="Search property or tenant…" className="max-w-[360px]" value={query} onChange={(e) => setQuery(e.target.value)} />
           <Select className="h-[44px] max-w-[200px]" value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">All statuses</option>
             <option>Pending</option><option>Paid</option><option>Overdue</option><option>Partial</option>
           </Select>
+          <FilterSelect value={propertyF} onChange={setPropertyF} placeholder="All properties" options={propertyOpts} />
         </div>
 
         <Card className="overflow-x-auto p-0">

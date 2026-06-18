@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { supplierStatusTone as statusTone } from "@/lib/badge-tones";
 import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
+import { FilterSelect } from "@/components/ui/filter-select";
 import { gbp } from "@/lib/utils";
 import type { Option } from "@/lib/data/options";
 import type { SupplierRow } from "@/lib/data/suppliers";
@@ -46,6 +47,8 @@ export function SuppliersClient({
   const toast = useToast();
   const confirm = useConfirm();
   const [query, setQuery] = useState("");
+  const [typeF, setTypeF] = useState("");
+  const [statusF, setStatusF] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<SupplierRow | null>(null);
   const [form, setForm] = useState<Form>(toForm());
@@ -85,9 +88,12 @@ export function SuppliersClient({
     });
   }
 
-  const filtered = suppliers.filter(
-    (s) => !query.trim() || s.business_name.toLowerCase().includes(query.toLowerCase()),
-  );
+  const filtered = suppliers.filter((s) => {
+    const q = query.trim().toLowerCase();
+    return (!q || s.business_name.toLowerCase().includes(q))
+      && (!typeF || s.type === typeF)
+      && (!statusF || s.status === statusF);
+  });
 
   return (
     <>
@@ -111,7 +117,11 @@ export function SuppliersClient({
           <Card><p className="text-[15px] text-muted">Active suppliers</p><p className="mt-2 font-display text-[28px] font-semibold text-text">{stats.active}</p></Card>
           <Card><p className="text-[15px] text-muted">Outstanding bills</p><p className="mt-2 font-display text-[28px] font-semibold text-text">{gbp(stats.outstanding)}</p></Card>
         </div>
-        <Input placeholder="Search suppliers…" className="max-w-[460px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <div className="flex flex-wrap items-center gap-3">
+          <Input placeholder="Search suppliers…" className="max-w-[460px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <FilterSelect value={typeF} onChange={setTypeF} placeholder="All types" options={options.supplier_type ?? []} />
+          <FilterSelect value={statusF} onChange={setStatusF} placeholder="All statuses" options={options.supplier_status ?? []} />
+        </div>
         <Card className="overflow-x-auto p-0">
           <div className="grid min-w-[720px] grid-cols-[1.5fr_1.5fr_1fr_0.9fr_0.8fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">
             <span>Business</span><span>Contact</span><span>Type</span><span>Status</span><span className="text-right">Outstanding</span><span className="text-right">Action</span>

@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Badge, type Tone } from "@/components/ui/badge";
 import { Input, Field, Select, Textarea } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
+import { FilterSelect } from "@/components/ui/filter-select";
 import { fmtDate } from "@/lib/utils";
 import type { CertificationRow } from "@/lib/data/certifications";
 import { createCertification, updateCertification, deleteCertification, bulkCreateCertifications } from "./actions";
@@ -56,6 +57,10 @@ export function CertificationsClient({
   const [form, setForm] = useState<Form>(toForm());
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [query, setQuery] = useState("");
+  const [statusF, setStatusF] = useState("");
+  const [typeF, setTypeF] = useState("");
+  const [propertyF, setPropertyF] = useState("");
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   // Bulk add
@@ -102,6 +107,20 @@ export function CertificationsClient({
     });
   }
 
+  const statusCat = (expiry: string | null) => {
+    if (!expiry) return "Valid";
+    const days = Math.ceil((new Date(expiry).getTime() - Date.now()) / 86400000);
+    return days < 0 ? "Expired" : days <= 30 ? "Expiring" : "Valid";
+  };
+  const filtered = certs.filter((c) => {
+    const q = query.trim().toLowerCase();
+    const matchQ = !q || (c.type?.name ?? "").toLowerCase().includes(q) || (c.property?.address ?? "").toLowerCase().includes(q);
+    return matchQ
+      && (!statusF || statusCat(c.expiry_date) === statusF)
+      && (!typeF || c.type_id === typeF)
+      && (!propertyF || c.property_id === propertyF);
+  });
+
   return (
     <>
       <Topbar
@@ -124,17 +143,23 @@ export function CertificationsClient({
           <h1 className="text-[26px] font-semibold tracking-[-0.01em] text-text">Certifications</h1>
           <p className="mt-[2px] text-[14px] text-muted">Compliance certificates and expiry tracking.</p>
         </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Input placeholder="Search type or property…" className="max-w-[360px]" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <FilterSelect value={statusF} onChange={setStatusF} placeholder="All statuses" options={[{ value: "Valid", label: "Valid" }, { value: "Expiring", label: "Expiring soon" }, { value: "Expired", label: "Expired" }]} />
+          <FilterSelect value={typeF} onChange={setTypeF} placeholder="All types" options={types} />
+          <FilterSelect value={propertyF} onChange={setPropertyF} placeholder="All properties" options={properties} />
+        </div>
         <Card className="overflow-x-auto p-0">
           <div className="grid min-w-[640px] grid-cols-[1.4fr_1.6fr_1fr_0.9fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">
             <span>Type</span><span>Property</span><span>Expiry</span><span>Status</span><span className="text-right">Action</span>
           </div>
-          {certs.length === 0 && (
+          {filtered.length === 0 && (
             <div className="grid place-items-center py-16 text-center">
-              <p className="text-[15px] font-medium text-text-2">No certifications yet</p>
+              <p className="text-[15px] font-medium text-text-2">No certifications match</p>
               <p className="mt-1 text-[15px] text-muted">{perms.create ? "Add a certification to track its expiry." : "No records available."}</p>
             </div>
           )}
-          {certs.map((c) => {
+          {filtered.map((c) => {
             const info = expiryInfo(c.expiry_date);
             return (
               <div key={c.id} onClick={() => perms.edit && openEdit(c)} className="grid min-w-[640px] cursor-pointer grid-cols-[1.4fr_1.6fr_1fr_0.9fr_auto] items-center gap-4 border-b border-border px-6 py-4 text-[14px] transition-colors last:border-b-0 hover:bg-surface-2/40">
