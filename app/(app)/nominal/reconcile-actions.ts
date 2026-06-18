@@ -16,9 +16,20 @@ export type Suggestion = {
   score: number;
 };
 
+export type Instalment = {
+  id: string;
+  due_date: string;
+  outstanding: number;
+  property: string | null;
+  tenant: string | null;
+};
+
 export type SuggestionsResult = {
   txn: { amount: number; date: string | null; reference: string | null };
   suggestions: Suggestion[];
+  // Every unpaid instalment (scoped to the txn's property when set), for the
+  // manual picker when no suggestion is correct.
+  allInstalments: Instalment[];
 };
 
 export async function fetchSuggestions(txnId: string): Promise<SuggestionsResult | null> {
@@ -61,12 +72,23 @@ export async function fetchSuggestions(txnId: string): Promise<SuggestionsResult
     return (Array.isArray(v) ? v[0]?.[key] : v?.[key]) ?? null;
   };
 
+  const allInstalments: Instalment[] = (rows ?? [])
+    .map((r) => ({
+      id: r.id as string,
+      due_date: r.due_date as string,
+      outstanding: Number(r.amount_due ?? 0) - Number(r.amount_collected ?? 0),
+      property: label((r as Record<string, unknown>).property, "address"),
+      tenant: label((r as Record<string, unknown>).tenant, "full_name"),
+    }))
+    .sort((a, b) => b.due_date.localeCompare(a.due_date));
+
   return {
     txn: {
       amount: Number(txn.amount_gross ?? 0),
       date: (txn.txn_date as string) ?? null,
       reference: (txn.reference as string) ?? null,
     },
+    allInstalments,
     suggestions: ranked.slice(0, 8).map((m) => {
       const row = byId.get(m.candidate.id)!;
       return {

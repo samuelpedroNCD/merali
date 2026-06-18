@@ -5,6 +5,7 @@ import { Loader2, Check, X, Sparkles } from "lucide-react";
 import { Drawer } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Field, Select } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import { gbp, fmtDate } from "@/lib/utils";
 import {
@@ -26,18 +27,27 @@ export function ReconcileDrawer({
   const [data, setData] = useState<SuggestionsResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  const [manual, setManual] = useState(false);
   const [pending, start] = useTransition();
 
   useEffect(() => {
     if (!open || !txnId) return;
     setLoading(true);
     setSelected(null);
+    setManual(false);
     fetchSuggestions(txnId).then((d) => {
       setData(d);
       setSelected(d?.suggestions[0]?.id ?? null);
+      // Open straight into the manual picker when there are no suggestions.
+      setManual((d?.suggestions.length ?? 0) === 0);
       setLoading(false);
     });
   }, [open, txnId]);
+
+  // Instalments not already shown as suggestions, for the manual picker.
+  const otherInstalments = (data?.allInstalments ?? []).filter(
+    (i) => !data?.suggestions.some((s) => s.id === i.id),
+  );
 
   function confirm() {
     if (!txnId || !selected) return;
@@ -94,19 +104,19 @@ export function ReconcileDrawer({
               <Sparkles strokeWidth={1.6} className="h-4 w-4 text-accent" /> Suggested matches
             </p>
             {data.suggestions.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border p-4 text-[15px] text-muted">
-                No matching rent instalments found. You can dismiss this as reviewed, or record it as a manual transaction.
+              <p className="mb-3 rounded-md border border-dashed border-border p-4 text-[15px] text-muted">
+                No suggested matches. Pick the right instalment below, or dismiss this as reviewed.
               </p>
             ) : (
               <ul className="flex flex-col gap-2">
                 {data.suggestions.map((s) => (
                   <li key={s.id}>
                     <button
-                      onClick={() => setSelected(s.id)}
-                      className={`flex w-full items-center gap-3 rounded-md border px-4 py-3 text-left transition-colors ${selected === s.id ? "border-accent bg-[color-mix(in_oklch,var(--c-accent)_8%,transparent)]" : "border-border hover:bg-surface-2/50"}`}
+                      onClick={() => { setSelected(s.id); setManual(false); }}
+                      className={`flex w-full items-center gap-3 rounded-md border px-4 py-3 text-left transition-colors ${!manual && selected === s.id ? "border-accent bg-[color-mix(in_oklch,var(--c-accent)_8%,transparent)]" : "border-border hover:bg-surface-2/50"}`}
                     >
-                      <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border ${selected === s.id ? "border-accent bg-accent" : "border-border"}`}>
-                        {selected === s.id && <span className="h-[6px] w-[6px] rounded-full bg-surface" />}
+                      <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border ${!manual && selected === s.id ? "border-accent bg-accent" : "border-border"}`}>
+                        {!manual && selected === s.id && <span className="h-[6px] w-[6px] rounded-full bg-surface" />}
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[14px] font-medium text-text">{s.tenant || s.property || "Rent instalment"}</p>
@@ -117,6 +127,40 @@ export function ReconcileDrawer({
                   </li>
                 ))}
               </ul>
+            )}
+
+            {/* Manual picker — any unpaid instalment, for when no suggestion fits. */}
+            {(manual || data.suggestions.length === 0) ? (
+              data.allInstalments.length === 0 ? (
+                <p className="mt-3 rounded-md border border-dashed border-border p-4 text-[15px] text-muted">
+                  No unpaid rent instalments{data.suggestions.length === 0 ? "" : " to choose from"}. Dismiss this as reviewed, or assign it from the Unreconciled list with “Approve”.
+                </p>
+              ) : (
+                <div className="mt-3">
+                  <Field label="Choose an instalment">
+                    <Select
+                      value={(manual && selected) || ""}
+                      onChange={(e) => { setSelected(e.target.value || null); setManual(true); }}
+                    >
+                      <option value="">Select a rent instalment…</option>
+                      {data.allInstalments.map((i) => (
+                        <option key={i.id} value={i.id}>
+                          {fmtDate(i.due_date)} · {i.tenant || i.property || "Instalment"} · {gbp(i.outstanding)} outstanding
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                </div>
+              )
+            ) : (
+              otherInstalments.length > 0 && (
+                <button
+                  onClick={() => { setManual(true); setSelected(null); }}
+                  className="mt-3 text-[13px] font-semibold text-accent hover:underline"
+                >
+                  None of these? Choose another instalment
+                </button>
+              )
             )}
           </div>
         </div>
