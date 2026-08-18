@@ -1,9 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { tenancyStatus } from "@/lib/tenancy-status";
-import { shouldChase, daysOverdue as daysOverdueOf } from "@/lib/finance/credit-control";
+import { shouldChase, daysOverdue as daysOverdueOf, chaseStage, buildChaseEmail } from "@/lib/finance/credit-control";
 import { sendEmail } from "@/lib/email/send";
 import { gbp, fmtDate } from "@/lib/utils";
+
+const CHASE_CONTACT = process.env.CREDIT_CONTROL_CONTACT ?? null;
 
 const rel = <T,>(v: unknown): T | null => (Array.isArray(v) ? (v[0] ?? null) : ((v as T) ?? null)) as T | null;
 
@@ -20,6 +22,7 @@ export type TenancyBalance = {
   days_overdue: number;
   chasing_enabled: boolean;
   last_chased_at: string | null;
+  chase_count: number;
 };
 
 type LeaseRow = {
@@ -61,10 +64,12 @@ export async function getTenancyBalances(supabaseArg?: SupabaseClient): Promise<
   }
 
   const lastChase = new Map<string, string>();
+  const chaseCount = new Map<string, number>();
   for (const c of chases ?? []) {
     const k = c.lease_id as string;
     const at = c.chased_at as string;
     if (!lastChase.has(k) || at > (lastChase.get(k) as string)) lastChase.set(k, at);
+    chaseCount.set(k, (chaseCount.get(k) ?? 0) + 1);
   }
 
   return (leases ?? []).map((raw) => {
@@ -88,6 +93,7 @@ export async function getTenancyBalances(supabaseArg?: SupabaseClient): Promise<
       days_overdue: a.oldest ? daysOverdueOf(a.oldest, now) : 0,
       chasing_enabled: l.chasing_enabled ?? true,
       last_chased_at: lastChase.get(l.id) ?? null,
+      chase_count: chaseCount.get(l.id) ?? 0,
     };
   });
 }
@@ -112,13 +118,17 @@ export async function runCreditControl(supabase: SupabaseClient, now: Date = new
   const notifyStaff = (staff ?? []).filter((s) => s.notify_overdue !== false);
 
   for (const b of due) {
+    const stage = chaseStage(b.chase_count);
+    const email = buildChaseEmail(stage, {
+      tenant: b.tenant,
+      property: b.property,
+      amount: gbp(b.outstanding),
+      dueDate: b.oldest_overdue ? fmtDate(b.oldest_overdue) : "",
+      contact: CHASE_CONTACT,
+    });
     let emailed = false;
     if (b.tenant_email) {
-      emailed = await sendEmail({
-        to: b.tenant_email,
-        subject: `Rent arrears reminder — ${b.property ?? "your tenancy"}`,
-        html: `<p>Dear ${b.tenant ?? "tenant"},</p><p>Our records show an outstanding rent balance of <strong>${gbp(b.outstanding)}</strong> on your tenancy at ${b.property ?? ""}, with the earliest unpaid amount due on ${b.oldest_overdue ? fmtDate(b.oldest_overdue) : ""}.</p><p>Please arrange payment or contact us if you believe this is in error.</p><p>Merali Lettings</p>`,
-      });
+      emailed = await sendEmail({ to: b.tenant_email, subject: email.subject, html: email.html });
     }
 
     await supabase.from("credit_control_chase").insert({
