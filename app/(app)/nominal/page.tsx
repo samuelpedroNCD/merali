@@ -1,5 +1,5 @@
 import { requireUser, can } from "@/lib/auth";
-import { listTransactions, getLedgerTotals } from "@/lib/data/transactions";
+import { listTransactions, getLedgerTotals, listRecentNarratives } from "@/lib/data/transactions";
 import { listPropertyOptions, listLeaseOptions } from "@/lib/data/leases";
 import { getOptions } from "@/lib/data/options";
 import { nominalOptions } from "@/lib/data/nominals";
@@ -8,7 +8,7 @@ import { NominalClient } from "./nominal-client";
 
 export default async function NominalPage() {
   const user = await requireUser();
-  const [transactions, totals, properties, leases, options, nominals, banks] = await Promise.all([
+  const [transactions, totals, properties, leases, options, nominals, banks, narratives] = await Promise.all([
     listTransactions(),
     getLedgerTotals(),
     listPropertyOptions(),
@@ -16,6 +16,7 @@ export default async function NominalPage() {
     getOptions(["transaction_type", "transaction_category", "vat_rate", "invoice_status"]),
     nominalOptions(),
     bankAccountOptions(),
+    listRecentNarratives(),
   ]);
 
   return (
@@ -27,6 +28,7 @@ export default async function NominalPage() {
       options={options}
       nominals={nominals}
       banks={banks}
+      narratives={narratives}
       perms={{
         create: can(user, "finance", "create"),
         edit: can(user, "finance", "edit"),

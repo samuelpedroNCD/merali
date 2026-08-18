@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { tenancyStatus, type TenancyStatus } from "@/lib/tenancy-status";
 
 export type LeaseRow = {
   id: string;
@@ -123,14 +124,21 @@ export async function getLeaseSchedule(id: string): Promise<LeaseScheduleRow[]> 
   return (data ?? []) as unknown as LeaseScheduleRow[];
 }
 
-export type LeaseOption = { value: string; label: string; property_id: string | null; active: boolean };
+export type LeaseOption = {
+  value: string;
+  label: string;
+  property_id: string | null;
+  active: boolean;
+  tenant_name: string | null;
+  tenancy_status: TenancyStatus; // Current | Past | Future (drives the receipt narrative)
+};
 
 /** Tenancies for a transaction's "Tenancy" picker (label = lead tenant · property). */
 export async function listLeaseOptions(): Promise<LeaseOption[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("lease")
-    .select("id, status, property_id, property:property_id(address), tenant:tenant_id(full_name), lease_tenant(is_lead, tenant:tenant_id(full_name))")
+    .select("id, status, start_date, commencement_date, end_date, property_id, property:property_id(address), tenant:tenant_id(full_name), lease_tenant(is_lead, tenant:tenant_id(full_name))")
     .order("created_at", { ascending: false });
   const pick = (rel: unknown, key: string) => {
     const v = rel as Record<string, string> | Record<string, string>[] | null;
@@ -139,13 +147,19 @@ export async function listLeaseOptions(): Promise<LeaseOption[]> {
   return (data ?? []).map((l) => {
     const lts = (l.lease_tenant ?? []) as { is_lead: boolean; tenant: unknown }[];
     const lead = lts.find((x) => x.is_lead) ?? lts[0];
-    const name = (lead ? pick(lead.tenant, "full_name") : null) || pick(l.tenant, "full_name") || "Tenancy";
+    const name = (lead ? pick(lead.tenant, "full_name") : null) || pick(l.tenant, "full_name") || null;
     const addr = pick(l.property, "address");
     return {
       value: l.id as string,
-      label: addr ? `${name} · ${addr}` : name,
+      label: addr ? `${name ?? "Tenancy"} · ${addr}` : (name ?? "Tenancy"),
       property_id: (l.property_id as string) ?? null,
       active: ((l.status as string) ?? "").toLowerCase() === "active",
+      tenant_name: name,
+      tenancy_status: tenancyStatus({
+        start_date: (l.start_date as string) ?? null,
+        commencement_date: (l.commencement_date as string) ?? null,
+        end_date: (l.end_date as string) ?? null,
+      }),
     };
   });
 }

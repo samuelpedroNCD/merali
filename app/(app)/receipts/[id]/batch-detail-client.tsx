@@ -14,6 +14,8 @@ import { useToast } from "@/components/ui/toast";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { gbp, fmtDate } from "@/lib/utils";
 import type { BatchDetail, BatchTxn } from "@/lib/data/receipt-batches";
+import type { LeaseOption } from "@/lib/data/leases";
+import { buildNarrative } from "@/lib/finance/narrative";
 import { createTransaction } from "../../nominal/actions";
 import { addToBatch, removeFromBatch, postBatch, setBatchExpected } from "../actions";
 
@@ -23,14 +25,18 @@ export function BatchDetailClient({
   batch,
   unbatched,
   properties,
+  leases,
   nominals,
+  narratives,
   shortRef,
   canEdit,
 }: {
   batch: BatchDetail;
   unbatched: BatchTxn[];
   properties: Opt[];
+  leases: LeaseOption[];
   nominals: Opt[];
+  narratives: string[];
   shortRef: string | null;
   canEdit: boolean;
 }) {
@@ -42,10 +48,25 @@ export function BatchDetailClient({
   const [assignOpen, setAssignOpen] = useState(false);
   const [editExp, setEditExp] = useState(false);
   const [expected, setExpected] = useState(batch.expected_total != null ? String(batch.expected_total) : "");
-  const [form, setForm] = useState({ amount_gross: "", txn_date: new Date().toISOString().slice(0, 10), reference: shortRef ?? "", property_id: "", nominal_code_id: "" });
+  const [form, setForm] = useState({ amount_gross: "", txn_date: new Date().toISOString().slice(0, 10), reference: shortRef ?? "", property_id: "", nominal_code_id: "", notes: "" });
+  const [narrSearch, setNarrSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const draft = batch.status === "draft";
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  const narrHits = narrSearch.trim()
+    ? narratives.filter((n) => n.toLowerCase().includes(narrSearch.trim().toLowerCase())).slice(0, 40)
+    : [];
+
+  // Picking a property pre-fills the narrative from its single active tenancy (WS6),
+  // unless the details field has already been typed into.
+  function onPropertyChange(v: string) {
+    setForm((f) => {
+      const active = leases.filter((l) => l.property_id === v && l.active);
+      const narr = active.length === 1 ? buildNarrative(active[0].tenant_name, active[0].tenancy_status) : null;
+      return { ...f, property_id: v, notes: narr && !f.notes.trim() ? narr : f.notes };
+    });
+  }
 
   function refresh() { router.refresh(); }
 
@@ -55,11 +76,11 @@ export function BatchDetailClient({
       const res = await createTransaction({
         type: "Income", amount_gross: form.amount_gross, vat_rate: 0, txn_date: form.txn_date,
         reference: form.reference, property_id: form.property_id || null, nominal_code_id: form.nominal_code_id || null,
-        bank_account_id: batch.bank_account_id, batch_id: batch.id,
+        notes: form.notes || null, bank_account_id: batch.bank_account_id, batch_id: batch.id,
       });
       if (!res.ok) return setError(res.error);
       setAddOpen(false);
-      setForm({ amount_gross: "", txn_date: form.txn_date, reference: shortRef ?? "", property_id: "", nominal_code_id: "" });
+      setForm({ amount_gross: "", txn_date: form.txn_date, reference: shortRef ?? "", property_id: "", nominal_code_id: "", notes: "" });
       toast.success("Receipt added.");
       refresh();
     });
@@ -178,8 +199,29 @@ export function BatchDetailClient({
           <Field label="Amount (gross, £)"><Input type="number" step="0.01" min={0} value={form.amount_gross} onChange={(e) => set("amount_gross", e.target.value)} /></Field>
           <Field label="Date"><Input type="date" value={form.txn_date} onChange={(e) => set("txn_date", e.target.value)} /></Field>
           <Field label="Reference" hint="Defaults to the bank's reference"><Input value={form.reference} onChange={(e) => set("reference", e.target.value)} /></Field>
-          <Field label="Property (optional)"><Select value={form.property_id} onChange={(e) => set("property_id", e.target.value)}><option value="">None</option>{properties.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</Select></Field>
+          <Field label="Property (optional)"><Select value={form.property_id} onChange={(e) => onPropertyChange(e.target.value)}><option value="">None</option>{properties.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</Select></Field>
           <Field label="Nominal (optional)" className="col-span-2"><Select value={form.nominal_code_id} onChange={(e) => set("nominal_code_id", e.target.value)}><option value="">Uncategorised</option>{nominals.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</Select></Field>
+          <div className="col-span-2">
+            <Field label="Details / narrative" hint="Pre-fills from the property's current tenancy; editable">
+              <Input value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="e.g. Catwell N Rent" />
+            </Field>
+            {narratives.length > 0 && (
+              <div className="mt-2">
+                <Input placeholder="Reuse a previous note…" value={narrSearch} onChange={(e) => setNarrSearch(e.target.value)} className="h-[40px]" />
+                {narrSearch.trim() && (
+                  <ul className="mt-1 max-h-[150px] overflow-y-auto thin-scroll rounded-md border border-border">
+                    {narrHits.length === 0 ? (
+                      <li className="px-3 py-2 text-[13px] text-muted">No matches</li>
+                    ) : narrHits.map((n) => (
+                      <li key={n}>
+                        <button type="button" onClick={() => { set("notes", n); setNarrSearch(""); }} className="block w-full truncate px-3 py-2 text-left text-[13.5px] text-text-2 hover:bg-surface-2/60">{n}</button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </Drawer>
 

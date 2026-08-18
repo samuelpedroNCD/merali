@@ -17,6 +17,7 @@ import { gbp, fmtDate } from "@/lib/utils";
 import type { Option } from "@/lib/data/options";
 import type { TransactionRow, LedgerTotals } from "@/lib/data/transactions";
 import type { LeaseOption } from "@/lib/data/leases";
+import { buildNarrative } from "@/lib/finance/narrative";
 import { createTransaction, updateTransaction, deleteTransaction } from "./actions";
 import { ReconcileDrawer } from "./reconcile-drawer";
 import { unreconcileTransaction } from "./reconcile-actions";
@@ -51,6 +52,7 @@ export function NominalClient({
   options,
   nominals,
   banks,
+  narratives,
   perms,
 }: {
   transactions: TransactionRow[];
@@ -60,6 +62,7 @@ export function NominalClient({
   options: Record<string, Option[]>;
   nominals: Opt[];
   banks: { value: string; label: string; short_ref: string | null }[];
+  narratives: string[];
   perms: Perms;
 }) {
   const router = useRouter();
@@ -77,13 +80,34 @@ export function NominalClient({
   const [pending, startTransition] = useTransition();
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
+  // Narrative for a tenancy: "<Surname> <Initial> <Rent|Arrears>" (WS6). Only
+  // pre-fill when the notes field hasn't been typed into, so we never clobber it.
+  function narrativeFor(leaseId: string): string | null {
+    const l = leases.find((x) => x.value === leaseId);
+    return l ? buildNarrative(l.tenant_name, l.tenancy_status) : null;
+  }
+  const withNarrative = (f: Form, leaseId: string): Form => {
+    const n = leaseId ? narrativeFor(leaseId) : null;
+    return n && !f.notes.trim() ? { ...f, notes: n } : f;
+  };
+
+  function onLeaseChange(v: string) {
+    setForm((f) => withNarrative({ ...f, lease_id: v }, v));
+  }
+
   // Picking a property auto-selects its single active tenancy (still overridable).
   function onPropertyChange(v: string) {
     setForm((f) => {
       const active = leases.filter((l) => l.property_id === v && l.active);
-      return { ...f, property_id: v, lease_id: active.length === 1 ? active[0].value : "" };
+      const lease_id = active.length === 1 ? active[0].value : "";
+      return withNarrative({ ...f, property_id: v, lease_id }, lease_id);
     });
   }
+
+  const [narrSearch, setNarrSearch] = useState("");
+  const narrHits = narrSearch.trim()
+    ? narratives.filter((n) => n.toLowerCase().includes(narrSearch.trim().toLowerCase())).slice(0, 40)
+    : [];
 
   // Picking a bank defaults the reference to its short-ref (WS1), still editable.
   function onBankChange(v: string) {
@@ -286,13 +310,33 @@ export function NominalClient({
           <Field label="Amount (gross, £)"><Input type="number" step="0.01" min={0} value={form.amount_gross} onChange={(e) => set("amount_gross", e.target.value)} /></Field>
           <SelectField label="VAT rate (%)" value={form.vat_rate} onChange={(v) => set("vat_rate", v)} options={options.vat_rate} />
           <SelectFieldOpt label="Property" value={form.property_id} onChange={onPropertyChange} options={properties} placeholder="Choose…" />
-          <SelectFieldOpt label="Tenancy" value={form.lease_id} onChange={(v) => set("lease_id", v)} options={leases} placeholder="None / not tenancy-specific" />
+          <SelectFieldOpt label="Tenancy" value={form.lease_id} onChange={onLeaseChange} options={leases} placeholder="None / not tenancy-specific" />
           <Field label="Date"><Input type="date" value={form.txn_date} onChange={(e) => set("txn_date", e.target.value)} /></Field>
           <SelectField label="Status" value={form.status} onChange={(v) => set("status", v)} options={options.invoice_status} />
           <SelectFieldOpt label="Bank account" value={form.bank_account_id} onChange={onBankChange} options={banks} placeholder="None" />
           <Field label="Reference" hint="Auto-fills from the bank"><Input value={form.reference} onChange={(e) => set("reference", e.target.value)} placeholder="e.g. LB" /></Field>
           <Field label="Receipt / proof link" className="col-span-2"><Input value={form.receipt_link} onChange={(e) => set("receipt_link", e.target.value)} placeholder="https://…" /></Field>
-          <Field label="Notes" className="col-span-2"><Textarea rows={3} value={form.notes} onChange={(e) => set("notes", e.target.value)} /></Field>
+          <div className="col-span-2">
+            <Field label="Details / narrative" hint="Pre-fills as “Surname Initial Rent/Arrears” from the tenancy; editable">
+              <Textarea rows={2} value={form.notes} onChange={(e) => set("notes", e.target.value)} />
+            </Field>
+            {narratives.length > 0 && (
+              <div className="mt-2">
+                <Input placeholder="Reuse a previous note…" value={narrSearch} onChange={(e) => setNarrSearch(e.target.value)} className="h-[40px]" />
+                {narrSearch.trim() && (
+                  <ul className="mt-1 max-h-[150px] overflow-y-auto thin-scroll rounded-md border border-border">
+                    {narrHits.length === 0 ? (
+                      <li className="px-3 py-2 text-[13px] text-muted">No matches</li>
+                    ) : narrHits.map((n) => (
+                      <li key={n}>
+                        <button type="button" onClick={() => { set("notes", n); setNarrSearch(""); }} className="block w-full truncate px-3 py-2 text-left text-[13.5px] text-text-2 hover:bg-surface-2/60">{n}</button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </Drawer>
 

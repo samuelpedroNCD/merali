@@ -45,6 +45,28 @@ export async function listUnreconciledTransactions(): Promise<TransactionRow[]> 
   return (data ?? []) as unknown as TransactionRow[];
 }
 
+/** Distinct recent receipt narratives, most-recent first — for reuse (WS6). */
+export async function listRecentNarratives(limit = 200): Promise<string[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("transaction")
+    .select("notes")
+    .not("notes", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1000);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const r of data ?? []) {
+    const n = ((r.notes as string) ?? "").trim();
+    if (n && !seen.has(n)) {
+      seen.add(n);
+      out.push(n);
+      if (out.length >= limit) break;
+    }
+  }
+  return out;
+}
+
 export type LedgerTotals = { credits: number; debits: number; net: number };
 
 export async function getLedgerTotals(): Promise<LedgerTotals> {
