@@ -12,7 +12,7 @@ export default async function NominalAccountPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ asOf?: string; landlord?: string }>;
+  searchParams: Promise<{ asOf?: string; landlord?: string; entity?: string }>;
 }) {
   const user = await requireUser();
   if (!can(user, "finance", "view")) redirect("/dashboard");
@@ -22,7 +22,7 @@ export default async function NominalAccountPage({
   const activity = await getNominalActivity(id, { to: sp.asOf || null, landlordId: sp.landlord || null });
   if (!activity) notFound();
 
-  const backHref = `/nominal/trial-balance?asOf=${sp.asOf ?? ""}${sp.landlord ? `&landlord=${sp.landlord}` : ""}`;
+  const backHref = `/nominal/trial-balance?asOf=${sp.asOf ?? ""}${sp.landlord ? `&landlord=${sp.landlord}` : ""}${sp.entity ? `&entity=${sp.entity}` : ""}`;
 
   return (
     <>

@@ -116,13 +116,15 @@ export async function syncTransactionJournal(supabase: SupabaseClient, txnId: st
   }
 
   let bankControlId: string | null = null;
+  let entityId: string | null = null;
   if (txn.bank_account_id) {
     const { data: bank } = await supabase
       .from("bank_account")
-      .select("control_nominal_id")
+      .select("control_nominal_id, entity_id")
       .eq("id", txn.bank_account_id as string)
       .maybeSingle();
     bankControlId = (bank?.control_nominal_id as string) ?? null;
+    entityId = (bank?.entity_id as string) ?? null;
   }
 
   const lines = buildTransactionJournal(txn as TxnForJournal, { ...ctrl, bankControlId });
@@ -133,6 +135,7 @@ export async function syncTransactionJournal(supabase: SupabaseClient, txnId: st
       entry_date: txn.txn_date,
       description: (txn.reference as string) || (txn.notes as string) || (txn.type as string) || "Transaction",
       source: "transaction",
+      entity_id: entityId,
     },
     p_lines: lines,
   });

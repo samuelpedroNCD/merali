@@ -35,6 +35,7 @@ function toForm(t?: TransactionRow | null): Form {
     property_id: t?.property_id ?? "",
     lease_id: t?.lease_id ?? "",
     nominal_code_id: t?.nominal_code_id ?? "",
+    bank_account_id: t?.bank_account_id ?? "",
     status: t?.status ?? "",
     reference: t?.reference ?? "",
     receipt_link: t?.receipt_link ?? "",
@@ -49,6 +50,7 @@ export function NominalClient({
   leases,
   options,
   nominals,
+  banks,
   perms,
 }: {
   transactions: TransactionRow[];
@@ -57,6 +59,7 @@ export function NominalClient({
   leases: LeaseOption[];
   options: Record<string, Option[]>;
   nominals: Opt[];
+  banks: { value: string; label: string; short_ref: string | null }[];
   perms: Perms;
 }) {
   const router = useRouter();
@@ -80,6 +83,12 @@ export function NominalClient({
       const active = leases.filter((l) => l.property_id === v && l.active);
       return { ...f, property_id: v, lease_id: active.length === 1 ? active[0].value : "" };
     });
+  }
+
+  // Picking a bank defaults the reference to its short-ref (WS1), still editable.
+  function onBankChange(v: string) {
+    const bank = banks.find((b) => b.value === v);
+    setForm((f) => ({ ...f, bank_account_id: v, reference: v && bank?.short_ref ? bank.short_ref : f.reference }));
   }
 
   const rows = useMemo(
@@ -280,7 +289,8 @@ export function NominalClient({
           <SelectFieldOpt label="Tenancy" value={form.lease_id} onChange={(v) => set("lease_id", v)} options={leases} placeholder="None / not tenancy-specific" />
           <Field label="Date"><Input type="date" value={form.txn_date} onChange={(e) => set("txn_date", e.target.value)} /></Field>
           <SelectField label="Status" value={form.status} onChange={(v) => set("status", v)} options={options.invoice_status} />
-          <Field label="Reference"><Input value={form.reference} onChange={(e) => set("reference", e.target.value)} placeholder="e.g. #J083" /></Field>
+          <SelectFieldOpt label="Bank account" value={form.bank_account_id} onChange={onBankChange} options={banks} placeholder="None" />
+          <Field label="Reference" hint="Auto-fills from the bank"><Input value={form.reference} onChange={(e) => set("reference", e.target.value)} placeholder="e.g. LB" /></Field>
           <Field label="Receipt / proof link" className="col-span-2"><Input value={form.receipt_link} onChange={(e) => set("receipt_link", e.target.value)} placeholder="https://…" /></Field>
           <Field label="Notes" className="col-span-2"><Textarea rows={3} value={form.notes} onChange={(e) => set("notes", e.target.value)} /></Field>
         </div>

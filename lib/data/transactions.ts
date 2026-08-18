@@ -12,6 +12,7 @@ export type TransactionRow = {
   property_id: string | null;
   lease_id: string | null;
   nominal_code_id: string | null;
+  bank_account_id: string | null;
   status: string | null;
   reference: string | null;
   notes: string | null;

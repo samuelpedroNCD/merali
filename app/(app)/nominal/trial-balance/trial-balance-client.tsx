@@ -17,20 +17,26 @@ export function TrialBalanceClient({
   tb,
   asOf,
   landlordId,
+  entityId,
   landlords,
+  entities,
 }: {
   tb: TrialBalance;
   asOf: string;
   landlordId: string | null;
+  entityId: string | null;
   landlords: { value: string; label: string }[];
+  entities: { value: string; label: string }[];
 }) {
   const router = useRouter();
 
-  function go(next: { asOf?: string; landlord?: string | null }) {
+  function go(next: { asOf?: string; landlord?: string | null; entity?: string | null }) {
     const params = new URLSearchParams();
     params.set("asOf", next.asOf ?? asOf);
     const ll = next.landlord === undefined ? landlordId : next.landlord;
+    const en = next.entity === undefined ? entityId : next.entity;
     if (ll) params.set("landlord", ll);
+    if (en) params.set("entity", en);
     router.push(`/nominal/trial-balance?${params.toString()}`);
   }
 
@@ -62,7 +68,7 @@ export function TrialBalanceClient({
           <div>
             <h1 className="text-[26px] font-semibold tracking-[-0.01em] text-text">Trial balance</h1>
             <p className="mt-[2px] text-[14px] text-muted">
-              As at {fmtDate(asOf)} · {landlordId ? "one landlord (activity view)" : "all companies"}
+              As at {fmtDate(asOf)} · {landlordId ? "one landlord (activity view)" : (entities.find((e) => e.value === entityId)?.label ?? "all companies")}
             </p>
           </div>
           <Button size="toolbar" variant="ghost" className="gap-[6px]" onClick={exportCsv} disabled={tb.rows.length === 0}>
@@ -75,12 +81,8 @@ export function TrialBalanceClient({
             As at date
             <Input type="date" value={asOf} onChange={(e) => go({ asOf: e.target.value })} className="h-[44px] w-auto" />
           </label>
-          <FilterSelect
-            value={landlordId ?? ""}
-            onChange={(v) => go({ landlord: v || null })}
-            placeholder="All companies"
-            options={landlords}
-          />
+          <FilterSelect value={entityId ?? ""} onChange={(v) => go({ entity: v || null })} placeholder="All companies" options={entities} />
+          <FilterSelect value={landlordId ?? ""} onChange={(v) => go({ landlord: v || null })} placeholder="All landlords" options={landlords} />
           {tb.rows.length > 0 && (
             <Badge tone={tb.balanced ? "good" : "warn"} dot>
               {tb.balanced ? "Balanced" : "Activity view — does not balance"}
@@ -107,7 +109,7 @@ export function TrialBalanceClient({
               {tb.rows.map((r) => (
                 <Link
                   key={r.nominal_id}
-                  href={`/nominal/account/${r.nominal_id}?asOf=${asOf}${landlordId ? `&landlord=${landlordId}` : ""}`}
+                  href={`/nominal/account/${r.nominal_id}?asOf=${asOf}${landlordId ? `&landlord=${landlordId}` : ""}${entityId ? `&entity=${entityId}` : ""}`}
                   className="grid min-w-[720px] cursor-pointer grid-cols-[0.8fr_2fr_1fr_1fr_1fr] items-center gap-4 border-b border-border px-6 py-3 text-[13.5px] transition-colors last:border-b-0 hover:bg-surface-2/40"
                 >
                   <span className="font-mono text-text-2">{r.code}</span>
