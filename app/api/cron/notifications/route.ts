@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { runTriggers } from "@/lib/notifications/triggers";
+import { runCreditControl } from "@/lib/data/credit-control";
 
 // Daily notification job. Triggered by Vercel Cron (Authorization: Bearer
 // CRON_SECRET). Falls back to allowing a logged-in session for manual runs.
@@ -15,7 +16,8 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createServiceClient();
     const result = await runTriggers(supabase);
-    return NextResponse.json({ ok: true, ...result });
+    const creditControl = await runCreditControl(supabase);
+    return NextResponse.json({ ok: true, ...result, ...creditControl });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }

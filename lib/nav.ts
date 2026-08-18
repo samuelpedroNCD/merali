@@ -15,6 +15,7 @@ import {
   IdCard,
   BadgeCheck,
   BellRing,
+  HandCoins,
   History,
   FileBarChart,
   Settings,
@@ -42,6 +43,7 @@ export const NAV: NavSection[] = [
       { label: "Landlords", href: "/landlords", icon: Briefcase, module: "landlords" },
       { label: "Tenancies", href: "/tenancies", icon: ScrollText, module: "leases" },
       { label: "Payments", href: "/payments", icon: ReceiptText, module: "finance" },
+      { label: "Credit control", href: "/credit-control", icon: HandCoins, module: "finance" },
     ],
   },
   {
