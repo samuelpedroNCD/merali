@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/data/activity";
+import { syncTransactionJournal } from "@/lib/finance/journal";
 
 const s = (v: unknown) => (v === "" || v === undefined ? null : v);
 
@@ -42,6 +43,7 @@ export async function approveTransaction(id: string, input: unknown): Promise<Ac
     .update({ ...parsed.data, lease_id, needs_review: false })
     .eq("id", id);
   if (error) return { ok: false, error: error.message };
+  await syncTransactionJournal(supabase, id); // WS11: assignment changed the nominal/type
 
   await logActivity({ type: "Transaction Approved", objectTable: "transaction", objectId: id, creatorId: user.id });
   revalidatePath("/unreconciled");

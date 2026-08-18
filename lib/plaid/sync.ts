@@ -4,6 +4,7 @@ import { plaidClient } from "./client";
 import { autoReconcile } from "@/lib/finance/auto-reconcile";
 import { decryptField } from "@/lib/crypto/secrets";
 import { matchPropertyByCode, type CodedProperty } from "@/lib/finance/matchProperty";
+import { syncTransactionJournal } from "@/lib/finance/journal";
 
 type BankAccount = {
   id: string;
@@ -74,19 +75,23 @@ export async function syncItem(
     const data = res.data;
 
     if (data.added.length) {
-      await supabase
+      const { data: rows } = await supabase
         .from("transaction")
         .upsert(data.added.map((t) => withMatch(mapTxn(t, bank))), {
           onConflict: "plaid_transaction_id",
-        });
+        })
+        .select("id");
+      for (const r of rows ?? []) await syncTransactionJournal(supabase, r.id as string); // WS11
       added += data.added.length;
     }
     if (data.modified.length) {
-      await supabase
+      const { data: rows } = await supabase
         .from("transaction")
         .upsert(data.modified.map((t) => mapTxn(t, bank)), {
           onConflict: "plaid_transaction_id",
-        });
+        })
+        .select("id");
+      for (const r of rows ?? []) await syncTransactionJournal(supabase, r.id as string); // WS11
       modified += data.modified.length;
     }
     if (data.removed.length) {

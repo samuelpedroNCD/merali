@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/data/activity";
 import { computeVatFromGross } from "@/lib/finance/vat";
+import { syncTransactionJournal } from "@/lib/finance/journal";
 
 const s = (v: unknown) => (v === "" || v === undefined ? null : v);
 const num = (v: unknown) => (v === "" || v == null ? null : Number(v));
@@ -86,6 +87,7 @@ export async function createTransaction(input: unknown): Promise<ActionResult> {
     .select("id")
     .single();
   if (error) return { ok: false, error: error.message };
+  await syncTransactionJournal(supabase, data.id); // WS11: post the balanced journal
 
   await logActivity({
     type: "Transaction Creation",
@@ -114,6 +116,7 @@ export async function updateTransaction(id: string, input: unknown): Promise<Act
   const lease_id = await resolveLeaseId(supabase, parsed.data.lease_id, parsed.data.property_id);
   const { error } = await supabase.from("transaction").update({ ...buildRow(parsed.data), lease_id }).eq("id", id);
   if (error) return { ok: false, error: error.message };
+  await syncTransactionJournal(supabase, id); // WS11: re-post the balanced journal
 
   await logActivity({
     type: "Transaction Update",
@@ -135,8 +138,13 @@ export async function deleteTransaction(id: string): Promise<ActionResult> {
     return { ok: false, error: (e as Error).message };
   }
   const supabase = await createClient();
+  // WS11: drop the linked journal too (FK is on delete set null, not cascade).
+  const { data: existing } = await supabase.from("transaction").select("journal_entry_id").eq("id", id).maybeSingle();
   const { error } = await supabase.from("transaction").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
+  if (existing?.journal_entry_id) {
+    await supabase.from("journal_entry").delete().eq("id", existing.journal_entry_id as string);
+  }
 
   await logActivity({
     type: "Transaction Deletion",
