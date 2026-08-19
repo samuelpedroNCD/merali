@@ -61,6 +61,7 @@ const PropertySchema = z.object({
   parent_property_id: z.preprocess(emptyToNull, z.string().uuid().nullable()),
   landlord_id: z.preprocess(emptyToNull, z.string().uuid().nullable()),
   date_acquired: z.preprocess(emptyToNull, z.string().nullable()),
+  opted_to_tax: z.preprocess((v) => v === true || v === "true", z.boolean()).default(false),
   leasehold_register_number: z.preprocess(emptyToNull, z.string().nullable()),
   target_rent: z.preprocess(
     (v) => (v === "" || v == null ? null : Number(v)),

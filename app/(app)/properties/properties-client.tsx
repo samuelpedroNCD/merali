@@ -52,6 +52,7 @@ function toForm(p?: PropertyRow | null): Form {
     bedrooms: p?.bedrooms != null ? String(p.bedrooms) : "",
     landlord_id: p?.landlord_id ?? "",
     date_acquired: p?.date_acquired ?? "",
+    opted_to_tax: p?.opted_to_tax ? "true" : "false",
     leasehold_register_number: p?.leasehold_register_number ?? "",
     target_rent: p?.target_rent != null ? String(p.target_rent) : "",
     target_rent_month: p?.target_rent_month ?? "",
@@ -375,6 +376,12 @@ export function PropertiesClient({
             </Field>
             <Field label="Date acquired">
               <Input type="date" value={form.date_acquired} onChange={(e) => set("date_acquired", e.target.value)} />
+            </Field>
+            <Field label="Opted to tax" hint="If set, transactions on this property default to standard-rate VAT">
+              <Select value={form.opted_to_tax} onChange={(e) => set("opted_to_tax", e.target.value)}>
+                <option value="false">No</option>
+                <option value="true">Yes — opted to tax</option>
+              </Select>
             </Field>
             <div className="col-span-2">
               <p className="mb-2 text-[12.5px] font-semibold text-text">Title documents <span className="font-normal text-muted">— date · tenure · title number; add as many as the property has</span></p>

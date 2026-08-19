@@ -187,3 +187,10 @@ export async function listPropertyOptions(): Promise<
     label: p.address || p.internal_code || "Untitled property",
   }));
 }
+
+/** Property ids flagged opted-to-tax (WS13) — drives the VAT default on receipts. */
+export async function listOptedToTaxPropertyIds(): Promise<string[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("property").select("id").eq("opted_to_tax", true);
+  return (data ?? []).map((p) => p.id as string);
+}

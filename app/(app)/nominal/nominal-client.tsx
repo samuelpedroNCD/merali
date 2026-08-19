@@ -18,6 +18,7 @@ import type { Option } from "@/lib/data/options";
 import type { TransactionRow, LedgerTotals } from "@/lib/data/transactions";
 import type { LeaseOption } from "@/lib/data/leases";
 import { buildNarrative } from "@/lib/finance/narrative";
+import { computeVatFromGross } from "@/lib/finance/vat";
 import { createTransaction, updateTransaction, deleteTransaction } from "./actions";
 import { ReconcileDrawer } from "./reconcile-drawer";
 import { unreconcileTransaction } from "./reconcile-actions";
@@ -32,6 +33,7 @@ function toForm(t?: TransactionRow | null): Form {
     category: t?.category ?? "",
     amount_gross: t?.amount_gross != null ? String(t.amount_gross) : "",
     vat_rate: t?.vat_rate != null ? String(t.vat_rate) : "0",
+    vat_only: t && Number(t.amount_net) === 0 && Number(t.vat_amount) > 0 ? "true" : "false",
     txn_date: t?.txn_date ?? new Date().toISOString().slice(0, 10),
     property_id: t?.property_id ?? "",
     lease_id: t?.lease_id ?? "",
@@ -53,6 +55,7 @@ export function NominalClient({
   nominals,
   banks,
   narratives,
+  optedPropertyIds,
   perms,
 }: {
   transactions: TransactionRow[];
@@ -63,6 +66,7 @@ export function NominalClient({
   nominals: Opt[];
   banks: { value: string; label: string; short_ref: string | null }[];
   narratives: string[];
+  optedPropertyIds: string[];
   perms: Perms;
 }) {
   const router = useRouter();
@@ -95,14 +99,24 @@ export function NominalClient({
     setForm((f) => withNarrative({ ...f, lease_id: v }, v));
   }
 
-  // Picking a property auto-selects its single active tenancy (still overridable).
+  // Picking a property auto-selects its single active tenancy (still overridable),
+  // and defaults standard-rate VAT when the property is opted to tax (WS13).
   function onPropertyChange(v: string) {
     setForm((f) => {
       const active = leases.filter((l) => l.property_id === v && l.active);
       const lease_id = active.length === 1 ? active[0].value : "";
-      return withNarrative({ ...f, property_id: v, lease_id }, lease_id);
+      let next = withNarrative({ ...f, property_id: v, lease_id }, lease_id);
+      if (optedPropertyIds.includes(v) && (next.vat_rate === "0" || next.vat_rate === "")) {
+        next = { ...next, vat_rate: "20" };
+      }
+      return next;
     });
   }
+
+  const optedSelected = !!form.property_id && optedPropertyIds.includes(form.property_id);
+  const vatBreakdown = form.vat_only === "true"
+    ? { net: 0, vat: Number(form.amount_gross) || 0, gross: Number(form.amount_gross) || 0 }
+    : computeVatFromGross(Number(form.amount_gross) || 0, Number(form.vat_rate) || 0);
 
   const [narrSearch, setNarrSearch] = useState("");
   const narrHits = narrSearch.trim()
@@ -307,8 +321,19 @@ export function NominalClient({
           <SelectField label="Type" value={form.type} onChange={(v) => set("type", v)} options={options.transaction_type} />
           <SelectField label="Category" value={form.category} onChange={(v) => set("category", v)} options={options.transaction_category} />
           <SelectFieldOpt label="Nominal code" value={form.nominal_code_id} onChange={(v) => set("nominal_code_id", v)} options={nominals} placeholder="Choose…" className="col-span-2" />
-          <Field label="Amount (gross, £)"><Input type="number" step="0.01" min={0} value={form.amount_gross} onChange={(e) => set("amount_gross", e.target.value)} /></Field>
-          <SelectField label="VAT rate (%)" value={form.vat_rate} onChange={(v) => set("vat_rate", v)} options={options.vat_rate} />
+          <Field label={form.vat_only === "true" ? "VAT amount (£)" : "Amount (gross, £)"}><Input type="number" step="0.01" min={0} value={form.amount_gross} onChange={(e) => set("amount_gross", e.target.value)} /></Field>
+          {form.vat_only === "true" ? (
+            <div className="flex items-end pb-1 text-[13px] text-muted">VAT-only line — the amount is the VAT</div>
+          ) : (
+            <SelectField label="VAT rate (%)" value={form.vat_rate} onChange={(v) => set("vat_rate", v)} options={options.vat_rate} />
+          )}
+          <div className="col-span-2 -mt-1 flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-surface-2/40 px-4 py-2 text-[13px]">
+            <span className="tabular-nums text-text-2">Net <span className="font-semibold text-text">{gbp(vatBreakdown.net)}</span> · VAT <span className="font-semibold text-text">{gbp(vatBreakdown.vat)}</span> · Total <span className="font-semibold text-text">{gbp(vatBreakdown.gross)}</span></span>
+            <label className="flex cursor-pointer items-center gap-2 text-[12.5px] text-muted">
+              <input type="checkbox" checked={form.vat_only === "true"} onChange={(e) => set("vat_only", e.target.checked ? "true" : "false")} className="h-4 w-4 accent-[var(--gold)]" /> VAT only
+            </label>
+          </div>
+          {optedSelected && <p className="col-span-2 -mt-2 text-[12.5px] text-accent">This property is opted to tax — VAT applies.</p>}
           <SelectFieldOpt label="Property" value={form.property_id} onChange={onPropertyChange} options={properties} placeholder="Choose…" />
           <SelectFieldOpt label="Tenancy" value={form.lease_id} onChange={onLeaseChange} options={leases} placeholder="None / not tenancy-specific" />
           <Field label="Date"><Input type="date" value={form.txn_date} onChange={(e) => set("txn_date", e.target.value)} /></Field>

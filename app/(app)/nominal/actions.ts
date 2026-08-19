@@ -16,6 +16,7 @@ const Schema = z.object({
   category: z.preprocess(s, z.string().nullable()),
   amount_gross: z.preprocess(num, z.number().nonnegative().nullable()),
   vat_rate: z.preprocess((v) => (v === "" || v == null ? 0 : Number(v)), z.number().min(0)),
+  vat_only: z.preprocess((v) => v === true || v === "true", z.boolean()).default(false),
   txn_date: z.preprocess(s, z.string().nullable()),
   property_id: z.preprocess(s, z.string().uuid().nullable()),
   lease_id: z.preprocess(s, z.string().uuid().nullable()),
@@ -32,12 +33,13 @@ export type ActionResult = { ok: true; id?: string } | { ok: false; error: strin
 
 function buildRow(d: z.infer<typeof Schema>) {
   const gross = d.amount_gross ?? 0;
-  const { net, vat } = computeVatFromGross(gross, d.vat_rate);
+  // VAT-only (e.g. parking): the whole amount is the VAT — no net.
+  const { net, vat } = d.vat_only ? { net: 0, vat: gross } : computeVatFromGross(gross, d.vat_rate);
   return {
     type: d.type,
     category: d.category,
     amount_gross: gross,
-    vat_rate: d.vat_rate,
+    vat_rate: d.vat_only ? 0 : d.vat_rate,
     vat_amount: vat,
     amount_net: net,
     txn_date: d.txn_date,

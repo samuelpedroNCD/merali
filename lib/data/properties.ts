@@ -21,6 +21,7 @@ export type PropertyRow = {
   landlord_id: string | null;
   assigned_manager_id: string | null;
   date_acquired: string | null;
+  opted_to_tax: boolean | null;
   leasehold_register_number: string | null;
   target_rent: number | null;
   target_rent_month: string | null;
@@ -35,7 +36,7 @@ export async function listProperties(search?: string): Promise<PropertyRow[]> {
   let query = supabase
     .from("property")
     .select(
-      "id, address, flat, town, post_code, country, area, internal_code, configuration, class, property_type, status, tenancy_class, property_tax, bedrooms, parent_property_id, landlord_id, assigned_manager_id, date_acquired, leasehold_register_number, target_rent, target_rent_month, notes, landlord:landlord_id(id, full_name), property_title(id, doc_date, tenure, title_number)",
+      "id, address, flat, town, post_code, country, area, internal_code, configuration, class, property_type, status, tenancy_class, property_tax, bedrooms, parent_property_id, landlord_id, assigned_manager_id, date_acquired, opted_to_tax, leasehold_register_number, target_rent, target_rent_month, notes, landlord:landlord_id(id, full_name), property_title(id, doc_date, tenure, title_number)",
     )
     .order("created_at", { ascending: false });
 
